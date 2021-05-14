@@ -1,0 +1,21 @@
+#!/bin/bash
+
+alias package='tar -v -c -z -f'
+alias copy='scp -i "$pvt_key_path" -r -P "$SSH_PORT"'
+alias attach='ssh -i "$pvt_key_path" -o StrictHostKeyChecking=no -p $SSH_PORT "$server"'
+alias login='attach -t "cd /var/www; bash --login"'
+
+alias mkdir-deployment-directories='attach -t "sudo mkdir -p /var/www/$DOMAIN /var/www/frontend.$DOMAIN"'
+alias change-permission='attach -t "sudo chmod -R 2755 /var/www/ && sudo chown -R www-data:www-data /var/www/"'
+alias change-nginx-permission='attach -t "sudo chown -R root:root /etc/nginx/sites-available/"'
+
+alias remove-nginx-default='attach -t "sudo rm -rf /var/www/html && sudo rm -f /etc/nginx/sites-*/default"'
+alias restart-nginx='attach -t "sudo systemctl restart nginx"'
+
+alias copy-s3cfg='copy ci-scripts/etc/.s3cfg  "$server":~/ && attach -t "sudo cp .s3cfg /etc " '
+
+## Frontend
+source ci-scripts/.frontendrc
+
+## Host
+source ci-scripts/.hostrc

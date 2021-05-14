@@ -1,0 +1,34 @@
+---
+  - name: nginx
+    hosts: linux
+    become: true
+
+    handlers:
+      - name: restart nginx
+        service:
+          name: nginx
+          state: restarted
+
+    tasks:
+      - name: Ensure nginx is installed.
+        apt:
+          name: nano
+          state: present
+
+      - name: Copy nginx etc/nginx/conf.d files.
+        copy:
+          src: ../etc/nginx/conf.d/devops.demo.drah.im
+          dest: /etc/nginx/conf.d/
+        notify: restart nginx
+      - debug: msg="{{ lookup('env','HOME') }} is an environment variable"
+
+
+      - name: Make sure handlers are flushed immediately.
+        meta: flush_handlers
+
+      - name: Ensure nginx is running and starts at boot.
+        service:
+          name: nginx
+          state: started
+          enabled: true
+    

@@ -1,0 +1,16 @@
+[Unit]
+Description=devops.demo.drah.im.service
+
+[Service]
+WorkingDirectory=/var/www/devops.demo.drah.im/
+ExecStart=dotnet MyCompanyName.AbpZeroTemplate.Web.Host.dll
+Restart=always
+RestartSec=10
+SyslogIdentifier=devops.demo.drah.im.service
+User=www-data
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:9901
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target

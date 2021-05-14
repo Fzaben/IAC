@@ -1,0 +1,11 @@
+---
+
+webserver_packages:
+  - nginx
+
+webserver_static_sites:
+  - name: devops.dev.devops.terkwaz.com
+    root:  /etc/nginx/sites-available/
+
+  # - name: devops1.dev.devops.terkwaz.com
+  #   root: /usr/share/nginx/devops1.dev.devops.terkwaz.com

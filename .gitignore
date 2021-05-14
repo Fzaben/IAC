@@ -1,0 +1,24 @@
+# terraform
+.ssh
+.terraform*
+terraform.tfplan
+terraform.tfstate*
+
+# ansible
+ansible.log
+
+
+not-here
+
+# apps
+db
+node_modules
+api
+auth
+___abp-demo
+abp-framework
+# packges
+*tar.gz
+rsync -avr -o -g /source/directory user@:destinationHost/destination/directory
+
+rsync -arvz -e 'ssh -p 2222' apps/angular/dist/devops do@devops.demo.drah.im:/var/www/devops*/devops

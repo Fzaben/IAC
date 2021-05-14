@@ -1,0 +1,46 @@
+#!/bin/bash
+pvt_key_path=$BITBUCKET_CLONE_DIR/.ssh/id_rsa
+
+echo $BITBUCKET_STEP_TRIGGERER_UUID
+if [[ $BITBUCKET_DEPLOYMENT_ENVIRONMENT == production ]]
+then
+    domain=$DOMAIN
+    appsettings_environment=Production
+elif [[ $BITBUCKET_DEPLOYMENT_ENVIRONMENT == staging ]]
+then
+    domain=$BITBUCKET_DEPLOYMENT_ENVIRONMENT.$DOMAIN
+    appsettings_environment=Staging
+
+elif [[ $BITBUCKET_DEPLOYMENT_ENVIRONMENT == dev ]]
+then
+    domain=$BITBUCKET_DEPLOYMENT_ENVIRONMENT.$DOMAIN
+    appsettings_environment=Staging
+    sed -i "s/9911/9921/g" src/MyCompanyName.AbpZeroTemplate.Web.Host/appsettings.$appsettings_environment.json
+    sed -i "s/9903/9913/g" src/MyCompanyName.AbpZeroTemplate.Web.Mvc/appsettings.$appsettings_environment.json
+
+fi
+export space_deployment_path=deployment/$BITBUCKET_REPO_SLUG/$BITBUCKET_BUILD_NUMBER.$BITBUCKET_STEP_RUN_NUMBER.$domain
+
+
+sed -i "s/SPACE_ACCESS_KEY/$SPACE_ACCESS_KEY/g" $BITBUCKET_CLONE_DIR/ci-scripts/etc/.s3cfg
+sed -i "s/SPACE_SECRET_KEY/$SPACE_SECRET_KEY/g" $BITBUCKET_CLONE_DIR/ci-scripts/etc/.s3cfg
+sed -i "s/SPACE_NAME/$SPACE_NAME/g" $BITBUCKET_CLONE_DIR/ci-scripts/etc/.s3cfg
+
+# update MyCompanyName.AbpZeroTemplate.Web.Host appsettings.appsettings_environment.json files
+echo "update MyCompanyName.AbpZeroTemplate.Web.Host appsettings.$appsettings_environment.json files"
+sed -i "s/CONNECTION_STRING/$CONNECTION_STRING/g" src/MyCompanyName.AbpZeroTemplate.Web.Host/appsettings.$appsettings_environment.json
+sed -i "s/CONNECTION_STRING/$CONNECTION_STRING/g" src/MyCompanyName.AbpZeroTemplate.Web.Mvc/appsettings.$appsettings_environment.json
+mv src/MyCompanyName.AbpZeroTemplate.Web.Mvc/appsettings.$appsettings_environment.json src/MyCompanyName.AbpZeroTemplate.Web.Mvc/mvc.appsettings.$appsettings_environment.json
+
+# update ci-scripts/deploy.sh this for general deployment 
+echo "update ci-scripts/deploy.sh this for general deployment"
+
+sed -i "s/SPACE_NAME/$SPACE_NAME/g" ci-scripts/deploy.sh
+sed -i "s/BITBUCKET_DEPLOYMENT_ENVIRONMENT/$BITBUCKET_DEPLOYMENT_ENVIRONMENT/g" ci-scripts/deploy.sh
+sed -i "s/BITBUCKET_REPO_SLUG/$BITBUCKET_REPO_SLUG/g" ci-scripts/deploy.sh
+sed -i "s/DOMAIN/$domain/g" ci-scripts/deploy.sh
+sed -i "s/BITBUCKET_BUILD_NUMBER/$BITBUCKET_BUILD_NUMBER/g" ci-scripts/deploy.sh
+sed -i "s/BITBUCKET_STEP_RUN_NUMBER/$BITBUCKET_STEP_RUN_NUMBER/g" ci-scripts/deploy.sh
+sed -i "s/APPSETTINGS_ENVIRONMENT/$appsettings_environment/g" ci-scripts/deploy.sh
+
+alias attach='ssh "$SSH_USER"@"$IP" -p "$SSH_PORT" -o StrictHostKeyChecking=no'  
