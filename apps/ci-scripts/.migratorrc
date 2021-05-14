@@ -1,0 +1,20 @@
+#!/bin/bash
+project_name=$solution_name'.Migrator'
+package_name=$project_name'.tar.gz' 
+publish_location=bin/Release/net5.0/ubuntu.20.04-x64/publish
+
+## Migrator
+alias dotnet-publish-migrator='dotnet publish "$project_path"/"$project_name"/ -c Release -r ubuntu.20.04-x64'
+alias package-migrator='package $"package_name" -C "$project_path"/"$project_name"/"$publish_location" ./'
+alias copy-migrator-package-to-server='copy $"package_name" "$server":~/'
+alias unpackage-migrator-package-from-server='attach -t "$unpackage ~/$package_name -C /var/www/migrator.$DOMAIN"'
+alias migrate-database='attach -t "cd /var/www/migrator.$DOMAIN sudo && dotnet $project_name.dll -q"'
+
+# Migrator
+publish_migrator () {
+    dotnet-publish-migrator && \
+    package-migrator && \
+    copy-migrator-package-to-server && \
+    unpackage-migrator-package-from-server && \
+    migrate-database
+}

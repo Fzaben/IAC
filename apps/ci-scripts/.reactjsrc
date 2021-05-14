@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## reactjs
+alias npm-publish-reactjs='yarn --cwd angular/ && yarn --cwd angular/ run publish'
+alias package-reactjs='package reactjs.tar.gz -C angular/dist ./'
+alias copy-reactjs-package-to-server='copy reactjs.tar.gz "$server":~/'
+alias unpackage-reactjs-package-from-server='attach -t "$unpackage  ~/reactjs.tar.gz -C /var/www/reactjs.$DOMAIN"'
+
+build_reactjs () {
+    npm-publish-reactjs && \
+    package-reactjs && \
+    copy-reactjs-package-to-server && \
+    unpackage-reactjs-package-from-server && \
+    change-permission
+}
+
+init_deploy_reactjs () {
+    build_reactjs
+    restart-nginx
+}
+
+deploy_reactjs () {
+    build_reactjs && \
+    restart-nginx
+}

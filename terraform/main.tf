@@ -90,22 +90,22 @@ resource "digitalocean_project" "do_porject" {
 }
 
 # Add an A record to the domain
-resource "digitalocean_record" "auth_subdomain" {
-  domain = var.domain
-  type   = "A"
-  name   = var.auth_subdomain
-  value  = digitalocean_droplet.default.ipv4_address
-  ttl    = 3600
-}
+# resource "digitalocean_record" "auth_subdomain" {
+#   domain = var.domain
+#   type   = "A"
+#   name   = var.auth_subdomain
+#   value  = digitalocean_droplet.default.ipv4_address
+#   ttl    = 3600
+# }
 
 # Add an A record to the domain
-resource "digitalocean_record" "api_subdomain" {
-  domain = var.domain
-  type   = "A"
-  name   = var.api_subdomain
-  value  = digitalocean_droplet.default.ipv4_address
-  ttl    = 3600
-}
+# resource "digitalocean_record" "api_subdomain" {
+# domain = var.domain
+# type   = "A"
+# name   = var.api_subdomain
+# value  = digitalocean_droplet.default.ipv4_address
+# ttl    = 3600
+#}
 
 # Add an A record to the domain
 resource "digitalocean_record" "landing_subdomain" {

@@ -8,13 +8,12 @@ main_domain=devops.demo.drah.im
 server="$SSH_USER@$IP"
 DOMAIN=$1$main_domain
 
-solution_name='MyCompanyName.AbpZeroTemplate'
-project_name=$solution_name'.Web'
+solution_name='DevOps'
 project_root_path="."
 backend_path="aspnet-core"
 pvt_key_path=~/Workspace/devops/IAC/.ssh/id_rsa
 project_path=$backend_path'/src'
-unpackage='sudo tar -v -z -x -f'
+unpackage='sudo tar vzxf'
 
 source ci-scripts/.aliasrc
 
@@ -24,17 +23,14 @@ init_deploy_apps () {
     change-permission && \
     init_deploy_host && \
     sleep 3 && \
-    init_deploy_frontend && \
+    init_deploy_reactjs && \
     change-permission
 }
 
 deploy_apps () {
     publish_host && \
     restart-host-service
-    publish_frontend && \
+    publish_reactjs && \
     change-permission && \
     restart-nginx
 }
-# - dotnet publish src/MyCompanyName.AbpZeroTemplate.Migrator/ -c Release -r ubuntu.20.04-x64
-# - tar -v -c -z -f MyCompanyName.AbpZeroTemplate.Migrator.tar.gz -C src/MyCompanyName.AbpZeroTemplate.Migrator/bin/Release/net5.0/ubuntu.20.04-x64/publish ./
-# - 

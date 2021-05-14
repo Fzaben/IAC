@@ -1,10 +1,11 @@
 #!/bin/bash
+project_name=$solution_name'.Web.Host'
 
 ## Host
-alias dotnet-publish-host='dotnet publish "$project_path"/"$project_name".Host/ -c Release -r ubuntu.20.04-x64'
-alias package-host='package "$project_name".Host.tar.gz -C "$project_path"/"$project_name".Host/bin/Release/net5.0/ubuntu.20.04-x64/publish ./'
-alias copy-host-package-to-server='copy "$project_name".Host.tar.gz "$server":~/'
-alias unpackage-host-package-from-server='attach -t "$unpackage ~/$project_name.Host.tar.gz -C /var/www/$DOMAIN"'
+alias dotnet-publish-host='dotnet publish "$project_path"/"$project_name"/ -c Release -r ubuntu.20.04-x64'
+alias package-host='package "$project_name".tar.gz -C "$project_path"/"$project_name"/bin/Release/net5.0/ubuntu.20.04-x64/publish ./'
+alias copy-host-package-to-server='copy "$project_name".tar.gz "$server":~/'
+alias unpackage-host-package-from-server='attach -t "$unpackage ~/$project_name.tar.gz -C /var/www/$DOMAIN"'
 
 alias copy-host-service-to-systemd='copy "$project_root_path"/ci-scripts/etc/systemd/system/$DOMAIN.service $server:~/'
 alias mv-host-service-to-systemd='attach -t "sudo mv ~/$DOMAIN.service /etc/systemd/system"'
