@@ -1,0 +1,53 @@
+---
+- name: Install packages
+  package:
+    name: "{{ webserver_packages }}"
+    state: latest
+
+- name: Add base NGINX configuration file
+  copy:
+    dest: /etc/nginx/nginx.conf
+    src: etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: Reload NGINX
+
+# Uncomment below to use file-based deployment instead of git-based deployment
+# Included only as an example
+- name: Copy site contents
+  copy:
+    dest: "{{ item.root }}/{{ item.name }}"
+    src: "templates/etc/nginx/conf.d/site.conf.j2"
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{ webserver_static_sites }}"
+
+- name: write templated text into a file on the remote host
+  copy:
+    dest: "{{ item.root }}/{{ item.name }}"
+    content: "Hello, {{ item.root }}!"
+  with_items: "{{ webserver_static_sites }}"
+
+
+# - name: Add static site config files
+#   template:
+#     src: etc/nginx/conf.d/site.conf.j2
+#     dest: "/etc/nginx/conf.d/{{ item.name }}.conf"
+#     owner: root
+#     group: root
+#     mode: 0644
+#   with_items: "{{ webserver_static_sites }}"
+#   notify: Reload NGINX
+
+# - name: Add server block for devops.dev.devops.terkwaz.com
+#   copy:
+#     src: etc/nginx/conf.d/devops.dev.devops.terkwaz.com
+#     dest: /etc/nginx/conf.d/devops.dev.devops.terkwaz.com.conf
+
+# - name: Add server block for devops1.dev.devops.terkwaz.com
+#   copy:
+#     src: etc/nginx/conf.d/devops1.dev.devops.terkwaz.com
+#     dest: /etc/nginx/conf.d/devops1.dev.devops.terkwaz.com.conf
+

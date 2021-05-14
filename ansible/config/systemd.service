@@ -1,0 +1,16 @@
+[Unit]
+Description={{ DOMAIN }}
+
+[Service]
+WorkingDirectory=/var/www/{{ DOMAIN }}
+ExecStart=/usr/bin/dotnet /var/www/{{ DOMAIN }}/{{ PROJECT_NAME }}.dll
+Restart=always
+RestartSec=10
+SyslogIdentifier={{ DOMAIN }}
+User={{ SSH_USER }}
+Environment=ASPNETCORE_ENVIRONMENT={{ ASPNETCORE_ENVIRONMENT }}
+Environment=ASPNETCORE_URLS={{ ASPNETCORE_URLS }}
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target
