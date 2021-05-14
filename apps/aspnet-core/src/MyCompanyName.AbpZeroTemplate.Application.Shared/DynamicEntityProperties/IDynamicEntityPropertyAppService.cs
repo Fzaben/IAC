@@ -8,7 +8,8 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
     {
         Task<DynamicEntityPropertyDto> Get(int id);
 
-        Task<ListResultDto<DynamicEntityPropertyDto>> GetAllPropertiesOfAnEntity(DynamicEntityPropertyGetAllInput input);
+        Task<ListResultDto<DynamicEntityPropertyDto>>
+            GetAllPropertiesOfAnEntity(DynamicEntityPropertyGetAllInput input);
 
 
         Task<ListResultDto<DynamicEntityPropertyDto>> GetAll();
@@ -18,7 +19,7 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
         Task Update(DynamicEntityPropertyDto dto);
 
         Task Delete(int id);
-        
+
         Task<ListResultDto<GetAllEntitiesHasDynamicPropertyOutput>> GetAllEntitiesHasDynamicProperty();
     }
 }

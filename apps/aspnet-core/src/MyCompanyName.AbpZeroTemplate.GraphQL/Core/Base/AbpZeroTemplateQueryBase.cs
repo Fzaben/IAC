@@ -13,8 +13,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MyCompanyName.AbpZeroTemplate.Core.Base
 {
-    public abstract class AbpZeroTemplateQueryBase<TField,TResult> : ITransientDependency
+    public abstract class AbpZeroTemplateQueryBase<TField, TResult> : ITransientDependency
     {
+        protected AbpZeroTemplateQueryBase(string fieldName,
+            Dictionary<string, Type> arguments = null)
+        {
+            PermissionChecker = NullPermissionChecker.Instance;
+            FieldName = fieldName;
+            Arguments = arguments ?? new Dictionary<string, Type>();
+        }
+
         public IPermissionChecker PermissionChecker { protected get; set; }
 
         public Dictionary<string, Type> Arguments { get; set; }
@@ -24,14 +32,6 @@ namespace MyCompanyName.AbpZeroTemplate.Core.Base
         public ResolveFieldContext<object> Context { get; set; }
 
         public IMapper Mapper { protected get; set; }
-
-        protected AbpZeroTemplateQueryBase(string fieldName,
-            Dictionary<string, Type> arguments = null)
-        {
-            PermissionChecker = NullPermissionChecker.Instance;
-            FieldName = fieldName;
-            Arguments = arguments ?? new Dictionary<string, Type>();
-        }
 
         public List<QueryArgument> GetQueryArguments()
         {
@@ -52,7 +52,7 @@ namespace MyCompanyName.AbpZeroTemplate.Core.Base
 
         public FieldType GetFieldType()
         {
-            return new FieldType
+            return new()
             {
                 Name = FieldName,
                 Type = typeof(TField),

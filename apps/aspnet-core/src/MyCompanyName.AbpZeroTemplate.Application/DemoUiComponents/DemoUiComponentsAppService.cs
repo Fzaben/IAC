@@ -11,32 +11,6 @@ namespace MyCompanyName.AbpZeroTemplate.DemoUiComponents
     [AbpAuthorize(AppPermissions.Pages_DemoUiComponents)]
     public class DemoUiComponentsAppService : AbpZeroTemplateAppServiceBase, IDemoUiComponentsAppService
     {
-        #region date & time pickers
-        public DateToStringOutput SendAndGetDate(DateTime? date)
-        {
-            return new DateToStringOutput
-            {
-                DateString = date?.ToString("d")
-            };
-        }
-
-        public DateToStringOutput SendAndGetDateTime(DateTime? date)
-        {
-            return new DateToStringOutput
-            {
-                DateString = date?.ToString("g")
-            };
-        }
-
-        public DateToStringOutput SendAndGetDateRange(DateTime? startDate, DateTime? endDate)
-        {
-            return new DateToStringOutput
-            {
-                DateString = startDate?.ToString("d") + " - " + endDate?.ToString("d")
-            };
-        }
-        #endregion
-
         public List<NameValue<string>> GetCountries(string searchTerm)
         {
             var countries = new List<NameValue<string>>
@@ -72,5 +46,33 @@ namespace MyCompanyName.AbpZeroTemplate.DemoUiComponents
                 Output = input
             };
         }
+
+        #region date & time pickers
+
+        public DateToStringOutput SendAndGetDate(DateTime? date)
+        {
+            return new DateToStringOutput
+            {
+                DateString = date?.ToString("d")
+            };
+        }
+
+        public DateToStringOutput SendAndGetDateTime(DateTime? date)
+        {
+            return new DateToStringOutput
+            {
+                DateString = date?.ToString("g")
+            };
+        }
+
+        public DateToStringOutput SendAndGetDateRange(DateTime? startDate, DateTime? endDate)
+        {
+            return new DateToStringOutput
+            {
+                DateString = startDate?.ToString("d") + " - " + endDate?.ToString("d")
+            };
+        }
+
+        #endregion
     }
 }

@@ -19,6 +19,4 @@ ___abp-demo
 abp-framework
 # packges
 *tar.gz
-rsync -avr -o -g /source/directory user@:destinationHost/destination/directory
-
-rsync -arvz -e 'ssh -p 2222' apps/angular/dist/devops do@devops.demo.drah.im:/var/www/devops*/devops
+.idea

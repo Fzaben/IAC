@@ -7,13 +7,13 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base.Configuration
 {
     public class TestAppConfigurationAccessor : IAppConfigurationAccessor, ISingletonDependency
     {
-        public IConfigurationRoot Configuration { get; }
-
         public TestAppConfigurationAccessor()
         {
             Configuration = AppConfigurations.Get(
                 typeof(AbpZeroTemplateTestBaseModule).GetAssembly().GetDirectoryPathOrNull()
             );
         }
+
+        public IConfigurationRoot Configuration { get; }
     }
 }

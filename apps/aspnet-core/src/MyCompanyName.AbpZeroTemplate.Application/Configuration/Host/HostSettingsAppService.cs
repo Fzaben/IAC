@@ -24,11 +24,9 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Host
     [AbpAuthorize(AppPermissions.Pages_Administration_Host_Settings)]
     public class HostSettingsAppService : SettingsAppServiceBase, IHostSettingsAppService
     {
-        public IExternalLoginOptionsCacheManager ExternalLoginOptionsCacheManager { get; set; }
-
         private readonly EditionManager _editionManager;
+        private readonly ISettingDefinitionManager _settingDefinitionManager;
         private readonly ITimeZoneService _timeZoneService;
-        readonly ISettingDefinitionManager _settingDefinitionManager;
 
         public HostSettingsAppService(
             IEmailSender emailSender,
@@ -43,6 +41,8 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Host
             _timeZoneService = timeZoneService;
             _settingDefinitionManager = settingDefinitionManager;
         }
+
+        public IExternalLoginOptionsCacheManager ExternalLoginOptionsCacheManager { get; set; }
 
         #region Get Settings
 
@@ -72,10 +72,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Host
 
             var defaultTimeZoneId =
                 await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.Application, AbpSession.TenantId);
-            if (settings.Timezone == defaultTimeZoneId)
-            {
-                settings.Timezone = string.Empty;
-            }
+            if (settings.Timezone == defaultTimeZoneId) settings.Timezone = string.Empty;
 
             return settings;
         }
@@ -91,16 +88,14 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Host
                         .IsNewRegisteredTenantActiveByDefault),
                 UseCaptchaOnRegistration =
                     await SettingManager.GetSettingValueAsync<bool>(AppSettings.TenantManagement
-                        .UseCaptchaOnRegistration),
+                        .UseCaptchaOnRegistration)
             };
 
             var defaultEditionId =
                 await SettingManager.GetSettingValueAsync(AppSettings.TenantManagement.DefaultEdition);
             if (!string.IsNullOrEmpty(defaultEditionId) &&
-                (await _editionManager.FindByIdAsync(Convert.ToInt32(defaultEditionId)) != null))
-            {
+                await _editionManager.FindByIdAsync(Convert.ToInt32(defaultEditionId)) != null)
                 settings.DefaultEditionId = Convert.ToInt32(defaultEditionId);
-            }
 
             return settings;
         }
@@ -224,7 +219,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Host
 
         private async Task<OtherSettingsEditDto> GetOtherSettingsAsync()
         {
-            return new OtherSettingsEditDto()
+            return new OtherSettingsEditDto
             {
                 IsQuickThemeSelectEnabled =
                     await SettingManager.GetSettingValueAsync<bool>(
@@ -462,13 +457,9 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Host
         private async Task UpdateSecuritySettingsAsync(SecuritySettingsEditDto settings)
         {
             if (settings.UseDefaultPasswordComplexitySettings)
-            {
                 await UpdatePasswordComplexitySettingsAsync(settings.DefaultPasswordComplexity);
-            }
             else
-            {
                 await UpdatePasswordComplexitySettingsAsync(settings.PasswordComplexity);
-            }
 
             await UpdateUserLockOutSettingsAsync(settings.UserLockOut);
             await UpdateTwoFactorLoginSettingsAsync(settings.TwoFactorLogin);

@@ -13,15 +13,9 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Common
 
             DtoSortingHelper.ReplaceSorting(sorting, s =>
             {
-                if (s == "UserName desc")
-                {
-                    s = "username desc";
-                }
+                if (s == "UserName desc") s = "username desc";
 
-                if (s == "Age asc")
-                {
-                    s = "age asc";
-                }
+                if (s == "Age asc") s = "age asc";
 
                 return s;
             }).ShouldBe("username desc,age asc");
@@ -30,10 +24,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Common
 
             DtoSortingHelper.ReplaceSorting(sorting, s =>
             {
-                if (s == "UserName desc")
-                {
-                    s = "username desc";
-                }
+                if (s == "UserName desc") s = "username desc";
                 return s;
             }).ShouldBe("username desc");
         }

@@ -18,11 +18,11 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
             IFeatureManager featureManager,
             IUnitOfWorkManager unitOfWorkManager)
             : base(cacheManager,
-                  tenantFeatureSettingRepository,
-                  tenantRepository,
-                  editionFeatureSettingRepository,
-                  featureManager,
-                  unitOfWorkManager)
+                tenantFeatureSettingRepository,
+                tenantRepository,
+                editionFeatureSettingRepository,
+                featureManager,
+                unitOfWorkManager)
         {
         }
     }

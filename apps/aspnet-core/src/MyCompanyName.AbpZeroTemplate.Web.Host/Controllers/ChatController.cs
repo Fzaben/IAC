@@ -11,7 +11,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
     [AbpMvcAuthorize]
     public class ChatController : ChatControllerBase
     {
-        public ChatController(IBinaryObjectManager binaryObjectManager, IChatMessageManager chatMessageManager) : 
+        public ChatController(IBinaryObjectManager binaryObjectManager, IChatMessageManager chatMessageManager) :
             base(binaryObjectManager, chatMessageManager)
         {
         }
@@ -21,10 +21,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             using (CurrentUnitOfWork.SetTenantId(null))
             {
                 var fileObject = await BinaryObjectManager.GetOrNullAsync(fileId);
-                if (fileObject == null)
-                {
-                    return StatusCode((int)HttpStatusCode.NotFound);
-                }
+                if (fileObject == null) return StatusCode((int) HttpStatusCode.NotFound);
 
                 return File(fileObject.Bytes, contentType, fileName);
             }

@@ -9,6 +9,7 @@ using Abp.Domain.Uow;
 using Abp.Extensions;
 using Abp.IdentityFramework;
 using Abp.Localization;
+using Abp.Notifications;
 using Abp.ObjectMapping;
 using Abp.UI;
 using Microsoft.AspNetCore.Identity;
@@ -22,17 +23,16 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
 {
     public class ImportUsersToExcelJob : AsyncBackgroundJob<ImportUsersFromExcelJobArgs>, ITransientDependency
     {
-        private readonly RoleManager _roleManager;
-        private readonly IUserListExcelDataReader _userListExcelDataReader;
-        private readonly IInvalidUserExporter _invalidUserExporter;
-        private readonly IUserPolicy _userPolicy;
-        private readonly IEnumerable<IPasswordValidator<User>> _passwordValidators;
-        private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IAppNotifier _appNotifier;
         private readonly IBinaryObjectManager _binaryObjectManager;
+        private readonly IInvalidUserExporter _invalidUserExporter;
         private readonly IObjectMapper _objectMapper;
+        private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IEnumerable<IPasswordValidator<User>> _passwordValidators;
+        private readonly RoleManager _roleManager;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        public UserManager UserManager { get; set; }
+        private readonly IUserListExcelDataReader _userListExcelDataReader;
+        private readonly IUserPolicy _userPolicy;
 
         public ImportUsersToExcelJob(
             RoleManager roleManager,
@@ -57,6 +57,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
             _objectMapper = objectMapper;
             _unitOfWorkManager = unitOfWorkManager;
         }
+
+        public UserManager UserManager { get; set; }
 
         public override async Task ExecuteAsync(ImportUsersFromExcelJobArgs args)
         {
@@ -98,13 +100,11 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
             var invalidUsers = new List<ImportUserDto>();
 
             foreach (var user in users)
-            {
                 using (var uow = _unitOfWorkManager.Begin())
                 {
                     using (CurrentUnitOfWork.SetTenantId(args.TenantId))
                     {
                         if (user.CanBeImported())
-                        {
                             try
                             {
                                 await CreateUserAsync(user);
@@ -119,16 +119,12 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
                                 user.Exception = exception.ToString();
                                 invalidUsers.Add(user);
                             }
-                        }
                         else
-                        {
                             invalidUsers.Add(user);
-                        }
                     }
 
                     await uow.CompleteAsync();
                 }
-            }
 
             using (var uow = _unitOfWorkManager.Begin())
             {
@@ -145,10 +141,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
         {
             var tenantId = CurrentUnitOfWork.GetTenantId();
 
-            if (tenantId.HasValue)
-            {
-                await _userPolicy.CheckMaxUserCountAsync(tenantId.Value);
-            }
+            if (tenantId.HasValue) await _userPolicy.CheckMaxUserCountAsync(tenantId.Value);
 
             var user = _objectMapper.Map<User>(input); //Passwords is not mapped (see mapping configuration)
             user.Password = input.Password;
@@ -158,9 +151,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
             {
                 await UserManager.InitializeOptionsAsync(tenantId);
                 foreach (var validator in _passwordValidators)
-                {
                     (await validator.ValidateAsync(UserManager, user, input.Password)).CheckErrors();
-                }
 
                 user.Password = _passwordHasher.HashPassword(user, input.Password);
             }
@@ -193,7 +184,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
                     new LocalizableString("AllUsersSuccessfullyImportedFromExcel",
                         AbpZeroTemplateConsts.LocalizationSourceName),
                     null,
-                    Abp.Notifications.NotificationSeverity.Success);
+                    NotificationSeverity.Success);
             }
         }
 
@@ -210,7 +201,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
                             AbpZeroTemplateConsts.LocalizationSourceName
                         ),
                         null,
-                        Abp.Notifications.NotificationSeverity.Warn);
+                        NotificationSeverity.Warn);
                 }
 
                 await uow.CompleteAsync();

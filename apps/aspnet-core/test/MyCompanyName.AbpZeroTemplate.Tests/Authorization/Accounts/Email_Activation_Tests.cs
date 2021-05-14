@@ -4,7 +4,6 @@ using Castle.MicroKernel.Registration;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts.Dto;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -37,7 +36,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Accounts
             {
                 var calledUser = callInfo.Arg<User>();
                 calledUser.EmailAddress.ShouldBe(localUser.EmailAddress);
-                confirmationCode = calledUser.EmailConfirmationCode; //Getting the confirmation code sent to the email address
+                confirmationCode =
+                    calledUser.EmailConfirmationCode; //Getting the confirmation code sent to the email address
                 return Task.CompletedTask;
             });
 

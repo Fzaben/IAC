@@ -16,7 +16,6 @@ namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
                 connectionStringResolver,
                 dbContextResolver)
         {
-
         }
     }
 }

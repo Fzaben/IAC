@@ -6,10 +6,10 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
-using Abp.Configuration;
 using Abp.Authorization;
 using Abp.Authorization.Roles;
 using Abp.Authorization.Users;
+using Abp.Configuration;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
@@ -28,33 +28,32 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Exporting;
 using MyCompanyName.AbpZeroTemplate.Dto;
 using MyCompanyName.AbpZeroTemplate.Notifications;
-using MyCompanyName.AbpZeroTemplate.Url;
 using MyCompanyName.AbpZeroTemplate.Organizations.Dto;
+using MyCompanyName.AbpZeroTemplate.Url;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 {
     [AbpAuthorize(AppPermissions.Pages_Administration_Users)]
     public class UserAppService : AbpZeroTemplateAppServiceBase, IUserAppService
     {
-        public IAppUrlService AppUrlService { get; set; }
+        private readonly IAppNotifier _appNotifier;
+        private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
+        private readonly IRepository<OrganizationUnit, long> _organizationUnitRepository;
+        private readonly IRepository<OrganizationUnitRole, long> _organizationUnitRoleRepository;
+        private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IEnumerable<IPasswordValidator<User>> _passwordValidators;
+        private readonly IRoleManagementConfig _roleManagementConfig;
 
         private readonly RoleManager _roleManager;
+        private readonly IRepository<RolePermissionSetting, long> _rolePermissionRepository;
+        private readonly IRepository<Role> _roleRepository;
         private readonly IUserEmailer _userEmailer;
         private readonly IUserListExcelExporter _userListExcelExporter;
-        private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
-        private readonly IAppNotifier _appNotifier;
-        private readonly IRepository<RolePermissionSetting, long> _rolePermissionRepository;
-        private readonly IRepository<UserPermissionSetting, long> _userPermissionRepository;
-        private readonly IRepository<UserRole, long> _userRoleRepository;
-        private readonly IRepository<Role> _roleRepository;
-        private readonly IUserPolicy _userPolicy;
-        private readonly IEnumerable<IPasswordValidator<User>> _passwordValidators;
-        private readonly IPasswordHasher<User> _passwordHasher;
-        private readonly IRepository<OrganizationUnit, long> _organizationUnitRepository;
-        private readonly IRoleManagementConfig _roleManagementConfig;
         private readonly UserManager _userManager;
         private readonly IRepository<UserOrganizationUnit, long> _userOrganizationUnitRepository;
-        private readonly IRepository<OrganizationUnitRole, long> _organizationUnitRoleRepository;
+        private readonly IRepository<UserPermissionSetting, long> _userPermissionRepository;
+        private readonly IUserPolicy _userPolicy;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
 
         public UserAppService(
             RoleManager roleManager,
@@ -95,6 +94,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 
             AppUrlService = NullAppUrlService.Instance;
         }
+
+        public IAppUrlService AppUrlService { get; set; }
 
         [HttpPost]
         public async Task<PagedResultDto<UserListDto>> GetUsers(GetUsersInput input)
@@ -172,10 +173,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
                 foreach (var defaultRole in await _roleManager.Roles.Where(r => r.IsDefault).ToListAsync())
                 {
                     var defaultUserRole = userRoleDtos.FirstOrDefault(ur => ur.RoleName == defaultRole.Name);
-                    if (defaultUserRole != null)
-                    {
-                        defaultUserRole.IsAssigned = true;
-                    }
+                    if (defaultUserRole != null) defaultUserRole.IsAssigned = true;
                 }
             }
             else
@@ -200,16 +198,6 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             }
 
             return output;
-        }
-
-        private List<string> GetAllRoleNamesOfUsersOrganizationUnits(long userId)
-        {
-            return (from userOu in _userOrganizationUnitRepository.GetAll()
-                join roleOu in _organizationUnitRoleRepository.GetAll() on userOu.OrganizationUnitId equals roleOu
-                    .OrganizationUnitId
-                join userOuRoles in _roleRepository.GetAll() on roleOu.RoleId equals userOuRoles.Id
-                where userOu.UserId == userId
-                select userOuRoles.Name).ToList();
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_ChangePermissions)]
@@ -246,22 +234,15 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         public async Task CreateOrUpdateUser(CreateOrUpdateUserInput input)
         {
             if (input.User.Id.HasValue)
-            {
                 await UpdateUserAsync(input);
-            }
             else
-            {
                 await CreateUserAsync(input);
-            }
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Delete)]
         public async Task DeleteUser(EntityDto<long> input)
         {
-            if (input.Id == AbpSession.GetUserId())
-            {
-                throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
-            }
+            if (input.Id == AbpSession.GetUserId()) throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
 
             var user = await UserManager.GetUserByIdAsync(input.Id);
             CheckErrors(await UserManager.DeleteAsync(user));
@@ -272,6 +253,16 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         {
             var user = await UserManager.GetUserByIdAsync(input.Id);
             user.Unlock();
+        }
+
+        private List<string> GetAllRoleNamesOfUsersOrganizationUnits(long userId)
+        {
+            return (from userOu in _userOrganizationUnitRepository.GetAll()
+                join roleOu in _organizationUnitRoleRepository.GetAll() on userOu.OrganizationUnitId equals roleOu
+                    .OrganizationUnitId
+                join userOuRoles in _roleRepository.GetAll() on roleOu.RoleId equals userOuRoles.Id
+                where userOu.UserId == userId
+                select userOuRoles.Name).ToList();
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Edit)]
@@ -318,10 +309,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Create)]
         protected virtual async Task CreateUserAsync(CreateOrUpdateUserInput input)
         {
-            if (AbpSession.TenantId.HasValue)
-            {
-                await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
-            }
+            if (AbpSession.TenantId.HasValue) await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
 
             var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)
             user.TenantId = AbpSession.TenantId;
@@ -337,9 +325,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             {
                 await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
                 foreach (var validator in _passwordValidators)
-                {
                     CheckErrors(await validator.ValidateAsync(UserManager, user, input.User.Password));
-                }
 
                 user.Password = _passwordHasher.HashPassword(user, input.User.Password);
             }
@@ -397,21 +383,14 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             foreach (var roleId in distinctRoleIds)
             {
                 var role = await _roleManager.FindByIdAsync(roleId.ToString());
-                if (role != null)
-                {
-                    roleNames[roleId] = role.DisplayName;
-                }
+                if (role != null) roleNames[roleId] = role.DisplayName;
             }
 
             foreach (var userListDto in userListDtos)
             {
                 foreach (var userListRoleDto in userListDto.Roles)
-                {
                     if (roleNames.ContainsKey(userListRoleDto.RoleId))
-                    {
                         userListRoleDto.RoleName = roleNames[userListRoleDto.RoleId];
-                    }
-                }
 
                 userListDto.Roles = userListDto.Roles.Where(r => r.RoleName != null).OrderBy(r => r.RoleName).ToList();
             }
@@ -447,15 +426,16 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
                     join urr in _roleRepository.GetAll() on ur.RoleId equals urr.Id into urrJoined
                     from urr in urrJoined.DefaultIfEmpty()
                     join up in _userPermissionRepository.GetAll()
-                        .Where(userPermission => input.Permissions.Contains(userPermission.Name)) on user.Id equals up.UserId into upJoined
+                            .Where(userPermission => input.Permissions.Contains(userPermission.Name)) on user.Id equals
+                        up.UserId into upJoined
                     from up in upJoined.DefaultIfEmpty()
                     join rp in _rolePermissionRepository.GetAll()
-                        .Where(rolePermission => input.Permissions.Contains(rolePermission.Name)) on
-                        new { RoleId = ur == null ? 0 : ur.RoleId } equals new { rp.RoleId } into rpJoined
+                            .Where(rolePermission => input.Permissions.Contains(rolePermission.Name)) on
+                        new {RoleId = ur == null ? 0 : ur.RoleId} equals new {rp.RoleId} into rpJoined
                     from rp in rpJoined.DefaultIfEmpty()
-                    where (up != null && up.IsGranted) ||
-                          (up == null && rp != null && rp.IsGranted) ||
-                          (up == null && rp == null && staticRoleNames.Contains(urr.Name))
+                    where up != null && up.IsGranted ||
+                          up == null && rp != null && rp.IsGranted ||
+                          up == null && rp == null && staticRoleNames.Contains(urr.Name)
                     group user by user.Id
                     into userGrouped
                     select userGrouped.Key;

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Abp.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 
 namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
 {
@@ -40,10 +39,10 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
                 TenantId = AbpSession.TenantId,
                 Permissions = new List<UserPermissionSetting>
                 {
-                    new UserPermissionSetting {Name = "test.permission1", IsGranted = true, TenantId = AbpSession.TenantId},
-                    new UserPermissionSetting {Name = "test.permission2", IsGranted = true, TenantId = AbpSession.TenantId},
-                    new UserPermissionSetting {Name = "test.permission3", IsGranted = false, TenantId = AbpSession.TenantId},
-                    new UserPermissionSetting {Name = "test.permission4", IsGranted = false, TenantId = AbpSession.TenantId}
+                    new() {Name = "test.permission1", IsGranted = true, TenantId = AbpSession.TenantId},
+                    new() {Name = "test.permission2", IsGranted = true, TenantId = AbpSession.TenantId},
+                    new() {Name = "test.permission3", IsGranted = false, TenantId = AbpSession.TenantId},
+                    new() {Name = "test.permission4", IsGranted = false, TenantId = AbpSession.TenantId}
                 }
             };
 

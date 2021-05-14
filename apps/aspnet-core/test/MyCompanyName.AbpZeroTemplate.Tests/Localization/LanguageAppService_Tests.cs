@@ -8,7 +8,6 @@ using Castle.MicroKernel.Registration;
 using MyCompanyName.AbpZeroTemplate.Localization;
 using MyCompanyName.AbpZeroTemplate.Localization.Dto;
 using MyCompanyName.AbpZeroTemplate.Migrations.Seed.Host;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -20,24 +19,20 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Localization
     {
         private readonly ILanguageAppService _languageAppService;
         private readonly IApplicationLanguageManager _languageManager;
-        private readonly bool _multiTenancyEnabled  = AbpZeroTemplateConsts.MultiTenancyEnabled;
+        private readonly bool _multiTenancyEnabled = AbpZeroTemplateConsts.MultiTenancyEnabled;
 
         public LanguageAppService_Tests()
         {
             if (_multiTenancyEnabled)
-            {
                 LoginAsHostAdmin();
-            }
             else
-            {
                 LoginAsDefaultTenantAdmin();
-            }
 
             var fakeApplicationCulturesProvider = Substitute.For<IApplicationCulturesProvider>();
             fakeApplicationCulturesProvider.GetAllCultures().Returns(
-                new CultureInfo[]
+                new[]
                 {
-                    new CultureInfo("en"),
+                    new("en"),
                     new CultureInfo("tr"),
                     new CultureInfo("zh-Hans"),
                     new CultureInfo("en-US")
@@ -73,7 +68,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Localization
 
             //Arrange
             var currentLanguages = await _languageManager.GetLanguagesAsync(AbpSession.TenantId);
-            var nonRegisteredLanguages = output.LanguageNames.Where(l => currentLanguages.All(cl => cl.Name != l.Value)).ToList();
+            var nonRegisteredLanguages =
+                output.LanguageNames.Where(l => currentLanguages.All(cl => cl.Name != l.Value)).ToList();
 
             //Act
             var newLanguageName = nonRegisteredLanguages[RandomHelper.GetRandom(nonRegisteredLanguages.Count)].Value;
@@ -156,7 +152,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Localization
             var currentEnabledLanguages =
                 (await _languageManager.GetLanguagesAsync(AbpSession.TenantId)).Where(l => !l.IsDisabled);
             var randomEnabledLanguage = RandomHelper.GetRandomOf(currentEnabledLanguages.ToArray());
-            
+
             //Act
             var output = await _languageAppService.GetLanguageForEdit(new NullableIdDto(null));
 

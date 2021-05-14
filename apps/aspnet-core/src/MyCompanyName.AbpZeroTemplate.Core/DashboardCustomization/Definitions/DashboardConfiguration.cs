@@ -7,12 +7,6 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
 {
     public class DashboardConfiguration
     {
-        public List<DashboardDefinition> DashboardDefinitions { get; } = new List<DashboardDefinition>();
-
-        public List<WidgetDefinition> WidgetDefinitions { get; } = new List<WidgetDefinition>();
-
-        public List<WidgetFilterDefinition> WidgetFilterDefinitions { get; } = new List<WidgetFilterDefinition>();
-
         public DashboardConfiguration()
         {
             #region FilterDefinitions
@@ -43,46 +37,47 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
             var dailySales = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.DailySales,
                 "WidgetDailySales",
-                side: MultiTenancySides.Tenant,
-                usedWidgetFilters: new List<string> { dateRangeFilter.Id },
-                permissions: tenantWidgetsDefaultPermission
+                MultiTenancySides.Tenant,
+                new List<string> {dateRangeFilter.Id},
+                tenantWidgetsDefaultPermission
             );
 
             var generalStats = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.GeneralStats,
                 "WidgetGeneralStats",
-                side: MultiTenancySides.Tenant,
-                permissions: tenantWidgetsDefaultPermission.Concat(new List<string>{ AppPermissions.Pages_Administration_AuditLogs }).ToList());
+                MultiTenancySides.Tenant,
+                permissions: tenantWidgetsDefaultPermission
+                    .Concat(new List<string> {AppPermissions.Pages_Administration_AuditLogs}).ToList());
 
             var profitShare = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.ProfitShare,
                 "WidgetProfitShare",
-                side: MultiTenancySides.Tenant,
+                MultiTenancySides.Tenant,
                 permissions: tenantWidgetsDefaultPermission);
 
             var memberActivity = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.MemberActivity,
                 "WidgetMemberActivity",
-                side: MultiTenancySides.Tenant,
+                MultiTenancySides.Tenant,
                 permissions: tenantWidgetsDefaultPermission);
 
             var regionalStats = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.RegionalStats,
                 "WidgetRegionalStats",
-                side: MultiTenancySides.Tenant,
+                MultiTenancySides.Tenant,
                 permissions: tenantWidgetsDefaultPermission);
 
             var salesSummary = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.SalesSummary,
                 "WidgetSalesSummary",
-                usedWidgetFilters: new List<string>() { dateRangeFilter.Id },
+                usedWidgetFilters: new List<string> {dateRangeFilter.Id},
                 side: MultiTenancySides.Tenant,
                 permissions: tenantWidgetsDefaultPermission);
 
             var topStats = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant.TopStats,
                 "WidgetTopStats",
-                side: MultiTenancySides.Tenant,
+                MultiTenancySides.Tenant,
                 permissions: tenantWidgetsDefaultPermission);
 
             WidgetDefinitions.Add(generalStats);
@@ -106,33 +101,33 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
             var incomeStatistics = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host.IncomeStatistics,
                 "WidgetIncomeStatistics",
-                side: MultiTenancySides.Host,
+                MultiTenancySides.Host,
                 permissions: hostWidgetsDefaultPermission);
 
             var hostTopStats = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host.TopStats,
                 "WidgetTopStats",
-                side: MultiTenancySides.Host,
+                MultiTenancySides.Host,
                 permissions: hostWidgetsDefaultPermission);
 
             var editionStatistics = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host.EditionStatistics,
                 "WidgetEditionStatistics",
-                side: MultiTenancySides.Host,
+                MultiTenancySides.Host,
                 permissions: hostWidgetsDefaultPermission);
 
             var subscriptionExpiringTenants = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host.SubscriptionExpiringTenants,
                 "WidgetSubscriptionExpiringTenants",
-                side: MultiTenancySides.Host,
+                MultiTenancySides.Host,
                 permissions: hostWidgetsDefaultPermission);
 
             var recentTenants = new WidgetDefinition(
                 AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host.RecentTenants,
                 "WidgetRecentTenants",
-                side: MultiTenancySides.Host,
-                usedWidgetFilters: new List<string>() { dateRangeFilter.Id },
-                permissions: hostWidgetsDefaultPermission);
+                MultiTenancySides.Host,
+                new List<string> {dateRangeFilter.Id},
+                hostWidgetsDefaultPermission);
 
             WidgetDefinitions.Add(incomeStatistics);
             WidgetDefinitions.Add(hostTopStats);
@@ -153,7 +148,8 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
                 AbpZeroTemplateDashboardCustomizationConsts.DashboardNames.DefaultTenantDashboard,
                 new List<string>
                 {
-                    generalStats.Id, dailySales.Id, profitShare.Id, memberActivity.Id, regionalStats.Id, topStats.Id, salesSummary.Id
+                    generalStats.Id, dailySales.Id, profitShare.Id, memberActivity.Id, regionalStats.Id, topStats.Id,
+                    salesSummary.Id
                 });
 
             DashboardDefinitions.Add(defaultTenantDashboard);
@@ -174,8 +170,12 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
             // Add your dashboard definiton here
 
             #endregion
-
         }
 
+        public List<DashboardDefinition> DashboardDefinitions { get; } = new();
+
+        public List<WidgetDefinition> WidgetDefinitions { get; } = new();
+
+        public List<WidgetFilterDefinition> WidgetFilterDefinitions { get; } = new();
     }
 }

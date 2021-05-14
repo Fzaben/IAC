@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Abp.AspNetCore;
 using Abp.AspNetCore.Configuration;
 using Abp.AspNetCore.Mvc.Antiforgery;
@@ -13,36 +15,34 @@ using Abp.Extensions;
 using Abp.Hangfire;
 using Abp.PlugIns;
 using Castle.Facilities.Logging;
-using Hangfire;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using MyCompanyName.AbpZeroTemplate.Authorization;
-using MyCompanyName.AbpZeroTemplate.Configuration;
-using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore;
-using MyCompanyName.AbpZeroTemplate.Identity;
-using MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR;
-using MyCompanyName.AbpZeroTemplate.Web.Common;
-using Swashbuckle.AspNetCore.Swagger;
-using MyCompanyName.AbpZeroTemplate.Web.IdentityServer;
-using MyCompanyName.AbpZeroTemplate.Web.Swagger;
-using Stripe;
-using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
-using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
+using Hangfire;
 using HealthChecks.UI.Client;
 using IdentityServer4.Configuration;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
-using MyCompanyName.AbpZeroTemplate.Configure;
-using MyCompanyName.AbpZeroTemplate.Schemas;
-using MyCompanyName.AbpZeroTemplate.Web.HealthCheck;
-using Newtonsoft.Json.Serialization;
-using Owl.reCAPTCHA;
-using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using MyCompanyName.AbpZeroTemplate.Authorization;
+using MyCompanyName.AbpZeroTemplate.Configuration;
+using MyCompanyName.AbpZeroTemplate.Configure;
+using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore;
+using MyCompanyName.AbpZeroTemplate.Identity;
+using MyCompanyName.AbpZeroTemplate.Schemas;
+using MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR;
+using MyCompanyName.AbpZeroTemplate.Web.Common;
+using MyCompanyName.AbpZeroTemplate.Web.HealthCheck;
+using MyCompanyName.AbpZeroTemplate.Web.IdentityServer;
+using MyCompanyName.AbpZeroTemplate.Web.Swagger;
+using Owl.reCAPTCHA;
+using Stripe;
+using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
 
 namespace MyCompanyName.AbpZeroTemplate.Web.Startup
 {
@@ -63,10 +63,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
         {
             //MVC
             services.AddControllersWithViews(
-            options =>
-            {
-                options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute());
-            }
+                options => { options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute()); }
             ).AddNewtonsoftJson();
 
             services.AddSignalR();
@@ -92,32 +89,26 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
                 });
             });
 
-            if (bool.Parse(_appConfiguration["KestrelServer:IsEnabled"]))
-            {
-                ConfigureKestrel(services);
-            }
+            if (bool.Parse(_appConfiguration["KestrelServer:IsEnabled"])) ConfigureKestrel(services);
 
             IdentityRegistrar.Register(services);
             AuthConfigurer.Configure(services, _appConfiguration);
 
             //Identity server
             if (bool.Parse(_appConfiguration["IdentityServer:IsEnabled"]))
-            {
                 IdentityServerRegistrar.Register(services, _appConfiguration, options =>
-                    options.UserInteraction = new UserInteractionOptions()
+                    options.UserInteraction = new UserInteractionOptions
                     {
                         LoginUrl = "/UI/Login",
                         LogoutUrl = "/UI/LogOut",
                         ErrorUrl = "/Error"
                     });
-            }
 
             if (WebConsts.SwaggerUiEnabled)
-            {
                 //Swagger - Enable this line and the related lines in Configure method to enable swagger UI
                 services.AddSwaggerGen(options =>
                 {
-                    options.SwaggerDoc("v1", new OpenApiInfo() { Title = "AbpZeroTemplate API", Version = "v1" });
+                    options.SwaggerDoc("v1", new OpenApiInfo {Title = "AbpZeroTemplate API", Version = "v1"});
                     options.DocInclusionPredicate((docName, description) => true);
                     options.ParameterFilter<SwaggerEnumParameterFilter>();
                     options.SchemaFilter<SwaggerEnumSchemaFilter>();
@@ -125,7 +116,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
                     options.OperationFilter<SwaggerOperationFilter>();
                     options.CustomDefaultSchemaIdSelector();
                 }).AddSwaggerGenNewtonsoftSupport();
-            }
 
             //Recaptcha
             services.AddreCAPTCHAV3(x =>
@@ -135,18 +125,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             });
 
             if (WebConsts.HangfireDashboardEnabled)
-            {
                 //Hangfire(Enable to use Hangfire instead of default job manager)
                 services.AddHangfire(config =>
                 {
                     config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
                 });
-            }
 
-            if (WebConsts.GraphQL.Enabled)
-            {
-                services.AddAndConfigureGraphQL();
-            }
+            if (WebConsts.GraphQL.Enabled) services.AddAndConfigureGraphQL();
 
             if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
             {
@@ -218,9 +203,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             {
                 if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
                     .Exist(_appConfiguration["ConnectionStrings:Default"]))
-                {
                     app.UseAbpRequestLocalization();
-                }
             }
 
             if (WebConsts.HangfireDashboardEnabled)
@@ -235,18 +218,14 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             }
 
             if (bool.Parse(_appConfiguration["Payment:Stripe:IsActive"]))
-            {
                 StripeConfiguration.ApiKey = _appConfiguration["Payment:Stripe:SecretKey"];
-            }
 
             if (WebConsts.GraphQL.Enabled)
             {
                 app.UseGraphQL<MainSchema>();
                 if (WebConsts.GraphQL.PlaygroundEnabled)
-                {
                     app.UseGraphQLPlayground(
                         new GraphQLPlaygroundOptions()); //to explorer API navigate https://*DOMAIN*/ui/playground
-                }
             }
 
             app.UseEndpoints(endpoints =>
@@ -258,24 +237,19 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
                 if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
-                {
-                    endpoints.MapHealthChecks("/health", new HealthCheckOptions()
+                    endpoints.MapHealthChecks("/health", new HealthCheckOptions
                     {
                         Predicate = _ => true,
                         ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                     });
-                }
 
-                app.ApplicationServices.GetRequiredService<IAbpAspNetCoreConfiguration>().EndpointConfiguration.ConfigureAllEndpoints(endpoints);
+                app.ApplicationServices.GetRequiredService<IAbpAspNetCoreConfiguration>().EndpointConfiguration
+                    .ConfigureAllEndpoints(endpoints);
             });
 
             if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
-            {
                 if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksUI:HealthChecksUIEnabled"]))
-                {
                     app.UseHealthChecksUI();
-                }
-            }
 
             if (WebConsts.SwaggerUiEnabled)
             {
@@ -295,16 +269,16 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
 
         private void ConfigureKestrel(IServiceCollection services)
         {
-            services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+            services.Configure<KestrelServerOptions>(options =>
             {
-                options.Listen(new System.Net.IPEndPoint(System.Net.IPAddress.Any, 443),
+                options.Listen(new IPEndPoint(IPAddress.Any, 443),
                     listenOptions =>
                     {
                         var certPassword = _appConfiguration.GetValue<string>("Kestrel:Certificates:Default:Password");
                         var certPath = _appConfiguration.GetValue<string>("Kestrel:Certificates:Default:Path");
-                        var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certPath,
+                        var cert = new X509Certificate2(certPath,
                             certPassword);
-                        listenOptions.UseHttps(new HttpsConnectionAdapterOptions()
+                        listenOptions.UseHttps(new HttpsConnectionAdapterOptions
                         {
                             ServerCertificate = cert
                         });

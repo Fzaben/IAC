@@ -1,4 +1,8 @@
-﻿using Abp.Application.Features;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Abp.Application.Features;
 using Abp.Application.Services.Dto;
 using Abp.Authorization.Users;
 using Abp.Configuration;
@@ -9,34 +13,27 @@ using Abp.Timing;
 using Abp.UI;
 using Abp.Zero.Configuration;
 using MyCompanyName.AbpZeroTemplate.Configuration;
-using MyCompanyName.AbpZeroTemplate.Debugging;
 using MyCompanyName.AbpZeroTemplate.Editions;
 using MyCompanyName.AbpZeroTemplate.Editions.Dto;
 using MyCompanyName.AbpZeroTemplate.Features;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto;
-using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Dto;
+using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
 using MyCompanyName.AbpZeroTemplate.Notifications;
 using MyCompanyName.AbpZeroTemplate.Security.Recaptcha;
 using MyCompanyName.AbpZeroTemplate.Url;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 {
     public class TenantRegistrationAppService : AbpZeroTemplateAppServiceBase, ITenantRegistrationAppService
     {
-        public IAppUrlService AppUrlService { get; set; }
+        private readonly IAppNotifier _appNotifier;
+        private readonly EditionManager _editionManager;
+        private readonly ILocalizationContext _localizationContext;
 
         private readonly IMultiTenancyConfig _multiTenancyConfig;
         private readonly IRecaptchaValidator _recaptchaValidator;
-        private readonly EditionManager _editionManager;
-        private readonly IAppNotifier _appNotifier;
-        private readonly ILocalizationContext _localizationContext;
-        private readonly TenantManager _tenantManager;
         private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
+        private readonly TenantManager _tenantManager;
 
         public TenantRegistrationAppService(
             IMultiTenancyConfig multiTenancyConfig,
@@ -58,25 +55,20 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             AppUrlService = NullAppUrlService.Instance;
         }
 
+        public IAppUrlService AppUrlService { get; set; }
+
         public async Task<RegisterTenantOutput> RegisterTenant(RegisterTenantInput input)
         {
             if (input.EditionId.HasValue)
-            {
                 await CheckEditionSubscriptionAsync(input.EditionId.Value, input.SubscriptionStartType);
-            }
             else
-            {
                 await CheckRegistrationWithoutEdition();
-            }
 
             using (CurrentUnitOfWork.SetTenantId(null))
             {
                 CheckTenantRegistrationIsEnabled();
 
-                if (UseCaptchaOnRegistration())
-                {
-                    await _recaptchaValidator.ValidateAsync(input.CaptchaResponse);
-                }
+                if (UseCaptchaOnRegistration()) await _recaptchaValidator.ValidateAsync(input.CaptchaResponse);
 
                 //Getting host-specific settings
                 var isActive = await IsNewRegisteredTenantActiveByDefault(input.SubscriptionStartType);
@@ -93,7 +85,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 
                     if (isInTrialPeriod)
                     {
-                        var edition = (SubscribableEdition)await _editionManager.GetByIdAsync(input.EditionId.Value);
+                        var edition = (SubscribableEdition) await _editionManager.GetByIdAsync(input.EditionId.Value);
                         subscriptionEndDate = Clock.Now.AddDays(edition.TrialDayCount ?? 0);
                     }
                 }
@@ -106,8 +98,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
                     null,
                     isActive,
                     input.EditionId,
-                    shouldChangePasswordOnNextLogin: false,
-                    sendActivationEmail: true,
+                    false,
+                    true,
                     subscriptionEndDate,
                     isInTrialPeriod,
                     AppUrlService.CreateEmailActivationUrlFormat(input.TenancyName)
@@ -130,30 +122,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             }
         }
 
-        private async Task<bool> IsNewRegisteredTenantActiveByDefault(SubscriptionStartType subscriptionStartType)
-        {
-            if (subscriptionStartType == SubscriptionStartType.Paid)
-            {
-                return false;
-            }
-
-            return await SettingManager.GetSettingValueForApplicationAsync<bool>(AppSettings.TenantManagement.IsNewRegisteredTenantActiveByDefault);
-        }
-
-        private async Task CheckRegistrationWithoutEdition()
-        {
-            var editions = await _editionManager.GetAllAsync();
-            if (editions.Any())
-            {
-                throw new Exception("Tenant registration is not allowed without edition because there are editions defined !");
-            }
-        }
-
         public async Task<EditionsSelectOutput> GetEditionsForSelect()
         {
             var features = FeatureManager
                 .GetAll()
-                .Where(feature => (feature[FeatureMetadata.CustomFeatureKey] as FeatureMetadata)?.IsVisibleOnPricingTable ?? false);
+                .Where(feature =>
+                    (feature[FeatureMetadata.CustomFeatureKey] as FeatureMetadata)?.IsVisibleOnPricingTable ?? false);
 
             var flatFeatures = ObjectMapper
                 .Map<List<FlatFeatureSelectDto>>(features)
@@ -169,20 +143,19 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 
             var editionWithFeatures = new List<EditionWithFeaturesDto>();
             foreach (var edition in editions)
-            {
                 editionWithFeatures.Add(await CreateEditionWithFeaturesDto(edition, featureDictionary));
-            }
 
             if (AbpSession.UserId.HasValue)
             {
                 var currentEditionId = (await _tenantManager.GetByIdAsync(AbpSession.GetTenantId()))
-                        .EditionId;
+                    .EditionId;
 
                 if (currentEditionId.HasValue)
                 {
                     editionWithFeatures = editionWithFeatures.Where(e => e.Edition.Id != currentEditionId).ToList();
 
-                    var currentEdition = (SubscribableEdition) (await _editionManager.GetByIdAsync(currentEditionId.Value));
+                    var currentEdition =
+                        (SubscribableEdition) await _editionManager.GetByIdAsync(currentEditionId.Value);
                     if (!currentEdition.IsFree)
                     {
                         var lastPayment = await _subscriptionPaymentRepository.GetLastCompletedPaymentOrDefaultAsync(
@@ -191,14 +164,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
                             null);
 
                         if (lastPayment != null)
-                        {
                             editionWithFeatures = editionWithFeatures
                                 .Where(e =>
                                     e.Edition.GetPaymentAmount(lastPayment.PaymentPeriodType) >
                                     currentEdition.GetPaymentAmount(lastPayment.PaymentPeriodType)
                                 )
                                 .ToList();
-                        }
                     }
                 }
             }
@@ -206,7 +177,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             return new EditionsSelectOutput
             {
                 AllFeatures = flatFeatures,
-                EditionsWithFeatures = editionWithFeatures,
+                EditionsWithFeatures = editionWithFeatures
             };
         }
 
@@ -218,7 +189,24 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             return editionDto;
         }
 
-        private async Task<EditionWithFeaturesDto> CreateEditionWithFeaturesDto(SubscribableEdition edition, Dictionary<string, Feature> featureDictionary)
+        private async Task<bool> IsNewRegisteredTenantActiveByDefault(SubscriptionStartType subscriptionStartType)
+        {
+            if (subscriptionStartType == SubscriptionStartType.Paid) return false;
+
+            return await SettingManager.GetSettingValueForApplicationAsync<bool>(AppSettings.TenantManagement
+                .IsNewRegisteredTenantActiveByDefault);
+        }
+
+        private async Task CheckRegistrationWithoutEdition()
+        {
+            var editions = await _editionManager.GetAllAsync();
+            if (editions.Any())
+                throw new Exception(
+                    "Tenant registration is not allowed without edition because there are editions defined !");
+        }
+
+        private async Task<EditionWithFeaturesDto> CreateEditionWithFeaturesDto(SubscribableEdition edition,
+            Dictionary<string, Feature> featureDictionary)
         {
             return new EditionWithFeaturesDto
             {
@@ -236,24 +224,21 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
         private void CheckTenantRegistrationIsEnabled()
         {
             if (!IsSelfRegistrationEnabled())
-            {
                 throw new UserFriendlyException(L("SelfTenantRegistrationIsDisabledMessage_Detail"));
-            }
 
-            if (!_multiTenancyConfig.IsEnabled)
-            {
-                throw new UserFriendlyException(L("MultiTenancyIsNotEnabled"));
-            }
+            if (!_multiTenancyConfig.IsEnabled) throw new UserFriendlyException(L("MultiTenancyIsNotEnabled"));
         }
 
         private bool IsSelfRegistrationEnabled()
         {
-            return SettingManager.GetSettingValueForApplication<bool>(AppSettings.TenantManagement.AllowSelfRegistration);
+            return SettingManager.GetSettingValueForApplication<bool>(
+                AppSettings.TenantManagement.AllowSelfRegistration);
         }
 
         private bool UseCaptchaOnRegistration()
         {
-            return SettingManager.GetSettingValueForApplication<bool>(AppSettings.TenantManagement.UseCaptchaOnRegistration);
+            return SettingManager.GetSettingValueForApplication<bool>(AppSettings.TenantManagement
+                .UseCaptchaOnRegistration);
         }
 
         private async Task CheckEditionSubscriptionAsync(int editionId, SubscriptionStartType subscriptionStartType)
@@ -263,27 +248,20 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             CheckSubscriptionStart(edition, subscriptionStartType);
         }
 
-        private static void CheckSubscriptionStart(SubscribableEdition edition, SubscriptionStartType subscriptionStartType)
+        private static void CheckSubscriptionStart(SubscribableEdition edition,
+            SubscriptionStartType subscriptionStartType)
         {
             switch (subscriptionStartType)
             {
                 case SubscriptionStartType.Free:
-                    if (!edition.IsFree)
-                    {
-                        throw new Exception("This is not a free edition !");
-                    }
+                    if (!edition.IsFree) throw new Exception("This is not a free edition !");
                     break;
                 case SubscriptionStartType.Trial:
-                    if (!edition.HasTrial())
-                    {
-                        throw new Exception("Trial is not available for this edition !");
-                    }
+                    if (!edition.HasTrial()) throw new Exception("Trial is not available for this edition !");
                     break;
                 case SubscriptionStartType.Paid:
                     if (edition.IsFree)
-                    {
                         throw new Exception("This is a free edition and cannot be subscribed as paid !");
-                    }
                     break;
             }
         }

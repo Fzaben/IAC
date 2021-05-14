@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Dto
+﻿namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Dto
 {
     public class AddNewPageOutput
     {

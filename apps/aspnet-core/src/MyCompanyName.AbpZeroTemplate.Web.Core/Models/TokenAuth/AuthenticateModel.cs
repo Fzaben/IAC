@@ -25,7 +25,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Models.TokenAuth
 
         public string ReturnUrl { get; set; }
 
-        [DisableAuditing]
-        public string CaptchaResponse { get; set; }
+        [DisableAuditing] public string CaptchaResponse { get; set; }
     }
 }

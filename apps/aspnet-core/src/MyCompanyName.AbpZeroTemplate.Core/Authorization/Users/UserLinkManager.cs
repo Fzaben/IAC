@@ -17,16 +17,14 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 {
     public class UserLinkManager : AbpZeroTemplateDomainServiceBase, IUserLinkManager
     {
-        private readonly IRepository<UserAccount, long> _userAccountRepository;
         private readonly ICacheManager _cacheManager;
-        private readonly UserManager _userManager;
         private readonly UserClaimsPrincipalFactory _principalFactory;
-
-        public IAbpSession AbpSession { get; set; }
+        private readonly IRepository<UserAccount, long> _userAccountRepository;
+        private readonly UserManager _userManager;
 
         public UserLinkManager(
             IRepository<UserAccount, long> userAccountRepository,
-            ICacheManager cacheManager, 
+            ICacheManager cacheManager,
             UserManager userManager,
             UserClaimsPrincipalFactory principalFactory)
         {
@@ -37,6 +35,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 
             AbpSession = NullAbpSession.Instance;
         }
+
+        public IAbpSession AbpSession { get; set; }
 
         [UnitOfWork]
         public virtual async Task Link(User firstUser, User secondUser)
@@ -49,26 +49,21 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 
             var userAccountsToLink = secondUserAccount.UserLinkId.HasValue
                 ? _userAccountRepository.GetAllList(ua => ua.UserLinkId == secondUserAccount.UserLinkId.Value)
-                : new List<UserAccount> { secondUserAccount };
+                : new List<UserAccount> {secondUserAccount};
 
-            userAccountsToLink.ForEach(u =>
-            {
-                u.UserLinkId = userLinkId;
-            });
+            userAccountsToLink.ForEach(u => { u.UserLinkId = userLinkId; });
 
             await CurrentUnitOfWork.SaveChangesAsync();
         }
 
         [UnitOfWork]
-        public virtual async Task<bool> AreUsersLinked(UserIdentifier firstUserIdentifier, UserIdentifier secondUserIdentifier)
+        public virtual async Task<bool> AreUsersLinked(UserIdentifier firstUserIdentifier,
+            UserIdentifier secondUserIdentifier)
         {
             var firstUserAccount = await GetUserAccountAsync(firstUserIdentifier);
             var secondUserAccount = await GetUserAccountAsync(secondUserIdentifier);
 
-            if (!firstUserAccount.UserLinkId.HasValue || !secondUserAccount.UserLinkId.HasValue)
-            {
-                return false;
-            }
+            if (!firstUserAccount.UserLinkId.HasValue || !secondUserAccount.UserLinkId.HasValue) return false;
 
             return firstUserAccount.UserLinkId == secondUserAccount.UserLinkId;
         }
@@ -85,7 +80,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         [UnitOfWork]
         public virtual async Task<UserAccount> GetUserAccountAsync(UserIdentifier userIdentifier)
         {
-            return await _userAccountRepository.FirstOrDefaultAsync(ua => ua.TenantId == userIdentifier.TenantId && ua.UserId == userIdentifier.UserId);
+            return await _userAccountRepository.FirstOrDefaultAsync(ua =>
+                ua.TenantId == userIdentifier.TenantId && ua.UserId == userIdentifier.UserId);
         }
 
         public async Task<string> GetAccountSwitchToken(long targetUserId, int? targetTenantId)
@@ -111,27 +107,22 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         public async Task<UserAndIdentity> GetSwitchedUserAndIdentity(string switchAccountToken)
         {
             var cacheItem = await _cacheManager.GetSwitchToLinkedAccountCache().GetOrDefaultAsync(switchAccountToken);
-            if (cacheItem == null)
-            {
-                throw new UserFriendlyException(L("SwitchToLinkedAccountTokenErrorMessage"));
-            }
+            if (cacheItem == null) throw new UserFriendlyException(L("SwitchToLinkedAccountTokenErrorMessage"));
 
             //Get the user from tenant
             var user = await _userManager.FindByIdAsync(cacheItem.TargetUserId.ToString());
 
             //Create identity
-            var identity = (ClaimsIdentity)(await _principalFactory.CreateAsync(user)).Identity;
+            var identity = (ClaimsIdentity) (await _principalFactory.CreateAsync(user)).Identity;
 
             //Add claims for audit logging
             if (cacheItem.ImpersonatorTenantId.HasValue)
-            {
-                identity.AddClaim(new Claim(AbpClaimTypes.ImpersonatorTenantId, cacheItem.ImpersonatorTenantId.Value.ToString(CultureInfo.InvariantCulture)));
-            }
+                identity.AddClaim(new Claim(AbpClaimTypes.ImpersonatorTenantId,
+                    cacheItem.ImpersonatorTenantId.Value.ToString(CultureInfo.InvariantCulture)));
 
             if (cacheItem.ImpersonatorUserId.HasValue)
-            {
-                identity.AddClaim(new Claim(AbpClaimTypes.ImpersonatorUserId, cacheItem.ImpersonatorUserId.Value.ToString(CultureInfo.InvariantCulture)));
-            }
+                identity.AddClaim(new Claim(AbpClaimTypes.ImpersonatorUserId,
+                    cacheItem.ImpersonatorUserId.Value.ToString(CultureInfo.InvariantCulture)));
 
             //Remove the cache item to prevent re-use
             await _cacheManager.GetSwitchToLinkedAccountCache().RemoveAsync(switchAccountToken);

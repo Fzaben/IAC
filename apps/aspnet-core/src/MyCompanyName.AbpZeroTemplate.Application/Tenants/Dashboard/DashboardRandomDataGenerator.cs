@@ -8,7 +8,12 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard
     {
         private const string DateFormat = "yyyy-MM-dd";
         private static readonly Random Random;
-        public static string[] CountryNames = { "Argentina", "China", "France", "Italy", "Japan", "Netherlands", "Russia", "Spain", "Turkey", "United States"};
+
+        public static string[] CountryNames =
+        {
+            "Argentina", "China", "France", "Italy", "Japan", "Netherlands", "Russia", "Spain", "Turkey",
+            "United States"
+        };
 
         static DashboardRandomDataGenerator()
         {
@@ -23,20 +28,14 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard
         public static int[] GetRandomArray(int size, int min, int max)
         {
             var array = new int[size];
-            for (var i = 0; i < size; i++)
-            {
-                array[i] = GetRandomInt(min, max);
-            }
+            for (var i = 0; i < size; i++) array[i] = GetRandomInt(min, max);
 
             return array;
         }
 
         public static int[] GetRandomPercentageArray(int size)
         {
-            if (size == 1)
-            {
-                return new int[100];
-            }
+            if (size == 1) return new int[100];
 
             var array = new int[size];
             var total = 0;
@@ -51,7 +50,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard
             return array;
         }
 
-        public static List<SalesSummaryData> GenerateSalesSummaryData(SalesSummaryDatePeriod inputSalesSummaryDatePeriod)
+        public static List<SalesSummaryData> GenerateSalesSummaryData(
+            SalesSummaryDatePeriod inputSalesSummaryDatePeriod)
         {
             List<SalesSummaryData> data = null;
 
@@ -70,7 +70,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard
                         new SalesSummaryData(DateTime.Now.AddDays(-2).ToString(DateFormat), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
                         new SalesSummaryData(DateTime.Now.AddDays(-1).ToString(DateFormat), Random.Next(1000, 2000),
-                            Random.Next(100, 999)),
+                            Random.Next(100, 999))
                     };
 
                     break;
@@ -112,16 +112,20 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard
         {
             return new List<MemberActivity>
             {
-                new MemberActivity("Brain", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500), GetRandomInt(10, 100), GetRandomInt(10, 150),
+                new MemberActivity("Brain", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500),
+                    GetRandomInt(10, 100), GetRandomInt(10, 150),
                     GetRandomInt(10, 99) + "%"),
 
-                new MemberActivity("Jane", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500), GetRandomInt(10, 100), GetRandomInt(10, 150),
+                new MemberActivity("Jane", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500),
+                    GetRandomInt(10, 100), GetRandomInt(10, 150),
                     GetRandomInt(10, 99) + "%"),
 
-                new MemberActivity("Tim", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500), GetRandomInt(10, 100), GetRandomInt(10, 150),
+                new MemberActivity("Tim", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500),
+                    GetRandomInt(10, 100), GetRandomInt(10, 150),
                     GetRandomInt(10, 99) + "%"),
 
-                new MemberActivity("Kate", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500), GetRandomInt(10, 100), GetRandomInt(10, 150),
+                new MemberActivity("Kate", AbpZeroTemplateConsts.CurrencySign + GetRandomInt(100, 500),
+                    GetRandomInt(10, 100), GetRandomInt(10, 150),
                     GetRandomInt(10, 99) + "%")
             };
         }

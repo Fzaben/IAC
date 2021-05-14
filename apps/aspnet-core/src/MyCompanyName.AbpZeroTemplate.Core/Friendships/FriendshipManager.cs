@@ -21,14 +21,12 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
         {
             if (friendship.TenantId == friendship.FriendTenantId &&
                 friendship.UserId == friendship.FriendUserId)
-            {
                 throw new UserFriendlyException(L("YouCannotBeFriendWithYourself"));
-            }
 
             using (CurrentUnitOfWork.SetTenantId(friendship.TenantId))
             {
                 _friendshipRepository.Insert(friendship);
-               await CurrentUnitOfWork.SaveChangesAsync();
+                await CurrentUnitOfWork.SaveChangesAsync();
             }
         }
 
@@ -48,21 +46,19 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
             using (CurrentUnitOfWork.SetTenantId(user.TenantId))
             {
                 return await _friendshipRepository.FirstOrDefaultAsync(friendship =>
-                                    friendship.UserId == user.UserId &&
-                                    friendship.TenantId == user.TenantId &&
-                                    friendship.FriendUserId == probableFriend.UserId &&
-                                    friendship.FriendTenantId == probableFriend.TenantId);
+                    friendship.UserId == user.UserId &&
+                    friendship.TenantId == user.TenantId &&
+                    friendship.FriendUserId == probableFriend.UserId &&
+                    friendship.FriendTenantId == probableFriend.TenantId);
             }
         }
 
         [UnitOfWork]
         public async Task BanFriendAsync(UserIdentifier userIdentifier, UserIdentifier probableFriend)
         {
-            var friendship = (await GetFriendshipOrNullAsync(userIdentifier, probableFriend));
+            var friendship = await GetFriendshipOrNullAsync(userIdentifier, probableFriend);
             if (friendship == null)
-            {
                 throw new Exception("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
-            }
 
             friendship.State = FriendshipState.Blocked;
             await UpdateFriendshipAsync(friendship);
@@ -71,11 +67,9 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
         [UnitOfWork]
         public async Task AcceptFriendshipRequestAsync(UserIdentifier userIdentifier, UserIdentifier probableFriend)
         {
-            var friendship = (await GetFriendshipOrNullAsync(userIdentifier, probableFriend));
+            var friendship = await GetFriendshipOrNullAsync(userIdentifier, probableFriend);
             if (friendship == null)
-            {
                 throw new Exception("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
-            }
 
             friendship.State = FriendshipState.Accepted;
             await UpdateFriendshipAsync(friendship);

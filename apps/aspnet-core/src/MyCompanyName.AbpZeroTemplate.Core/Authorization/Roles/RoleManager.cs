@@ -18,8 +18,8 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
 {
     /// <summary>
-    /// Role manager.
-    /// Used to implement domain logic for roles.
+    ///     Role manager.
+    ///     Used to implement domain logic for roles.
     /// </summary>
     public class RoleManager : AbpRoleManager<Role, User>
     {
@@ -64,10 +64,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
         public virtual async Task<Role> GetRoleByIdAsync(long roleId)
         {
             var role = await FindByIdAsync(roleId.ToString());
-            if (role == null)
-            {
-                throw new ApplicationException("There is no role with id: " + roleId);
-            }
+            if (role == null) throw new ApplicationException("There is no role with id: " + roleId);
 
             return role;
         }
@@ -77,9 +74,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
             if (role.Name == StaticRoleNames.Host.Admin &&
                 (!permissions.Any(p => p.Name == AppPermissions.Pages_Administration_Roles_Edit) ||
                  !permissions.Any(p => p.Name == AppPermissions.Pages_Administration_Users_ChangePermissions)))
-            {
                 throw new UserFriendlyException(L("YouCannotRemoveUserRolePermissionsFromAdminRole"));
-            }
         }
 
         private new string L(string name)

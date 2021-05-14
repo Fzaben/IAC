@@ -14,11 +14,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Security.Recaptcha
     public class RecaptchaValidator : AbpZeroTemplateServiceBase, IRecaptchaValidator, ITransientDependency
     {
         public const string RecaptchaResponseKey = "g-recaptcha-response";
-
-        private readonly IreCAPTCHASiteVerifyV3 _reCAPTCHASiteVerifyV3;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public RecaptchaValidator(IreCAPTCHASiteVerifyV3 reCAPTCHASiteVerifyV3, IHttpContextAccessor httpContextAccessor)
+        private readonly IreCAPTCHASiteVerifyV3 _reCAPTCHASiteVerifyV3;
+
+        public RecaptchaValidator(IreCAPTCHASiteVerifyV3 reCAPTCHASiteVerifyV3,
+            IHttpContextAccessor httpContextAccessor)
         {
             _reCAPTCHASiteVerifyV3 = reCAPTCHASiteVerifyV3;
             _httpContextAccessor = httpContextAccessor;
@@ -27,15 +28,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Security.Recaptcha
         public async Task ValidateAsync(string captchaResponse)
         {
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext == null)
-            {
-                throw new Exception("RecaptchaValidator should be used in a valid HTTP context!");
-            }
+            if (httpContext == null) throw new Exception("RecaptchaValidator should be used in a valid HTTP context!");
 
-            if (captchaResponse.IsNullOrEmpty())
-            {
-                throw new UserFriendlyException(L("CaptchaCanNotBeEmpty"));
-            }
+            if (captchaResponse.IsNullOrEmpty()) throw new UserFriendlyException(L("CaptchaCanNotBeEmpty"));
 
             var response = await _reCAPTCHASiteVerifyV3.Verify(new reCAPTCHASiteVerifyRequest
             {

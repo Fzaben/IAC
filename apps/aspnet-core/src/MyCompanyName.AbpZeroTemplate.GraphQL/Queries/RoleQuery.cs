@@ -19,12 +19,6 @@ namespace MyCompanyName.AbpZeroTemplate.Queries
     {
         private readonly RoleManager _roleManager;
 
-        public static class Args
-        {
-            public const string Id = "id";
-            public const string Name = "name";
-        }
-
         public RoleQuery(RoleManager roleManager)
             : base("roles", new Dictionary<string, Type>
                 {
@@ -46,6 +40,12 @@ namespace MyCompanyName.AbpZeroTemplate.Queries
                 .ContainsArgument<string>(Args.Name, name => query = query.Where(r => r.Name == name));
 
             return await ProjectToListAsync<RoleDto>(query);
+        }
+
+        public static class Args
+        {
+            public const string Id = "id";
+            public const string Name = "name";
         }
     }
 }

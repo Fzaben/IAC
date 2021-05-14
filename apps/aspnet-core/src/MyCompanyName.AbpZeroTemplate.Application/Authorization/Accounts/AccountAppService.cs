@@ -10,32 +10,26 @@ using Abp.UI;
 using Abp.Zero.Configuration;
 using Microsoft.AspNetCore.Identity;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts.Dto;
+using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
 using MyCompanyName.AbpZeroTemplate.Authorization.Impersonation;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Configuration;
-using MyCompanyName.AbpZeroTemplate.Debugging;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Security.Recaptcha;
 using MyCompanyName.AbpZeroTemplate.Url;
-using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
-using Abp.Domain.Repositories;
-
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
 {
     public class AccountAppService : AbpZeroTemplateAppServiceBase, IAccountAppService
     {
-        public IAppUrlService AppUrlService { get; set; }
-
-        public IRecaptchaValidator RecaptchaValidator { get; set; }
+        private readonly IImpersonationManager _impersonationManager;
+        private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly IUserDelegationManager _userDelegationManager;
 
         private readonly IUserEmailer _userEmailer;
-        private readonly UserRegistrationManager _userRegistrationManager;
-        private readonly IImpersonationManager _impersonationManager;
         private readonly IUserLinkManager _userLinkManager;
-        private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly UserRegistrationManager _userRegistrationManager;
         private readonly IWebUrlService _webUrlService;
-        private readonly IUserDelegationManager _userDelegationManager;
 
         public AccountAppService(
             IUserEmailer userEmailer,
@@ -43,7 +37,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
             IImpersonationManager impersonationManager,
             IUserLinkManager userLinkManager,
             IPasswordHasher<User> passwordHasher,
-            IWebUrlService webUrlService, 
+            IWebUrlService webUrlService,
             IUserDelegationManager userDelegationManager)
         {
             _userEmailer = userEmailer;
@@ -58,36 +52,29 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
             _userDelegationManager = userDelegationManager;
         }
 
+        public IAppUrlService AppUrlService { get; set; }
+
+        public IRecaptchaValidator RecaptchaValidator { get; set; }
+
         public async Task<IsTenantAvailableOutput> IsTenantAvailable(IsTenantAvailableInput input)
         {
             var tenant = await TenantManager.FindByTenancyNameAsync(input.TenancyName);
-            if (tenant == null)
-            {
-                return new IsTenantAvailableOutput(TenantAvailabilityState.NotFound);
-            }
+            if (tenant == null) return new IsTenantAvailableOutput(TenantAvailabilityState.NotFound);
 
-            if (!tenant.IsActive)
-            {
-                return new IsTenantAvailableOutput(TenantAvailabilityState.InActive);
-            }
+            if (!tenant.IsActive) return new IsTenantAvailableOutput(TenantAvailabilityState.InActive);
 
-            return new IsTenantAvailableOutput(TenantAvailabilityState.Available, tenant.Id, _webUrlService.GetServerRootAddress(input.TenancyName));
+            return new IsTenantAvailableOutput(TenantAvailabilityState.Available, tenant.Id,
+                _webUrlService.GetServerRootAddress(input.TenancyName));
         }
 
         public Task<int?> ResolveTenantId(ResolveTenantIdInput input)
         {
-            if (string.IsNullOrEmpty(input.c))
-            {
-                return Task.FromResult(AbpSession.TenantId);
-            }
+            if (string.IsNullOrEmpty(input.c)) return Task.FromResult(AbpSession.TenantId);
 
             var parameters = SimpleStringCipher.Instance.Decrypt(input.c);
             var query = HttpUtility.ParseQueryString(parameters);
 
-            if (query["tenantId"] == null)
-            {
-                return Task.FromResult<int?>(null);
-            }
+            if (query["tenantId"] == null) return Task.FromResult<int?>(null);
 
             var tenantId = Convert.ToInt32(query["tenantId"]) as int?;
             return Task.FromResult(tenantId);
@@ -95,10 +82,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
 
         public async Task<RegisterOutput> Register(RegisterInput input)
         {
-            if (UseCaptchaOnRegistration())
-            {
-                await RecaptchaValidator.ValidateAsync(input.CaptchaResponse);
-            }
+            if (UseCaptchaOnRegistration()) await RecaptchaValidator.ValidateAsync(input.CaptchaResponse);
 
             var user = await _userRegistrationManager.RegisterAsync(
                 input.Name,
@@ -110,7 +94,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
                 AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId)
             );
 
-            var isEmailConfirmationRequiredForLogin = await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement.IsEmailConfirmationRequiredForLogin);
+            var isEmailConfirmationRequiredForLogin =
+                await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement
+                    .IsEmailConfirmationRequiredForLogin);
 
             return new RegisterOutput
             {
@@ -125,16 +111,14 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
             await _userEmailer.SendPasswordResetLinkAsync(
                 user,
                 AppUrlService.CreatePasswordResetUrlFormat(AbpSession.TenantId)
-                );
+            );
         }
 
         public async Task<ResetPasswordOutput> ResetPassword(ResetPasswordInput input)
         {
             var user = await UserManager.GetUserByIdAsync(input.UserId);
             if (user == null || user.PasswordResetCode.IsNullOrEmpty() || user.PasswordResetCode != input.ResetCode)
-            {
                 throw new UserFriendlyException(L("InvalidPasswordResetCode"), L("InvalidPasswordResetCode_Detail"));
-            }
 
             await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
             CheckErrors(await UserManager.ChangePasswordAsync(user, input.Password));
@@ -164,15 +148,12 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
         public async Task ActivateEmail(ActivateEmailInput input)
         {
             var user = await UserManager.GetUserByIdAsync(input.UserId);
-            if (user != null && user.IsEmailConfirmed)
-            {
-                return;
-            }
+            if (user != null && user.IsEmailConfirmed) return;
 
-            if (user == null || user.EmailConfirmationCode.IsNullOrEmpty() || user.EmailConfirmationCode != input.ConfirmationCode)
-            {
-                throw new UserFriendlyException(L("InvalidEmailConfirmationCode"), L("InvalidEmailConfirmationCode_Detail"));
-            }
+            if (user == null || user.EmailConfirmationCode.IsNullOrEmpty() ||
+                user.EmailConfirmationCode != input.ConfirmationCode)
+                throw new UserFriendlyException(L("InvalidEmailConfirmationCode"),
+                    L("InvalidEmailConfirmationCode_Detail"));
 
             user.IsEmailConfirmed = true;
             user.EmailConfirmationCode = null;
@@ -190,21 +171,6 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
             };
         }
 
-        public virtual async Task<ImpersonateOutput> DelegatedImpersonate(DelegatedImpersonateInput input)
-        {
-            var userDelegation = await _userDelegationManager.GetAsync(input.UserDelegationId);
-            if (userDelegation.TargetUserId != AbpSession.GetUserId())
-            {
-                throw new UserFriendlyException("User delegation error.");
-            }
-
-            return new ImpersonateOutput
-            {
-                ImpersonationToken = await _impersonationManager.GetImpersonationToken(userDelegation.SourceUserId, userDelegation.TenantId),
-                TenancyName = await GetTenancyNameOrNullAsync(userDelegation.TenantId)
-            };
-        }
-
         public virtual async Task<ImpersonateOutput> BackToImpersonator()
         {
             return new ImpersonateOutput
@@ -217,14 +183,28 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
         public virtual async Task<SwitchToLinkedAccountOutput> SwitchToLinkedAccount(SwitchToLinkedAccountInput input)
         {
             if (!await _userLinkManager.AreUsersLinked(AbpSession.ToUserIdentifier(), input.ToUserIdentifier()))
-            {
                 throw new Exception(L("This account is not linked to your account"));
-            }
 
             return new SwitchToLinkedAccountOutput
             {
-                SwitchAccountToken = await _userLinkManager.GetAccountSwitchToken(input.TargetUserId, input.TargetTenantId),
+                SwitchAccountToken =
+                    await _userLinkManager.GetAccountSwitchToken(input.TargetUserId, input.TargetTenantId),
                 TenancyName = await GetTenancyNameOrNullAsync(input.TargetTenantId)
+            };
+        }
+
+        public virtual async Task<ImpersonateOutput> DelegatedImpersonate(DelegatedImpersonateInput input)
+        {
+            var userDelegation = await _userDelegationManager.GetAsync(input.UserDelegationId);
+            if (userDelegation.TargetUserId != AbpSession.GetUserId())
+                throw new UserFriendlyException("User delegation error.");
+
+            return new ImpersonateOutput
+            {
+                ImpersonationToken =
+                    await _impersonationManager.GetImpersonationToken(userDelegation.SourceUserId,
+                        userDelegation.TenantId),
+                TenancyName = await GetTenancyNameOrNullAsync(userDelegation.TenantId)
             };
         }
 
@@ -236,15 +216,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
         private async Task<Tenant> GetActiveTenantAsync(int tenantId)
         {
             var tenant = await TenantManager.FindByIdAsync(tenantId);
-            if (tenant == null)
-            {
-                throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId));
-            }
+            if (tenant == null) throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId));
 
-            if (!tenant.IsActive)
-            {
-                throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
-            }
+            if (!tenant.IsActive) throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
 
             return tenant;
         }
@@ -257,10 +231,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts
         private async Task<User> GetUserByChecking(string inputEmailAddress)
         {
             var user = await UserManager.FindByEmailAsync(inputEmailAddress);
-            if (user == null)
-            {
-                throw new UserFriendlyException(L("InvalidEmailAddress"));
-            }
+            if (user == null) throw new UserFriendlyException(L("InvalidEmailAddress"));
 
             return user;
         }

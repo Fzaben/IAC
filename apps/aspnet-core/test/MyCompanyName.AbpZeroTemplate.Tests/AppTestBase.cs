@@ -4,6 +4,5 @@ namespace MyCompanyName.AbpZeroTemplate.Tests
 {
     public class AppTestBase : AppTestBase<AbpZeroTemplateTestModule>
     {
-
     }
 }

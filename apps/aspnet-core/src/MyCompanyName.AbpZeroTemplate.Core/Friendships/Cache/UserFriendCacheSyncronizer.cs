@@ -1,5 +1,4 @@
 ﻿using Abp;
-using Abp.AutoMapper;
 using Abp.Dependency;
 using Abp.Events.Bus.Entities;
 using Abp.Events.Bus.Handlers;
@@ -15,8 +14,8 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         IEventHandler<EntityCreatedEventData<ChatMessage>>,
         ITransientDependency
     {
-        private readonly IUserFriendsCache _userFriendsCache;
         private readonly IObjectMapper _objectMapper;
+        private readonly IUserFriendsCache _userFriendsCache;
 
         public UserFriendCacheSyncronizer(
             IUserFriendsCache userFriendsCache,
@@ -26,12 +25,23 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
             _objectMapper = objectMapper;
         }
 
+        public void HandleEvent(EntityCreatedEventData<ChatMessage> eventData)
+        {
+            var message = eventData.Entity;
+            if (message.ReadState == ChatMessageReadState.Unread)
+                _userFriendsCache.IncreaseUnreadMessageCount(
+                    new UserIdentifier(message.TenantId, message.UserId),
+                    new UserIdentifier(message.TargetTenantId, message.TargetUserId),
+                    1
+                );
+        }
+
         public void HandleEvent(EntityCreatedEventData<Friendship> eventData)
         {
             _userFriendsCache.AddFriend(
                 eventData.Entity.ToUserIdentifier(),
                 _objectMapper.Map<FriendCacheItem>(eventData.Entity)
-                );
+            );
         }
 
         public void HandleEvent(EntityDeletedEventData<Friendship> eventData)
@@ -46,19 +56,6 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         {
             var friendCacheItem = _objectMapper.Map<FriendCacheItem>(eventData.Entity);
             _userFriendsCache.UpdateFriend(eventData.Entity.ToUserIdentifier(), friendCacheItem);
-        }
-
-        public void HandleEvent(EntityCreatedEventData<ChatMessage> eventData)
-        {
-            var message = eventData.Entity;
-            if (message.ReadState == ChatMessageReadState.Unread)
-            {
-                _userFriendsCache.IncreaseUnreadMessageCount(
-                    new UserIdentifier(message.TenantId, message.UserId),
-                    new UserIdentifier(message.TargetTenantId, message.TargetUserId),
-                    1
-                );
-            }
         }
     }
 }

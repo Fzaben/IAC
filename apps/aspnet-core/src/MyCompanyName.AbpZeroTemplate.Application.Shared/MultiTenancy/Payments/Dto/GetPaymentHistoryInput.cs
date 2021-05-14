@@ -8,15 +8,10 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Dto
     {
         public void Normalize()
         {
-            if (string.IsNullOrEmpty(Sorting))
-            {
-                Sorting = "CreationTime";
-            }
+            if (string.IsNullOrEmpty(Sorting)) Sorting = "CreationTime";
 
-            Sorting = DtoSortingHelper.ReplaceSorting(Sorting, s =>
-            {
-                return s.Replace("editionDisplayName", "Edition.DisplayName");
-            });
+            Sorting = DtoSortingHelper.ReplaceSorting(Sorting,
+                s => { return s.Replace("editionDisplayName", "Edition.DisplayName"); });
         }
     }
 }

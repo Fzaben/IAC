@@ -6,7 +6,6 @@ using MyCompanyName.AbpZeroTemplate.Editions;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 
@@ -16,7 +15,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
     public class TenantRegistrationAppService_Tests : AppTestBase
     {
         private readonly ITenantRegistrationAppService _tenantRegistrationAppService;
-        
+
         public TenantRegistrationAppService_Tests()
         {
             _tenantRegistrationAppService = Resolve<ITenantRegistrationAppService>();
@@ -72,15 +71,16 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
                 await context.SaveChangesAsync();
             });
 
-            var exception = await Assert.ThrowsAsync<Exception>(async () => await _tenantRegistrationAppService.RegisterTenant(new RegisterTenantInput
-            {
-                EditionId = edition.Id,
-                AdminEmailAddress = "admin@volosoft.com",
-                AdminPassword = "123qwe",
-                Name = "Volosoft",
-                SubscriptionStartType = SubscriptionStartType.Trial,
-                TenancyName = "Volosoft"
-            }));
+            var exception = await Assert.ThrowsAsync<Exception>(async () =>
+                await _tenantRegistrationAppService.RegisterTenant(new RegisterTenantInput
+                {
+                    EditionId = edition.Id,
+                    AdminEmailAddress = "admin@volosoft.com",
+                    AdminPassword = "123qwe",
+                    Name = "Volosoft",
+                    SubscriptionStartType = SubscriptionStartType.Trial,
+                    TenancyName = "Volosoft"
+                }));
 
             exception.Message.ShouldBe("Trial is not available for this edition !");
         }

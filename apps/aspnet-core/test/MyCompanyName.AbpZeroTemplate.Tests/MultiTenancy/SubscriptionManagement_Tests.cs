@@ -15,10 +15,10 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
     // ReSharper disable once InconsistentNaming
     public class SubscriptionManagement_Tests : AppTestBase
     {
-        private readonly TenantManager _tenantManager;
-        private readonly ITenantAppService _tenantAppService;
         private readonly EditionManager _editionManager;
         private readonly IPaymentAppService _paymentAppService;
+        private readonly ITenantAppService _tenantAppService;
+        private readonly TenantManager _tenantManager;
 
         public SubscriptionManagement_Tests()
         {
@@ -36,25 +36,23 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
         [InlineData(PaymentPeriodType.Daily, 99.99, 199.99, 25, 104.17)]
         [InlineData(PaymentPeriodType.Daily, 99.99, 199.99, 47, 195.83)]
         [InlineData(PaymentPeriodType.Daily, 99.99, 199.99, 12, 50.00)]
-
         [InlineData(PaymentPeriodType.Weekly, 99.99, 199.99, 1, 0.60)]
         [InlineData(PaymentPeriodType.Weekly, 99.99, 199.99, 167, 99.40)]
         [InlineData(PaymentPeriodType.Weekly, 99.99, 199.99, 169, 100.60)]
         [InlineData(PaymentPeriodType.Weekly, 99.99, 199.99, 335, 199.40)]
         [InlineData(PaymentPeriodType.Weekly, 99.99, 199.99, 84, 50.00)]
-
         [InlineData(PaymentPeriodType.Monthly, 99.99, 199.99, 1, 0.14)]
         [InlineData(PaymentPeriodType.Monthly, 99.99, 199.99, 719, 99.86)]
         [InlineData(PaymentPeriodType.Monthly, 99.99, 199.99, 721, 100.14)]
         [InlineData(PaymentPeriodType.Monthly, 99.99, 199.99, 1439, 199.86)]
         [InlineData(PaymentPeriodType.Monthly, 99.99, 199.99, 360, 50.00)]
-
         [InlineData(PaymentPeriodType.Annual, 99.99, 199.99, 1, 0.01)]
         [InlineData(PaymentPeriodType.Annual, 99.99, 199.99, 8759, 99.99)]
         [InlineData(PaymentPeriodType.Annual, 99.99, 199.99, 8761, 100.01)]
         [InlineData(PaymentPeriodType.Annual, 99.99, 199.99, 17519, 199.99)]
         [InlineData(PaymentPeriodType.Annual, 99.99, 199.99, 4380, 50.00)]
-        public void Calculate_Upgrade_To_Edition_Price(PaymentPeriodType paymentPeriodType, decimal currentEditionPrice, decimal targetEditionPrice, int remainingHoursCount, decimal upgradePrice)
+        public void Calculate_Upgrade_To_Edition_Price(PaymentPeriodType paymentPeriodType, decimal currentEditionPrice,
+            decimal targetEditionPrice, int remainingHoursCount, decimal upgradePrice)
         {
             // Used same price for easily testing upgrade price calculation.
             var currentEdition = new SubscribableEdition
@@ -77,7 +75,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
                 AnnualPrice = targetEditionPrice
             };
 
-            var price = _tenantManager.GetUpgradePrice(currentEdition, targetEdition, remainingHoursCount, paymentPeriodType);
+            var price = _tenantManager.GetUpgradePrice(currentEdition, targetEdition, remainingHoursCount,
+                paymentPeriodType);
 
             price.ToString("N2").ShouldBe(upgradePrice.ToString("N2"));
         }
@@ -93,7 +92,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             var subscriptionEndDate = DateTime.Today.ToUniversalTime().AddDays(10);
             var updatedSubscriptionEndDate = subscriptionEndDate;
 
-            await CreateUpdateTenant(paymentPeriodType, editionPaymentType, subscriptionEndDate, updatedSubscriptionEndDate);
+            await CreateUpdateTenant(paymentPeriodType, editionPaymentType, subscriptionEndDate,
+                updatedSubscriptionEndDate);
         }
 
         [MultiTenantTheory]
@@ -104,9 +104,9 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
         public async Task BuyNow_Tenant_Edition(PaymentPeriodType paymentPeriodType,
             EditionPaymentType editionPaymentType)
         {
-            var updatedSubscriptionEndDate = Clock.Now.ToUniversalTime().AddDays((int)paymentPeriodType);
+            var updatedSubscriptionEndDate = Clock.Now.ToUniversalTime().AddDays((int) paymentPeriodType);
 
-            await CreateUpdateTenant(paymentPeriodType, editionPaymentType, subscriptionEndDate: null, updatedSubscriptionEndDate);
+            await CreateUpdateTenant(paymentPeriodType, editionPaymentType, null, updatedSubscriptionEndDate);
         }
 
         [MultiTenantTheory]
@@ -118,9 +118,10 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             EditionPaymentType editionPaymentType)
         {
             var subscriptionEndDate = DateTime.Today.ToUniversalTime().AddDays(10);
-            var updatedSubscriptionEndDate = subscriptionEndDate.AddDays((int)paymentPeriodType);
+            var updatedSubscriptionEndDate = subscriptionEndDate.AddDays((int) paymentPeriodType);
 
-            await CreateUpdateTenant(paymentPeriodType, editionPaymentType, subscriptionEndDate, updatedSubscriptionEndDate);
+            await CreateUpdateTenant(paymentPeriodType, editionPaymentType, subscriptionEndDate,
+                updatedSubscriptionEndDate);
         }
 
         [Fact]
@@ -179,7 +180,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             };
             var standard = new SubscribableEdition
             {
-                DisplayName = "Standard Edition",
+                DisplayName = "Standard Edition"
             };
 
             await UsingDbContextAsync(async context =>
@@ -229,7 +230,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             };
             var standard = new SubscribableEdition
             {
-                DisplayName = "Standard Edition",
+                DisplayName = "Standard Edition"
             };
 
             await UsingDbContextAsync(async context =>
@@ -253,7 +254,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
                 await context.SaveChangesAsync();
             });
 
-            await Assert.ThrowsAsync<Exception>(async () => await _tenantManager.EndSubscriptionAsync(tenant, standard, utcNow));
+            await Assert.ThrowsAsync<Exception>(async () =>
+                await _tenantManager.EndSubscriptionAsync(tenant, standard, utcNow));
 
             UsingDbContext(context =>
             {
@@ -266,7 +268,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
         }
 
         [Fact]
-        public async Task Dont_Mark_Tenant_As_Passive_If_WaitingDayAfterExpire_Is_Not_Passed_And_Tenant_NotIsInTrialPeriod()
+        public async Task
+            Dont_Mark_Tenant_As_Passive_If_WaitingDayAfterExpire_Is_Not_Passed_And_Tenant_NotIsInTrialPeriod()
         {
             //Act
             var utcNow = Clock.Now.ToUniversalTime();
@@ -302,7 +305,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
                 await context.SaveChangesAsync();
             });
 
-            await Assert.ThrowsAsync<Exception>(async () => await _tenantManager.EndSubscriptionAsync(tenant, standard, utcNow));
+            await Assert.ThrowsAsync<Exception>(async () =>
+                await _tenantManager.EndSubscriptionAsync(tenant, standard, utcNow));
 
             UsingDbContext(context =>
             {
@@ -425,7 +429,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             result.Items[1].DayCount.ShouldBe(30);
         }
 
-        private async Task CreateUpdateTenant(PaymentPeriodType paymentPeriodType, EditionPaymentType editionPaymentType, DateTime? subscriptionEndDate, DateTime updatedSubscriptionEndDate)
+        private async Task CreateUpdateTenant(PaymentPeriodType paymentPeriodType,
+            EditionPaymentType editionPaymentType, DateTime? subscriptionEndDate, DateTime updatedSubscriptionEndDate)
         {
             await _editionManager.CreateAsync(new SubscribableEdition
             {

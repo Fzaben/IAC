@@ -6,7 +6,6 @@ using Abp;
 using Abp.Application.Features;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
-using Abp.Authorization.Users;
 using Abp.Domain.Uow;
 using Abp.Events.Bus;
 using Abp.Extensions;
@@ -23,24 +22,27 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
     [AbpAuthorize(AppPermissions.Pages_Tenants)]
     public class TenantAppService : AbpZeroTemplateAppServiceBase, ITenantAppService
     {
-        public IAppUrlService AppUrlService { get; set; }
-        public IEventBus EventBus { get; set; }
-
         public TenantAppService()
         {
             AppUrlService = NullAppUrlService.Instance;
             EventBus = NullEventBus.Instance;
         }
 
+        public IAppUrlService AppUrlService { get; set; }
+        public IEventBus EventBus { get; set; }
+
         public async Task<PagedResultDto<TenantListDto>> GetTenants(GetTenantsInput input)
         {
             var query = TenantManager.Tenants
                 .Include(t => t.Edition)
-                .WhereIf(!input.Filter.IsNullOrWhiteSpace(), t => t.Name.Contains(input.Filter) || t.TenancyName.Contains(input.Filter))
+                .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+                    t => t.Name.Contains(input.Filter) || t.TenancyName.Contains(input.Filter))
                 .WhereIf(input.CreationDateStart.HasValue, t => t.CreationTime >= input.CreationDateStart.Value)
                 .WhereIf(input.CreationDateEnd.HasValue, t => t.CreationTime <= input.CreationDateEnd.Value)
-                .WhereIf(input.SubscriptionEndDateStart.HasValue, t => t.SubscriptionEndDateUtc >= input.SubscriptionEndDateStart.Value.ToUniversalTime())
-                .WhereIf(input.SubscriptionEndDateEnd.HasValue, t => t.SubscriptionEndDateUtc <= input.SubscriptionEndDateEnd.Value.ToUniversalTime())
+                .WhereIf(input.SubscriptionEndDateStart.HasValue,
+                    t => t.SubscriptionEndDateUtc >= input.SubscriptionEndDateStart.Value.ToUniversalTime())
+                .WhereIf(input.SubscriptionEndDateEnd.HasValue,
+                    t => t.SubscriptionEndDateUtc <= input.SubscriptionEndDateEnd.Value.ToUniversalTime())
                 .WhereIf(input.EditionIdSpecified, t => t.EditionId == input.EditionId);
 
             var tenantCount = await query.CountAsync();
@@ -49,7 +51,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             return new PagedResultDto<TenantListDto>(
                 tenantCount,
                 ObjectMapper.Map<List<TenantListDto>>(tenants)
-                );
+            );
         }
 
         [AbpAuthorize(AppPermissions.Pages_Tenants_Create)]
@@ -88,14 +90,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             var tenant = await TenantManager.GetByIdAsync(input.Id);
 
             if (tenant.EditionId != input.EditionId)
-            {
                 EventBus.Trigger(new TenantEditionChangedEventData
                 {
                     TenantId = input.Id,
                     OldEditionId = tenant.EditionId,
                     NewEditionId = input.EditionId
                 });
-            }
 
             ObjectMapper.Map(input, tenant);
             tenant.SubscriptionEndDateUtc = tenant.SubscriptionEndDateUtc?.ToUniversalTime();
@@ -127,7 +127,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
         [AbpAuthorize(AppPermissions.Pages_Tenants_ChangeFeatures)]
         public async Task UpdateTenantFeatures(UpdateTenantFeaturesInput input)
         {
-            await TenantManager.SetFeatureValuesAsync(input.Id, input.FeatureValues.Select(fv => new NameValue(fv.Name, fv.Value)).ToArray());
+            await TenantManager.SetFeatureValuesAsync(input.Id,
+                input.FeatureValues.Select(fv => new NameValue(fv.Name, fv.Value)).ToArray());
         }
 
         [AbpAuthorize(AppPermissions.Pages_Tenants_ChangeFeatures)]
@@ -141,10 +142,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             using (CurrentUnitOfWork.SetTenantId(input.Id))
             {
                 var tenantAdmin = await UserManager.GetAdminAsync();
-                if (tenantAdmin != null)
-                {
-                    tenantAdmin.Unlock();
-                }
+                if (tenantAdmin != null) tenantAdmin.Unlock();
             }
         }
     }

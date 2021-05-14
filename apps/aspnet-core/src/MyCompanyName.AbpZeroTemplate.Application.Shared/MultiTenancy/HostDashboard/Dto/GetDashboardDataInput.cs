@@ -5,6 +5,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard.Dto
     public class GetDashboardDataInput : DashboardInputBase, IShouldNormalize
     {
         public ChartDateInterval IncomeStatisticsDateInterval { get; set; }
+
         public void Normalize()
         {
             TrimTime();

@@ -43,7 +43,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
 
         protected async Task<T> GetSettingValueForTenantAsync<T>(string settingName, int tenantId) where T : struct
         {
-            return (await SettingManager.GetSettingValueForTenantAsync(ThemeName + "." + settingName, tenantId)).To<T>();
+            return (await SettingManager.GetSettingValueForTenantAsync(ThemeName + "." + settingName, tenantId))
+                .To<T>();
         }
 
         protected async Task ChangeSettingForUserAsync(UserIdentifier user, string name, string value)

@@ -23,24 +23,24 @@ namespace MyCompanyName.AbpZeroTemplate.Common
             _editionManager = editionManager;
         }
 
-        public async Task<ListResultDto<SubscribableEditionComboboxItemDto>> GetEditionsForCombobox(bool onlyFreeItems = false)
+        public async Task<ListResultDto<SubscribableEditionComboboxItemDto>> GetEditionsForCombobox(
+            bool onlyFreeItems = false)
         {
             var subscribableEditions = (await _editionManager.Editions.Cast<SubscribableEdition>().ToListAsync())
                 .WhereIf(onlyFreeItems, e => e.IsFree)
                 .OrderBy(e => e.MonthlyPrice);
 
             return new ListResultDto<SubscribableEditionComboboxItemDto>(
-                subscribableEditions.Select(e => new SubscribableEditionComboboxItemDto(e.Id.ToString(), e.DisplayName, e.IsFree)).ToList()
+                subscribableEditions.Select(e =>
+                    new SubscribableEditionComboboxItemDto(e.Id.ToString(), e.DisplayName, e.IsFree)).ToList()
             );
         }
 
         public async Task<PagedResultDto<NameValueDto>> FindUsers(FindUsersInput input)
         {
             if (AbpSession.TenantId != null)
-            {
                 //Prevent tenants to get other tenant's users.
                 input.TenantId = AbpSession.TenantId;
-            }
 
             using (CurrentUnitOfWork.SetTenantId(input.TenantId))
             {
@@ -67,9 +67,9 @@ namespace MyCompanyName.AbpZeroTemplate.Common
                         new NameValueDto(
                             u.FullName + " (" + u.EmailAddress + ")",
                             u.Id.ToString()
-                            )
-                        ).ToList()
-                    );
+                        )
+                    ).ToList()
+                );
             }
         }
 

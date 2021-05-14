@@ -5,6 +5,26 @@ namespace MyCompanyName.AbpZeroTemplate.Types
 {
     public class UserType : ObjectGraphType<UserDto>
     {
+        public UserType()
+        {
+            Name = "UserType";
+
+            Field(x => x.Id);
+            Field(x => x.Name);
+            Field(x => x.Surname);
+            Field(x => x.UserName);
+            Field(x => x.EmailAddress);
+            Field(x => x.PhoneNumber);
+            Field(x => x.IsActive);
+            Field(x => x.IsEmailConfirmed);
+            Field(x => x.CreationTime);
+            Field(x => x.TenantId, true);
+            Field(x => x.ProfilePictureId, true, typeof(StringGraphType));
+
+            Field<ListGraphType<RoleType>>(ChildFields.Roles);
+            Field<ListGraphType<OrganizationUnitType>>(ChildFields.OrganizationUnits);
+        }
+
         public static class ChildFields
         {
             public const string Items = "items";
@@ -17,32 +37,12 @@ namespace MyCompanyName.AbpZeroTemplate.Types
             }
         }
 
-        public UserType()
-        {
-            Name = "UserType";
-            
-            Field(x => x.Id);
-            Field(x => x.Name);
-            Field(x => x.Surname);
-            Field(x => x.UserName);
-            Field(x => x.EmailAddress);
-            Field(x => x.PhoneNumber);
-            Field(x => x.IsActive);
-            Field(x => x.IsEmailConfirmed);
-            Field(x => x.CreationTime);
-            Field(x => x.TenantId, nullable: true);
-            Field(x => x.ProfilePictureId, nullable: true, type: typeof(StringGraphType));
-
-            Field<ListGraphType<RoleType>>(ChildFields.Roles);
-            Field<ListGraphType<OrganizationUnitType>>(ChildFields.OrganizationUnits);
-        }
-
         public class RoleType : ObjectGraphType<UserDto.RoleDto>
         {
             public RoleType()
             {
                 Name = "UserRoleType";
-                
+
                 Field(x => x.Id);
                 Field(x => x.Name);
                 Field(x => x.DisplayName);
@@ -54,7 +54,7 @@ namespace MyCompanyName.AbpZeroTemplate.Types
             public OrganizationUnitType()
             {
                 Name = "UserOrganizationUnitType";
-                
+
                 Field(x => x.Id);
                 Field(x => x.Code);
                 Field(x => x.DisplayName);

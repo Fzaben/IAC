@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Abp.Localization;
-
-namespace MyCompanyName.AbpZeroTemplate.Web.DashboardCustomization
+﻿namespace MyCompanyName.AbpZeroTemplate.Web.DashboardCustomization
 {
     public class WidgetFilterViewDefinition : ViewDefinition
     {
@@ -11,7 +8,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.DashboardCustomization
             string javascriptFile = null,
             string cssFile = null) : base(id, viewFile, javascriptFile, cssFile)
         {
-
         }
     }
 }

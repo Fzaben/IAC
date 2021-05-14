@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.IdentityFramework;
-using Abp.MultiTenancy;
 using Abp.Runtime.Session;
 using Abp.Threading;
 using Microsoft.AspNetCore.Identity;
@@ -12,26 +11,23 @@ using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 namespace MyCompanyName.AbpZeroTemplate
 {
     /// <summary>
-    /// Derive your application services from this class.
+    ///     Derive your application services from this class.
     /// </summary>
     public abstract class AbpZeroTemplateAppServiceBase : ApplicationService
     {
-        public TenantManager TenantManager { get; set; }
-
-        public UserManager UserManager { get; set; }
-
         protected AbpZeroTemplateAppServiceBase()
         {
             LocalizationSourceName = AbpZeroTemplateConsts.LocalizationSourceName;
         }
 
+        public TenantManager TenantManager { get; set; }
+
+        public UserManager UserManager { get; set; }
+
         protected virtual async Task<User> GetCurrentUserAsync()
         {
             var user = await UserManager.FindByIdAsync(AbpSession.GetUserId().ToString());
-            if (user == null)
-            {
-                throw new Exception("There is no current user!");
-            }
+            if (user == null) throw new Exception("There is no current user!");
 
             return user;
         }

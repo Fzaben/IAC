@@ -22,10 +22,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Session
         public async Task<GetCurrentLoginInformationsOutput> GetCurrentLoginInformationsAsync()
         {
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext == null)
-            {
-                return await _sessionAppService.GetCurrentLoginInformations();
-            }
+            if (httpContext == null) return await _sessionAppService.GetCurrentLoginInformations();
 
             var cachedValue = httpContext.Items["__PerRequestSessionCache"] as GetCurrentLoginInformationsOutput;
             if (cachedValue == null)

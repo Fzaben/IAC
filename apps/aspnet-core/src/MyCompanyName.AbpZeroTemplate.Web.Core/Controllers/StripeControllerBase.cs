@@ -10,9 +10,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
     public class StripeControllerBase : AbpZeroTemplateControllerBase
     {
-        protected readonly IStripePaymentAppService StripePaymentAppService;
-        private readonly StripeGatewayManager _stripeGatewayManager;
         private readonly StripePaymentGatewayConfiguration _stripeConfiguration;
+        private readonly StripeGatewayManager _stripeGatewayManager;
+        protected readonly IStripePaymentAppService StripePaymentAppService;
 
         public StripeControllerBase(
             StripeGatewayManager stripeGatewayManager,
@@ -35,17 +35,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
             try
             {
-                var stripeEvent = EventUtility.ConstructEvent(json, Request.Headers["Stripe-Signature"], _stripeConfiguration.WebhookSecret);
+                var stripeEvent = EventUtility.ConstructEvent(json, Request.Headers["Stripe-Signature"],
+                    _stripeConfiguration.WebhookSecret);
 
-                if (stripeEvent.Type == Events.InvoicePaid)
-                {
-                    await HandleSubscriptionCyclePaymentAsync(stripeEvent);
-                }
+                if (stripeEvent.Type == Events.InvoicePaid) await HandleSubscriptionCyclePaymentAsync(stripeEvent);
 
                 if (stripeEvent.Type == Events.CheckoutSessionCompleted)
-                {
                     await HandleCheckoutSessionCompletedAsync(stripeEvent);
-                }
 
                 // Other WebHook events can be handled here.
 
@@ -67,25 +63,19 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         {
             var invoice = stripeEvent.Data.Object as Invoice;
             if (invoice == null)
-            {
                 throw new ApplicationException("Unable to get Invoice information from stripeEvent.Data");
-            }
 
             // see https://stripe.com/docs/api/invoices/object#invoice_object-billing_reason
             // only handle for subscription_cycle payments
             if (invoice.BillingReason == "subscription_cycle")
-            {
                 await _stripeGatewayManager.HandleInvoicePaymentSucceededAsync(invoice);
-            }
         }
 
         private async Task HandleCheckoutSessionCompletedAsync(Event stripeEvent)
         {
             var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
             if (session == null)
-            {
                 throw new ApplicationException("Unable to get session information from stripeEvent.Data");
-            }
 
             await StripePaymentAppService.ConfirmPayment(
                 new StripeConfirmPaymentInput

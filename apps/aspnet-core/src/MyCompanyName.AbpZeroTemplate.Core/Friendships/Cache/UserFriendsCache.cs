@@ -1,32 +1,32 @@
-using Abp;
-using Abp.Domain.Repositories;
-using Abp.Runtime.Caching;
-using MyCompanyName.AbpZeroTemplate.Chat;
 using System.Linq;
+using Abp;
 using Abp.Dependency;
+using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Abp.MultiTenancy;
+using Abp.Runtime.Caching;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
+using MyCompanyName.AbpZeroTemplate.Chat;
 
 namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
 {
     public class UserFriendsCache : IUserFriendsCache, ISingletonDependency
     {
         private readonly ICacheManager _cacheManager;
-        private readonly IRepository<Friendship, long> _friendshipRepository;
         private readonly IRepository<ChatMessage, long> _chatMessageRepository;
-        private readonly ITenantCache _tenantCache;
-        private readonly UserStore _userStore;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IRepository<Friendship, long> _friendshipRepository;
 
-        private readonly object _syncObj = new object();
+        private readonly object _syncObj = new();
+        private readonly ITenantCache _tenantCache;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly UserStore _userStore;
 
         public UserFriendsCache(
             ICacheManager cacheManager,
             IRepository<Friendship, long> friendshipRepository,
             IRepository<ChatMessage, long> chatMessageRepository,
             ITenantCache tenantCache,
-            IUnitOfWorkManager unitOfWorkManager, 
+            IUnitOfWorkManager unitOfWorkManager,
             UserStore userStore)
         {
             _cacheManager = cacheManager;
@@ -58,22 +58,16 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         public virtual void ResetUnreadMessageCount(UserIdentifier userIdentifier, UserIdentifier friendIdentifier)
         {
             var user = GetCacheItemOrNull(userIdentifier);
-            if (user == null)
-            {
-                return;
-            }
+            if (user == null) return;
 
             lock (_syncObj)
             {
                 var friend = user.Friends.FirstOrDefault(
-                     f => f.FriendUserId == friendIdentifier.UserId &&
-                     f.FriendTenantId == friendIdentifier.TenantId
-                 );
+                    f => f.FriendUserId == friendIdentifier.UserId &&
+                         f.FriendTenantId == friendIdentifier.TenantId
+                );
 
-                if (friend == null)
-                {
-                    return;
-                }
+                if (friend == null) return;
 
                 friend.UnreadMessageCount = 0;
                 UpdateUserOnCache(userIdentifier, user);
@@ -81,25 +75,20 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         }
 
         [UnitOfWork]
-        public virtual void IncreaseUnreadMessageCount(UserIdentifier userIdentifier, UserIdentifier friendIdentifier, int change)
+        public virtual void IncreaseUnreadMessageCount(UserIdentifier userIdentifier, UserIdentifier friendIdentifier,
+            int change)
         {
             var user = GetCacheItemOrNull(userIdentifier);
-            if (user == null)
-            {
-                return;
-            }
+            if (user == null) return;
 
             lock (_syncObj)
             {
                 var friend = user.Friends.FirstOrDefault(
-                     f => f.FriendUserId == friendIdentifier.UserId &&
-                     f.FriendTenantId == friendIdentifier.TenantId
+                    f => f.FriendUserId == friendIdentifier.UserId &&
+                         f.FriendTenantId == friendIdentifier.TenantId
                 );
 
-                if (friend == null)
-                {
-                    return;
-                }
+                if (friend == null) return;
 
                 friend.UnreadMessageCount += change;
                 UpdateUserOnCache(userIdentifier, user);
@@ -109,10 +98,7 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         public void AddFriend(UserIdentifier userIdentifier, FriendCacheItem friend)
         {
             var user = GetCacheItemOrNull(userIdentifier);
-            if (user == null)
-            {
-                return;
-            }
+            if (user == null) return;
 
             lock (_syncObj)
             {
@@ -127,10 +113,7 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         public void RemoveFriend(UserIdentifier userIdentifier, FriendCacheItem friend)
         {
             var user = GetCacheItemOrNull(userIdentifier);
-            if (user == null)
-            {
-                return;
-            }
+            if (user == null) return;
 
             lock (_syncObj)
             {
@@ -145,16 +128,13 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
         public void UpdateFriend(UserIdentifier userIdentifier, FriendCacheItem friend)
         {
             var user = GetCacheItemOrNull(userIdentifier);
-            if (user == null)
-            {
-                return;
-            }
+            if (user == null) return;
 
             lock (_syncObj)
             {
                 var existingFriendIndex = user.Friends.FindIndex(
                     f => f.FriendUserId == friend.FriendUserId &&
-                    f.FriendTenantId == friend.FriendTenantId
+                         f.FriendTenantId == friend.FriendTenantId
                 );
 
                 if (existingFriendIndex >= 0)
@@ -184,16 +164,17 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships.Cache
                         FriendUserName = friendship.FriendUserName,
                         FriendTenancyName = friendship.FriendTenancyName,
                         FriendProfilePictureId = friendship.FriendProfilePictureId,
-                        UnreadMessageCount = _chatMessageRepository.GetAll().Count(cm => cm.ReadState == ChatMessageReadState.Unread &&
-                                                               cm.UserId == userIdentifier.UserId &&
-                                                               cm.TenantId == userIdentifier.TenantId &&
-                                                               cm.TargetUserId == friendship.FriendUserId &&
-                                                               cm.TargetTenantId == friendship.FriendTenantId &&
-                                                               cm.Side == ChatSide.Receiver)
+                        UnreadMessageCount = _chatMessageRepository.GetAll().Count(cm =>
+                            cm.ReadState == ChatMessageReadState.Unread &&
+                            cm.UserId == userIdentifier.UserId &&
+                            cm.TenantId == userIdentifier.TenantId &&
+                            cm.TargetUserId == friendship.FriendUserId &&
+                            cm.TargetTenantId == friendship.FriendTenantId &&
+                            cm.Side == ChatSide.Receiver)
                     }).ToList();
-                
+
                 var user = _userStore.FindById(userIdentifier.UserId.ToString());
-                
+
                 return new UserWithFriendsCacheItem
                 {
                     TenantId = userIdentifier.TenantId,

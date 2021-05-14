@@ -9,7 +9,6 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization
         public PermissionChecker(UserManager userManager)
             : base(userManager)
         {
-
         }
     }
 }

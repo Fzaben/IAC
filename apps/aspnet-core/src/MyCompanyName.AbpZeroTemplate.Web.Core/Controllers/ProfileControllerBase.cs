@@ -21,13 +21,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
     public abstract class ProfileControllerBase : AbpZeroTemplateControllerBase
     {
-        private readonly ITempFileCacheManager _tempFileCacheManager;
-        private readonly IProfileAppService _profileAppService;
-        
         private const int MaxProfilePictureSize = 5242880; //5MB
+        private readonly IProfileAppService _profileAppService;
+        private readonly ITempFileCacheManager _tempFileCacheManager;
 
         protected ProfileControllerBase(
-            ITempFileCacheManager tempFileCacheManager, 
+            ITempFileCacheManager tempFileCacheManager,
             IProfileAppService profileAppService)
         {
             _tempFileCacheManager = tempFileCacheManager;
@@ -41,15 +40,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 var profilePictureFile = Request.Form.Files.First();
 
                 //Check input
-                if (profilePictureFile == null)
-                {
-                    throw new UserFriendlyException(L("ProfilePicture_Change_Error"));
-                }
+                if (profilePictureFile == null) throw new UserFriendlyException(L("ProfilePicture_Change_Error"));
 
                 if (profilePictureFile.Length > MaxProfilePictureSize)
-                {
-                    throw new UserFriendlyException(L("ProfilePicture_Warn_SizeLimit", AppConsts.MaxProfilPictureBytesUserFriendlyValue));
-                }
+                    throw new UserFriendlyException(L("ProfilePicture_Warn_SizeLimit",
+                        AppConsts.MaxProfilPictureBytesUserFriendlyValue));
 
                 byte[] fileBytes;
                 using (var stream = profilePictureFile.OpenReadStream())
@@ -57,10 +52,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                     fileBytes = stream.GetAllBytes();
                 }
 
-                if (!ImageFormatHelper.GetRawImageFormat(fileBytes).IsIn(ImageFormat.Jpeg, ImageFormat.Png, ImageFormat.Gif))
-                {
+                if (!ImageFormatHelper.GetRawImageFormat(fileBytes)
+                    .IsIn(ImageFormat.Jpeg, ImageFormat.Png, ImageFormat.Gif))
                     throw new Exception(L("IncorrectImageFormat"));
-                }
 
                 _tempFileCacheManager.SetFile(input.FileToken, fileBytes);
 
@@ -91,14 +85,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         public async Task<FileResult> GetProfilePictureByUser(long userId)
         {
             var output = await _profileAppService.GetProfilePictureByUser(userId);
-            if (output.ProfilePicture.IsNullOrEmpty())
-            {
-                return GetDefaultProfilePictureInternal();
-            }
+            if (output.ProfilePicture.IsNullOrEmpty()) return GetDefaultProfilePictureInternal();
 
             return File(Convert.FromBase64String(output.ProfilePicture), MimeTypeNames.ImageJpeg);
         }
-        
+
         protected FileResult GetDefaultProfilePictureInternal()
         {
             return File(Path.Combine("Common", "Images", "default-profile-picture.png"), MimeTypeNames.ImagePng);

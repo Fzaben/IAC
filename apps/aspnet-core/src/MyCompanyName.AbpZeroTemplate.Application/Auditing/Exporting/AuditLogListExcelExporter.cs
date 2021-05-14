@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Abp.Extensions;
 using Abp.Runtime.Session;
 using Abp.Timing.Timezone;
@@ -7,15 +6,14 @@ using MyCompanyName.AbpZeroTemplate.Auditing.Dto;
 using MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI;
 using MyCompanyName.AbpZeroTemplate.Dto;
 using MyCompanyName.AbpZeroTemplate.Storage;
-using NPOI.SS.UserModel;
 
 namespace MyCompanyName.AbpZeroTemplate.Auditing.Exporting
 {
     public class AuditLogListExcelExporter : NpoiExcelExporterBase, IAuditLogListExcelExporter
     {
-        private readonly ITimeZoneConverter _timeZoneConverter;
         private readonly IAbpSession _abpSession;
-        
+        private readonly ITimeZoneConverter _timeZoneConverter;
+
         public AuditLogListExcelExporter(
             ITimeZoneConverter timeZoneConverter,
             IAbpSession abpSession,
@@ -60,21 +58,17 @@ namespace MyCompanyName.AbpZeroTemplate.Auditing.Exporting
                         _ => _.ClientName,
                         _ => _.BrowserInfo,
                         _ => _.Exception.IsNullOrEmpty() ? L("Success") : _.Exception
-                        );
-                    
+                    );
+
                     for (var i = 1; i <= auditLogListDtos.Count; i++)
-                    {
                         //Formatting cells
                         SetCellDataFormat(sheet.GetRow(i).Cells[0], "yyyy-mm-dd hh:mm:ss");
-                    }
-                    
+
                     for (var i = 0; i < 10; i++)
                     {
                         if (i.IsIn(4, 9)) //Don't AutoFit Parameters and Exception
-                        {
                             continue;
-                        }
-                        
+
                         sheet.AutoSizeColumn(i);
                     }
                 });
@@ -105,15 +99,10 @@ namespace MyCompanyName.AbpZeroTemplate.Auditing.Exporting
                     );
 
                     for (var i = 1; i <= entityChangeListDtos.Count; i++)
-                    {
                         //Formatting cells
                         SetCellDataFormat(sheet.GetRow(i).Cells[3], "yyyy-mm-dd hh:mm:ss");
-                    }
-                    
-                    for (var i = 0; i < 4; i++)
-                    {
-                        sheet.AutoSizeColumn(i);
-                    }
+
+                    for (var i = 0; i < 4; i++) sheet.AutoSizeColumn(i);
                 });
         }
     }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile.Dto;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 
@@ -90,6 +89,6 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
                 .Resolve<IPasswordHasher<User>>()
                 .VerifyHashedPassword(currentUser, currentUser.Password, "2mF9d8Ac!5")
                 .ShouldBe(PasswordVerificationResult.Success);
-        } 
+        }
     }
 }

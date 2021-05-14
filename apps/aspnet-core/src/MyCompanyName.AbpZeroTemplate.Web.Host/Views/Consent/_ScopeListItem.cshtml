@@ -1,5 +1,4 @@
-﻿@using MyCompanyName.AbpZeroTemplate.Web.Models.Consent
-@model ScopeViewModel
+﻿@model MyCompanyName.AbpZeroTemplate.Web.Models.Consent.ScopeViewModel
 <li class="list-group-item">
     <label>
         <input type="checkbox"
@@ -7,13 +6,13 @@
                id="scopes_@Model.Name"
                value="@Model.Name"
                checked="@Model.Checked"
-               disabled="@Model.Required" />
+               disabled="@Model.Required"/>
 
         @if (Model.Required)
         {
             <input type="hidden"
                    name="ScopesConsented"
-                   value="@Model.Name" />
+                   value="@Model.Name"/>
         }
 
         <strong>&nbsp;@L(Model.DisplayName)</strong>
@@ -27,7 +26,9 @@
 
     @if (Model.Required)
     {
-        <span><em>(@L("Required"))</em></span>
+        <span>
+            <em>(@L("Required"))</em>
+        </span>
     }
 
     @if (Model.Description != null)

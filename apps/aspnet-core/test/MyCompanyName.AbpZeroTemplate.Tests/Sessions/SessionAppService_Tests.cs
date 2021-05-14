@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using MyCompanyName.AbpZeroTemplate.Sessions;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 
@@ -24,7 +23,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Sessions
 
             //Act
             var output = await _sessionAppService.GetCurrentLoginInformations();
-            
+
             //Assert
             var currentUser = await GetCurrentUserAsync();
             output.User.ShouldNotBe(null);

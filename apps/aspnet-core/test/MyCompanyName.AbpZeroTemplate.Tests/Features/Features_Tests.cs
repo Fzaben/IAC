@@ -10,7 +10,6 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
 using MyCompanyName.AbpZeroTemplate.Editions;
 using MyCompanyName.AbpZeroTemplate.Editions.Dto;
 using MyCompanyName.AbpZeroTemplate.Features;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 
@@ -20,8 +19,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Features
     public class Features_Tests : AppTestBase
     {
         private readonly IEditionAppService _editionAppService;
-        private readonly IUserAppService _userAppService;
         private readonly ILocalizationManager _localizationManager;
+        private readonly IUserAppService _userAppService;
 
         public Features_Tests()
         {
@@ -39,10 +38,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Features
 
             //Changing a sample feature value
             var maxUserCountFeature = output.FeatureValues.FirstOrDefault(f => f.Name == AppFeatures.MaxUserCount);
-            if (maxUserCountFeature != null)
-            {
-                maxUserCountFeature.Value = "2";
-            }
+            if (maxUserCountFeature != null) maxUserCountFeature.Value = "2";
 
             await _editionAppService.CreateEdition(
                 new CreateEditionDto
@@ -55,7 +51,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Features
                 });
 
 
-            var premiumEditon = (await _editionAppService.GetEditions()).Items.FirstOrDefault(e => e.DisplayName == "Premium Edition");
+            var premiumEditon =
+                (await _editionAppService.GetEditions()).Items.FirstOrDefault(e => e.DisplayName == "Premium Edition");
             premiumEditon.ShouldNotBeNull();
 
             await UsingDbContextAsync(async context =>
@@ -101,7 +98,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Features
                         })
             );
 
-            exception.Message.ShouldContain(_localizationManager.GetString(AbpZeroTemplateConsts.LocalizationSourceName, "MaximumUserCount_Error_Message"));
+            exception.Message.ShouldContain(_localizationManager.GetString(AbpZeroTemplateConsts.LocalizationSourceName,
+                "MaximumUserCount_Error_Message"));
         }
     }
 }

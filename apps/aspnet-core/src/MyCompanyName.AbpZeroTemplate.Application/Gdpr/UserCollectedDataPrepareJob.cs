@@ -19,10 +19,10 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
 {
     public class UserCollectedDataPrepareJob : AsyncBackgroundJob<UserIdentifier>, ITransientDependency
     {
-        private readonly IBinaryObjectManager _binaryObjectManager;
-        private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IAppNotifier _appNotifier;
+        private readonly IBinaryObjectManager _binaryObjectManager;
         private readonly ISettingManager _settingManager;
+        private readonly ITempFileCacheManager _tempFileCacheManager;
 
         public UserCollectedDataPrepareJob(
             IBinaryObjectManager binaryObjectManager,
@@ -46,7 +46,7 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
                     args.TenantId,
                     args.UserId
                 );
-                
+
                 var culture = CultureHelper.GetCultureInfoByChecking(userLanguage);
 
                 using (CultureInfoHelper.Use(culture))
@@ -59,10 +59,7 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
                         foreach (var provider in providers)
                         {
                             var providerFiles = await provider.GetFiles(args);
-                            if (providerFiles.Any())
-                            {
-                                files.AddRange(providerFiles);
-                            }
+                            if (providerFiles.Any()) files.AddRange(providerFiles);
                         }
                     }
 
@@ -104,6 +101,5 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
                 return outputZipFileStream.ToArray();
             }
         }
-
     }
 }

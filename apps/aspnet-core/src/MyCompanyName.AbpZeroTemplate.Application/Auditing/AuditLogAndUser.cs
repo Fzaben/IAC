@@ -4,7 +4,7 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 namespace MyCompanyName.AbpZeroTemplate.Auditing
 {
     /// <summary>
-    /// A helper class to store an <see cref="AuditLog"/> and a <see cref="User"/> object.
+    ///     A helper class to store an <see cref="AuditLog" /> and a <see cref="User" /> object.
     /// </summary>
     public class AuditLogAndUser
     {

@@ -5,12 +5,12 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityPropertyValues.Dto
 {
     public class GetAllDynamicEntityPropertyValuesOutput
     {
-        public List<GetAllDynamicEntityPropertyValuesOutputItem> Items { get; set; }
-
         public GetAllDynamicEntityPropertyValuesOutput()
         {
             Items = new List<GetAllDynamicEntityPropertyValuesOutputItem>();
         }
+
+        public List<GetAllDynamicEntityPropertyValuesOutputItem> Items { get; set; }
     }
 
     public class GetAllDynamicEntityPropertyValuesOutputItem

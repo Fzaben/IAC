@@ -14,13 +14,11 @@ namespace MyCompanyName.AbpZeroTemplate.Authentication
 
         public bool IsValid()
         {
-            bool valid = !ClientId.IsNullOrWhiteSpace() ||
-                         !Authority.IsNullOrWhiteSpace();
+            var valid = !ClientId.IsNullOrWhiteSpace() ||
+                        !Authority.IsNullOrWhiteSpace();
 
             if (valid && !Authority.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
                 throw new UserFriendlyException("Property name \"Authority\" must start with \"https://\"");
-            }
 
             return valid;
         }

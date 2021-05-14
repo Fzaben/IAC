@@ -12,13 +12,14 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Swagger
     {
         public void Apply(OpenApiParameter parameter, ParameterFilterContext context)
         {
-            var type = Nullable.GetUnderlyingType(context.ApiParameterDescription.Type) ?? context.ApiParameterDescription.Type;
+            var type = Nullable.GetUnderlyingType(context.ApiParameterDescription.Type) ??
+                       context.ApiParameterDescription.Type;
             if (type.IsEnum)
             {
                 AddEnumParamSpec(parameter, type, context);
                 parameter.Required = type == context.ApiParameterDescription.Type;
             }
-            else if (type.IsArray || (type.IsGenericType && type.GetInterfaces().Contains(typeof(IEnumerable))))
+            else if (type.IsArray || type.IsGenericType && type.GetInterfaces().Contains(typeof(IEnumerable)))
             {
                 var itemType = type.GetElementType() ?? type.GenericTypeArguments.First();
                 AddEnumSpec(itemType, context);
@@ -31,10 +32,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Swagger
                 context.SchemaGenerator.GenerateSchema(type, context.SchemaRepository)
             );
 
-            if (schema.Reference == null || !type.IsEnum)
-            {
-                return;
-            }
+            if (schema.Reference == null || !type.IsEnum) return;
 
             var enumNames = new OpenApiArray();
             enumNames.AddRange(Enum.GetNames(type).Select(_ => new OpenApiString(_)));
@@ -44,13 +42,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Swagger
         private static void AddEnumParamSpec(OpenApiParameter parameter, Type type, ParameterFilterContext context)
         {
             var schema = context.SchemaGenerator.GenerateSchema(type, context.SchemaRepository);
-            if (schema.Reference == null)
-            {
-                return;
-            }
+            if (schema.Reference == null) return;
 
             parameter.Schema = schema;
-            
+
             var enumNames = new OpenApiArray();
             enumNames.AddRange(Enum.GetNames(type).Select(_ => new OpenApiString(_)));
             schema.Extensions.Add("x-enumNames", enumNames);

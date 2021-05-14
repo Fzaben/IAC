@@ -8,14 +8,6 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
 {
     public class GetLanguageTextsInput : IPagedResultRequest, ISortedResultRequest, IShouldNormalize
     {
-        [Range(0, int.MaxValue)]
-        public int MaxResultCount { get; set; } //0: Unlimited.
-
-        [Range(0, int.MaxValue)]
-        public int SkipCount { get; set; }
-
-        public string Sorting { get; set; }
-
         [Required]
         [MaxLength(ApplicationLanguageText.MaxSourceNameLength)]
         public string SourceName { get; set; }
@@ -30,13 +22,16 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
         public string TargetValueFilter { get; set; }
 
         public string FilterText { get; set; }
-        
+
+        [Range(0, int.MaxValue)] public int MaxResultCount { get; set; } //0: Unlimited.
+
+        [Range(0, int.MaxValue)] public int SkipCount { get; set; }
+
         public void Normalize()
         {
-            if (TargetValueFilter.IsNullOrEmpty())
-            {
-                TargetValueFilter = "ALL";
-            }
+            if (TargetValueFilter.IsNullOrEmpty()) TargetValueFilter = "ALL";
         }
+
+        public string Sorting { get; set; }
     }
 }

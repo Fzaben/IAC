@@ -6,12 +6,12 @@ namespace MyCompanyName.AbpZeroTemplate.Net.Sms
 {
     public class SmsSender : ISmsSender, ITransientDependency
     {
-        public ILogger Logger { get; set; }
-
         public SmsSender()
         {
             Logger = NullLogger.Instance;
         }
+
+        public ILogger Logger { get; set; }
 
         public Task SendAsync(string number, string message)
         {

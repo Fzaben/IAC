@@ -10,24 +10,18 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Delegation.Dto
 
         public int SkipCount { get; set; }
 
-        public string Sorting { get; set; }
-
         public void Normalize()
         {
-            if (string.IsNullOrEmpty(Sorting) || Sorting == "userName ASC")
-            {
-                Sorting = "Username";
-            }
+            if (string.IsNullOrEmpty(Sorting) || Sorting == "userName ASC") Sorting = "Username";
 
             Sorting = DtoSortingHelper.ReplaceSorting(Sorting, s =>
             {
-                if (s == "userName DESC")
-                {
-                    s = "UserName DESC";
-                }
+                if (s == "userName DESC") s = "UserName DESC";
 
                 return s;
             });
         }
+
+        public string Sorting { get; set; }
     }
 }

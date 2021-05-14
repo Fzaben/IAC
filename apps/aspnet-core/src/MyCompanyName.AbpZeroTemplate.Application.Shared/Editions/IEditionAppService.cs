@@ -20,7 +20,8 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
 
         Task MoveTenantsToAnotherEdition(MoveTenantsToAnotherEditionDto input);
 
-        Task<List<SubscribableEditionComboboxItemDto>> GetEditionComboboxItems(int? selectedEditionId = null, bool addAllItem = false, bool onlyFree = false);
+        Task<List<SubscribableEditionComboboxItemDto>> GetEditionComboboxItems(int? selectedEditionId = null,
+            bool addAllItem = false, bool onlyFree = false);
 
         Task<int> GetTenantCount(int editionId);
     }

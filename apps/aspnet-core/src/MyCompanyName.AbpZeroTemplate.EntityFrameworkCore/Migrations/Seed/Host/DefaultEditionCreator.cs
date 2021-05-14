@@ -23,10 +23,12 @@ namespace MyCompanyName.AbpZeroTemplate.Migrations.Seed.Host
 
         private void CreateEditions()
         {
-            var defaultEdition = _context.Editions.IgnoreQueryFilters().FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName);
+            var defaultEdition = _context.Editions.IgnoreQueryFilters()
+                .FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName);
             if (defaultEdition == null)
             {
-                defaultEdition = new SubscribableEdition { Name = EditionManager.DefaultEditionName, DisplayName = EditionManager.DefaultEditionName };
+                defaultEdition = new SubscribableEdition
+                    {Name = EditionManager.DefaultEditionName, DisplayName = EditionManager.DefaultEditionName};
                 _context.Editions.Add(defaultEdition);
                 _context.SaveChanges();
 
@@ -44,17 +46,15 @@ namespace MyCompanyName.AbpZeroTemplate.Migrations.Seed.Host
         private void CreateFeatureIfNotExists(int editionId, string featureName, bool isEnabled)
         {
             var defaultEditionChatFeature = _context.EditionFeatureSettings.IgnoreQueryFilters()
-                                                        .FirstOrDefault(ef => ef.EditionId == editionId && ef.Name == featureName);
+                .FirstOrDefault(ef => ef.EditionId == editionId && ef.Name == featureName);
 
             if (defaultEditionChatFeature == null)
-            {
                 _context.EditionFeatureSettings.Add(new EditionFeatureSetting
                 {
                     Name = featureName,
                     Value = isEnabled.ToString().ToLower(),
                     EditionId = editionId
                 });
-            }
         }
     }
 }

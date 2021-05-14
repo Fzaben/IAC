@@ -33,15 +33,15 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
     public class ProfileAppService : AbpZeroTemplateAppServiceBase, IProfileAppService
     {
         private const int MaxProfilPictureBytes = 5242880; //5MB
+        private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
-        private readonly ITimeZoneService _timeZoneService;
+        private readonly ICacheManager _cacheManager;
         private readonly IFriendshipManager _friendshipManager;
         private readonly GoogleTwoFactorAuthenticateService _googleTwoFactorAuthenticateService;
-        private readonly ISmsSender _smsSender;
-        private readonly ICacheManager _cacheManager;
-        private readonly ITempFileCacheManager _tempFileCacheManager;
-        private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly ProfileImageServiceFactory _profileImageServiceFactory;
+        private readonly ISmsSender _smsSender;
+        private readonly ITempFileCacheManager _tempFileCacheManager;
+        private readonly ITimeZoneService _timeZoneService;
 
         public ProfileAppService(
             IAppFolders appFolders,
@@ -84,19 +84,10 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
 
                 var defaultTimeZoneId =
                     await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.User, AbpSession.TenantId);
-                if (userProfileEditDto.Timezone == defaultTimeZoneId)
-                {
-                    userProfileEditDto.Timezone = string.Empty;
-                }
+                if (userProfileEditDto.Timezone == defaultTimeZoneId) userProfileEditDto.Timezone = string.Empty;
             }
 
             return userProfileEditDto;
-        }
-
-        public async Task DisableGoogleAuthenticator()
-        {
-            var user = await GetCurrentUserAsync();
-            user.GoogleAuthenticatorKey = null;
         }
 
         public async Task<UpdateGoogleAuthenticatorKeyOutput> UpdateGoogleAuthenticatorKey()
@@ -132,15 +123,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
             var cacheKey = AbpSession.ToUserIdentifier().ToString();
             var cash = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(cacheKey);
 
-            if (cash == null)
-            {
-                throw new Exception("Phone number confirmation code is not found in cache !");
-            }
+            if (cash == null) throw new Exception("Phone number confirmation code is not found in cache !");
 
-            if (input.Code != cash.Code)
-            {
-                throw new UserFriendlyException(L("WrongSmsVerificationCode"));
-            }
+            if (input.Code != cash.Code) throw new UserFriendlyException(L("WrongSmsVerificationCode"));
 
             var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
             user.IsPhoneNumberConfirmed = true;
@@ -160,13 +145,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
             var user = await GetCurrentUserAsync();
 
             if (user.PhoneNumber != input.PhoneNumber)
-            {
                 input.IsPhoneNumberConfirmed = false;
-            }
-            else if (user.IsPhoneNumberConfirmed)
-            {
-                input.IsPhoneNumberConfirmed = true;
-            }
+            else if (user.IsPhoneNumberConfirmed) input.IsPhoneNumberConfirmed = true;
 
             ObjectMapper.Map(input, user);
             CheckErrors(await UserManager.UpdateAsync(user));
@@ -194,25 +174,20 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
 
             var user = await GetCurrentUserAsync();
             if (await UserManager.CheckPasswordAsync(user, input.CurrentPassword))
-            {
                 CheckErrors(await UserManager.ChangePasswordAsync(user, input.NewPassword));
-            }
             else
-            {
                 CheckErrors(IdentityResult.Failed(new IdentityError
                 {
                     Description = "Incorrect password."
                 }));
-            }
         }
 
         public async Task UpdateProfilePicture(UpdateProfilePictureInput input)
         {
-            var allowToUseGravatar = await SettingManager.GetSettingValueAsync<bool>(AppSettings.UserManagement.AllowUsingGravatarProfilePicture);
-            if (!allowToUseGravatar)
-            {
-                input.UseGravatarProfilePicture = false;
-            }
+            var allowToUseGravatar =
+                await SettingManager.GetSettingValueAsync<bool>(AppSettings.UserManagement
+                    .AllowUsingGravatarProfilePicture);
+            if (!allowToUseGravatar) input.UseGravatarProfilePicture = false;
 
             await SettingManager.ChangeSettingForUserAsync(
                 AbpSession.ToUserIdentifier(),
@@ -220,24 +195,19 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
                 input.UseGravatarProfilePicture.ToString().ToLowerInvariant()
             );
 
-            if (input.UseGravatarProfilePicture)
-            {
-                return;
-            }
+            if (input.UseGravatarProfilePicture) return;
 
             byte[] byteArray;
 
             var imageBytes = _tempFileCacheManager.GetFile(input.FileToken);
 
             if (imageBytes == null)
-            {
                 throw new UserFriendlyException("There is no such image file with the token: " + input.FileToken);
-            }
 
             using (var bmpImage = new Bitmap(new MemoryStream(imageBytes)))
             {
-                var width = (input.Width == 0 || input.Width > bmpImage.Width) ? bmpImage.Width : input.Width;
-                var height = (input.Height == 0 || input.Height > bmpImage.Height) ? bmpImage.Height : input.Height;
+                var width = input.Width == 0 || input.Width > bmpImage.Width ? bmpImage.Width : input.Width;
+                var height = input.Height == 0 || input.Height > bmpImage.Height ? bmpImage.Height : input.Height;
                 var bmCrop = bmpImage.Clone(new Rectangle(input.X, input.Y, width, height), bmpImage.PixelFormat);
 
                 using (var stream = new MemoryStream())
@@ -248,19 +218,15 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
             }
 
             if (byteArray.Length > MaxProfilPictureBytes)
-            {
                 throw new UserFriendlyException(L("ResizedProfilePicture_Warn_SizeLimit",
                     AppConsts.ResizedMaxProfilPictureBytesUserFriendlyValue));
-            }
 
             var user = await UserManager.GetUserByIdAsync(AbpSession.GetUserId());
 
-            if (user.ProfilePictureId.HasValue)
-            {
-                await _binaryObjectManager.DeleteAsync(user.ProfilePictureId.Value);
-            }
+            if (user.ProfilePictureId.HasValue) await _binaryObjectManager.DeleteAsync(user.ProfilePictureId.Value);
 
-            var storedFile = new BinaryObject(AbpSession.TenantId, byteArray, $"Profile picture of user {AbpSession.UserId}. {DateTime.UtcNow}");
+            var storedFile = new BinaryObject(AbpSession.TenantId, byteArray,
+                $"Profile picture of user {AbpSession.UserId}. {DateTime.UtcNow}");
             await _binaryObjectManager.SaveAsync(storedFile);
 
             user.ProfilePictureId = storedFile.Id;
@@ -311,10 +277,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
         public async Task<GetProfilePictureOutput> GetProfilePictureByUserName(string username)
         {
             var user = await UserManager.FindByNameAsync(username);
-            if (user == null)
-            {
-                return new GetProfilePictureOutput(string.Empty);
-            }
+            if (user == null) return new GetProfilePictureOutput(string.Empty);
 
             var userIdentifier = new UserIdentifier(AbpSession.TenantId, user.Id);
             using (var profileImageService = await _profileImageServiceFactory.Get(userIdentifier))
@@ -332,10 +295,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
                 friendUserIdentifier
             );
 
-            if (friendShip == null)
-            {
-                return new GetProfilePictureOutput(string.Empty);
-            }
+            if (friendShip == null) return new GetProfilePictureOutput(string.Empty);
 
 
             using (var profileImageService = await _profileImageServiceFactory.Get(friendUserIdentifier))
@@ -365,13 +325,16 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
             );
         }
 
+        public async Task DisableGoogleAuthenticator()
+        {
+            var user = await GetCurrentUserAsync();
+            user.GoogleAuthenticatorKey = null;
+        }
+
         private async Task<byte[]> GetProfilePictureByIdOrNull(Guid profilePictureId)
         {
             var file = await _binaryObjectManager.GetOrNullAsync(profilePictureId);
-            if (file == null)
-            {
-                return null;
-            }
+            if (file == null) return null;
 
             return file.Bytes;
         }
@@ -379,10 +342,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
         private async Task<GetProfilePictureOutput> GetProfilePictureByIdInternal(Guid profilePictureId)
         {
             var bytes = await GetProfilePictureByIdOrNull(profilePictureId);
-            if (bytes == null)
-            {
-                return new GetProfilePictureOutput(string.Empty);
-            }
+            if (bytes == null) return new GetProfilePictureOutput(string.Empty);
 
             return new GetProfilePictureOutput(Convert.ToBase64String(bytes));
         }

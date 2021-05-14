@@ -15,14 +15,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
 {
     public class SignalRChatCommunicator : IChatCommunicator, ITransientDependency
     {
-        /// <summary>
-        /// Reference to the logger.
-        /// </summary>
-        public ILogger Logger { get; set; }
+        private readonly IHubContext<ChatHub> _chatHub;
 
         private readonly IObjectMapper _objectMapper;
-
-        private readonly IHubContext<ChatHub> _chatHub;
 
         public SignalRChatCommunicator(
             IObjectMapper objectMapper,
@@ -33,29 +28,29 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
             Logger = NullLogger.Instance;
         }
 
+        /// <summary>
+        ///     Reference to the logger.
+        /// </summary>
+        public ILogger Logger { get; set; }
+
         public async Task SendMessageToClient(IReadOnlyList<IOnlineClient> clients, ChatMessage message)
         {
             foreach (var client in clients)
             {
                 var signalRClient = GetSignalRClientOrNull(client);
-                if (signalRClient == null)
-                {
-                    return;
-                }
+                if (signalRClient == null) return;
 
                 await signalRClient.SendAsync("getChatMessage", _objectMapper.Map<ChatMessageDto>(message));
             }
         }
 
-        public async Task SendFriendshipRequestToClient(IReadOnlyList<IOnlineClient> clients, Friendship friendship, bool isOwnRequest, bool isFriendOnline)
+        public async Task SendFriendshipRequestToClient(IReadOnlyList<IOnlineClient> clients, Friendship friendship,
+            bool isOwnRequest, bool isFriendOnline)
         {
             foreach (var client in clients)
             {
                 var signalRClient = GetSignalRClientOrNull(client);
-                if (signalRClient == null)
-                {
-                    return;
-                }
+                if (signalRClient == null) return;
 
                 var friendshipRequest = _objectMapper.Map<FriendDto>(friendship);
                 friendshipRequest.IsOnline = isFriendOnline;
@@ -64,43 +59,37 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
             }
         }
 
-        public async Task SendUserConnectionChangeToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, bool isConnected)
+        public async Task SendUserConnectionChangeToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user,
+            bool isConnected)
         {
             foreach (var client in clients)
             {
                 var signalRClient = GetSignalRClientOrNull(client);
-                if (signalRClient == null)
-                {
-                    continue;
-                }
+                if (signalRClient == null) continue;
 
                 await signalRClient.SendAsync("getUserConnectNotification", user, isConnected);
             }
         }
 
-        public async Task SendUserStateChangeToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, FriendshipState newState)
+        public async Task SendUserStateChangeToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user,
+            FriendshipState newState)
         {
             foreach (var client in clients)
             {
                 var signalRClient = GetSignalRClientOrNull(client);
-                if (signalRClient == null)
-                {
-                    continue;
-                }
+                if (signalRClient == null) continue;
 
                 await signalRClient.SendAsync("getUserStateChange", user, newState);
             }
         }
 
-        public async Task SendAllUnreadMessagesOfUserReadToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user)
+        public async Task SendAllUnreadMessagesOfUserReadToClients(IReadOnlyList<IOnlineClient> clients,
+            UserIdentifier user)
         {
             foreach (var client in clients)
             {
                 var signalRClient = GetSignalRClientOrNull(client);
-                if (signalRClient == null)
-                {
-                    continue;
-                }
+                if (signalRClient == null) continue;
 
                 await signalRClient.SendAsync("getallUnreadMessagesOfUserRead", user);
             }
@@ -111,10 +100,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
             foreach (var client in clients)
             {
                 var signalRClient = GetSignalRClientOrNull(client);
-                if (signalRClient == null)
-                {
-                    continue;
-                }
+                if (signalRClient == null) continue;
 
                 await signalRClient.SendAsync("getReadStateChange", user);
             }

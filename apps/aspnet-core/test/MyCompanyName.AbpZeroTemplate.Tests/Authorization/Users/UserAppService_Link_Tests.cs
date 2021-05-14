@@ -15,11 +15,11 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
     // ReSharper disable once InconsistentNaming
     public class UserAppService_Link_Tests : UserAppServiceTestBase
     {
+        private readonly TenantManager _tenantManager;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IUserLinkAppService _userLinkAppService;
         private readonly IUserLinkManager _userLinkManager;
         private readonly UserManager _userManager;
-        private readonly TenantManager _tenantManager;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         public UserAppService_Link_Tests()
         {
@@ -61,10 +61,13 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             });
 
             //Assert
-            var defaultTenantAdmin = await UsingDbContextAsync(context => context.Users.FirstOrDefaultAsync(u => u.TenantId == AbpSession.TenantId && u.Id == AbpSession.UserId));
-            var defaultTenantAccount = await _userLinkManager.GetUserAccountAsync(defaultTenantAdmin.ToUserIdentifier());
+            var defaultTenantAdmin = await UsingDbContextAsync(context =>
+                context.Users.FirstOrDefaultAsync(u => u.TenantId == AbpSession.TenantId && u.Id == AbpSession.UserId));
+            var defaultTenantAccount =
+                await _userLinkManager.GetUserAccountAsync(defaultTenantAdmin.ToUserIdentifier());
 
-            var testUser = await UsingDbContextAsync(testTenantId, context => context.Users.FirstOrDefaultAsync(u => u.UserName == "test"));
+            var testUser = await UsingDbContextAsync(testTenantId,
+                context => context.Users.FirstOrDefaultAsync(u => u.UserName == "test"));
             var testUserAccount = await _userLinkManager.GetUserAccountAsync(testUser.ToUserIdentifier());
 
             defaultTenantAccount.UserLinkId.ShouldBe(testUserAccount.UserLinkId);
@@ -97,13 +100,18 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             await _userLinkAppService.LinkToUser(linkToTestTenantUserInput);
 
             //Assert
-            var defaultTenantAdmin = await UsingDbContextAsync(context => context.Users.FirstOrDefaultAsync(u => u.TenantId == AbpSession.TenantId && u.UserName == AbpUserBase.AdminUserName));
-            var defaultTenantAdminAccount = await _userLinkManager.GetUserAccountAsync(defaultTenantAdmin.ToUserIdentifier());
+            var defaultTenantAdmin = await UsingDbContextAsync(context =>
+                context.Users.FirstOrDefaultAsync(u =>
+                    u.TenantId == AbpSession.TenantId && u.UserName == AbpUserBase.AdminUserName));
+            var defaultTenantAdminAccount =
+                await _userLinkManager.GetUserAccountAsync(defaultTenantAdmin.ToUserIdentifier());
 
-            var jnash = await UsingDbContextAsync(context => context.Users.FirstOrDefaultAsync(u => u.UserName == "jnash"));
+            var jnash = await UsingDbContextAsync(context =>
+                context.Users.FirstOrDefaultAsync(u => u.UserName == "jnash"));
             var jnashAccount = await _userLinkManager.GetUserAccountAsync(jnash.ToUserIdentifier());
 
-            var testTenantUser = await UsingDbContextAsync(testTenantId, context => context.Users.FirstOrDefaultAsync(u => u.UserName == "test"));
+            var testTenantUser = await UsingDbContextAsync(testTenantId,
+                context => context.Users.FirstOrDefaultAsync(u => u.UserName == "test"));
             var testTenantUserAccount = await _userLinkManager.GetUserAccountAsync(testTenantUser.ToUserIdentifier());
 
             jnashAccount.UserLinkId.ShouldBe(jnashAccount.Id);
@@ -118,7 +126,9 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
         {
             var testTenant = new Tenant("Test", "test")
             {
-                ConnectionString = SimpleStringCipher.Instance.Encrypt("Server=localhost; Database=AbpZeroTemplateTest_" + Guid.NewGuid().ToString("N") + "; Trusted_Connection=True;")
+                ConnectionString = SimpleStringCipher.Instance.Encrypt(
+                    "Server=localhost; Database=AbpZeroTemplateTest_" + Guid.NewGuid().ToString("N") +
+                    "; Trusted_Connection=True;")
             };
 
             await _tenantManager.CreateAsync(testTenant);
@@ -135,7 +145,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
                         Surname = "User",
                         UserName = "test",
                         Password = "AM4OLBpptxBYmM79lGOX9egzZk3vIQU3d/gFCJzaBjAPXzYIK3tQ2N7X4fcrHtElTw==", //123qwe
-                        TenantId = testTenant.Id,
+                        TenantId = testTenant.Id
                     };
 
                     await _userManager.CreateAsync(testUser);
@@ -171,10 +181,12 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             });
 
             //Assert
-            var linkedUser = await UsingDbContextAsync(context => context.Users.FirstOrDefaultAsync(u => u.UserName == "jnash"));
+            var linkedUser =
+                await UsingDbContextAsync(context => context.Users.FirstOrDefaultAsync(u => u.UserName == "jnash"));
             var linkedUserAccount = await _userLinkManager.GetUserAccountAsync(linkedUser.ToUserIdentifier());
 
-            var currentUser = await UsingDbContextAsync(context => context.Users.FirstOrDefaultAsync(u => u.Id == AbpSession.UserId));
+            var currentUser = await UsingDbContextAsync(context =>
+                context.Users.FirstOrDefaultAsync(u => u.Id == AbpSession.UserId));
             var currentUserAccount = await _userLinkManager.GetUserAccountAsync(currentUser.ToUserIdentifier());
 
             linkedUserAccount.UserLinkId.HasValue.ShouldBe(true);
@@ -184,9 +196,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             currentUserAccount.ShouldNotBe(null);
 
             if (currentUserAccount.UserLinkId != null)
-            {
                 linkedUserAccount.UserLinkId?.ShouldBe(currentUserAccount.UserLinkId.Value);
-            }
         }
 
         private async Task CreateTestUsersForAccountLinkingAsync()

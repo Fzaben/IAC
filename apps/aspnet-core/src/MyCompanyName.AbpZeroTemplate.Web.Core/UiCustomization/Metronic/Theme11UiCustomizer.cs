@@ -27,7 +27,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
                     },
                     Header = new ThemeHeaderSettingsDto
                     {
-                        MobileFixedHeader = await GetSettingValueAsync<bool>(AppSettings.UiManagement.Header.MobileFixedHeader)
+                        MobileFixedHeader =
+                            await GetSettingValueAsync<bool>(AppSettings.UiManagement.Header.MobileFixedHeader)
                     },
                     Menu = new ThemeMenuSettingsDto
                     {
@@ -47,7 +48,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
             settings.BaseSettings.SubHeader.SubheaderSize = 5;
             settings.BaseSettings.SubHeader.TitleStlye = "text-dark font-weight-bold my-2 mr-5";
             settings.BaseSettings.SubHeader.ContainerStyle = "subheader py-2 py-lg-4  subheader-transparent";
-            
+
             settings.IsLeftMenuUsed = true;
             settings.IsTopMenuUsed = false;
             settings.IsTabMenuUsed = false;
@@ -60,19 +61,26 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
             await SettingManager.ChangeSettingForUserAsync(user, AppSettings.UiManagement.Theme, ThemeName);
 
             await ChangeSettingForUserAsync(user, AppSettings.UiManagement.LayoutType, settings.Layout.LayoutType);
-            await ChangeSettingForUserAsync(user, AppSettings.UiManagement.Header.MobileFixedHeader, settings.Header.MobileFixedHeader.ToString());
-            await ChangeSettingForUserAsync(user, AppSettings.UiManagement.LeftAside.FixedAside, settings.Menu.FixedAside.ToString());
-            await ChangeSettingForUserAsync(user, AppSettings.UiManagement.SearchActive, settings.Menu.SearchActive.ToString());
+            await ChangeSettingForUserAsync(user, AppSettings.UiManagement.Header.MobileFixedHeader,
+                settings.Header.MobileFixedHeader.ToString());
+            await ChangeSettingForUserAsync(user, AppSettings.UiManagement.LeftAside.FixedAside,
+                settings.Menu.FixedAside.ToString());
+            await ChangeSettingForUserAsync(user, AppSettings.UiManagement.SearchActive,
+                settings.Menu.SearchActive.ToString());
         }
 
         public async Task UpdateTenantUiManagementSettingsAsync(int tenantId, ThemeSettingsDto settings)
         {
             await SettingManager.ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.Theme, ThemeName);
 
-            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.LayoutType, settings.Layout.LayoutType);
-            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.Header.MobileFixedHeader, settings.Header.MobileFixedHeader.ToString());
-            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.LeftAside.FixedAside, settings.Menu.FixedAside.ToString());
-            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.SearchActive, settings.Menu.SearchActive.ToString());
+            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.LayoutType,
+                settings.Layout.LayoutType);
+            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.Header.MobileFixedHeader,
+                settings.Header.MobileFixedHeader.ToString());
+            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.LeftAside.FixedAside,
+                settings.Menu.FixedAside.ToString());
+            await ChangeSettingForTenantAsync(tenantId, AppSettings.UiManagement.SearchActive,
+                settings.Menu.SearchActive.ToString());
         }
 
         public async Task UpdateApplicationUiManagementSettingsAsync(ThemeSettingsDto settings)
@@ -80,9 +88,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
             await SettingManager.ChangeSettingForApplicationAsync(AppSettings.UiManagement.Theme, ThemeName);
 
             await ChangeSettingForApplicationAsync(AppSettings.UiManagement.LayoutType, settings.Layout.LayoutType);
-            await ChangeSettingForApplicationAsync(AppSettings.UiManagement.Header.MobileFixedHeader, settings.Header.MobileFixedHeader.ToString());
-            await ChangeSettingForApplicationAsync(AppSettings.UiManagement.LeftAside.FixedAside, settings.Menu.FixedAside.ToString());
-            await ChangeSettingForApplicationAsync(AppSettings.UiManagement.SearchActive, settings.Menu.SearchActive.ToString());
+            await ChangeSettingForApplicationAsync(AppSettings.UiManagement.Header.MobileFixedHeader,
+                settings.Header.MobileFixedHeader.ToString());
+            await ChangeSettingForApplicationAsync(AppSettings.UiManagement.LeftAside.FixedAside,
+                settings.Menu.FixedAside.ToString());
+            await ChangeSettingForApplicationAsync(AppSettings.UiManagement.SearchActive,
+                settings.Menu.SearchActive.ToString());
         }
 
         public async Task<ThemeSettingsDto> GetHostUiManagementSettings()
@@ -98,11 +109,14 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
                 },
                 Header = new ThemeHeaderSettingsDto
                 {
-                    MobileFixedHeader = await GetSettingValueForApplicationAsync<bool>(AppSettings.UiManagement.Header.MobileFixedHeader),
+                    MobileFixedHeader =
+                        await GetSettingValueForApplicationAsync<bool>(
+                            AppSettings.UiManagement.Header.MobileFixedHeader)
                 },
                 Menu = new ThemeMenuSettingsDto
                 {
-                    FixedAside = await GetSettingValueForApplicationAsync<bool>(AppSettings.UiManagement.LeftAside.FixedAside),
+                    FixedAside =
+                        await GetSettingValueForApplicationAsync<bool>(AppSettings.UiManagement.LeftAside.FixedAside),
                     SearchActive = await GetSettingValueForApplicationAsync<bool>(AppSettings.UiManagement.SearchActive)
                 }
             };
@@ -121,12 +135,17 @@ namespace MyCompanyName.AbpZeroTemplate.Web.UiCustomization.Metronic
                 },
                 Header = new ThemeHeaderSettingsDto
                 {
-                    MobileFixedHeader = await GetSettingValueForTenantAsync<bool>(AppSettings.UiManagement.Header.MobileFixedHeader, tenantId),
+                    MobileFixedHeader =
+                        await GetSettingValueForTenantAsync<bool>(AppSettings.UiManagement.Header.MobileFixedHeader,
+                            tenantId)
                 },
                 Menu = new ThemeMenuSettingsDto
                 {
-                    FixedAside = await GetSettingValueForTenantAsync<bool>(AppSettings.UiManagement.LeftAside.FixedAside, tenantId),
-                    SearchActive = await GetSettingValueForTenantAsync<bool>(AppSettings.UiManagement.SearchActive, tenantId)
+                    FixedAside =
+                        await GetSettingValueForTenantAsync<bool>(AppSettings.UiManagement.LeftAside.FixedAside,
+                            tenantId),
+                    SearchActive =
+                        await GetSettingValueForTenantAsync<bool>(AppSettings.UiManagement.SearchActive, tenantId)
                 }
             };
         }

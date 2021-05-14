@@ -8,6 +8,7 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
     {
         Task<PagedResultDto<GetAllSendAttemptsOutput>> GetAllSendAttempts(GetAllSendAttemptsInput input);
 
-        Task<ListResultDto<GetAllSendAttemptsOfWebhookEventOutput>> GetAllSendAttemptsOfWebhookEvent(GetAllSendAttemptsOfWebhookEventInput input);
+        Task<ListResultDto<GetAllSendAttemptsOfWebhookEventOutput>> GetAllSendAttemptsOfWebhookEvent(
+            GetAllSendAttemptsOfWebhookEventInput input);
     }
 }

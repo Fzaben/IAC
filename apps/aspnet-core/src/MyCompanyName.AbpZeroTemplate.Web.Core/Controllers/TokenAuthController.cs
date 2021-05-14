@@ -11,9 +11,9 @@ using Abp.AspNetCore.Mvc.Authorization;
 using Abp.AspNetZeroCore.Web.Authentication.External;
 using Abp.Authorization;
 using Abp.Authorization.Users;
-using Abp.MultiTenancy;
 using Abp.Configuration;
 using Abp.Extensions;
+using Abp.MultiTenancy;
 using Abp.Net.Mail;
 using Abp.Notifications;
 using Abp.Runtime.Caching;
@@ -31,21 +31,21 @@ using MyCompanyName.AbpZeroTemplate.Authentication.TwoFactor;
 using MyCompanyName.AbpZeroTemplate.Authentication.TwoFactor.Google;
 using MyCompanyName.AbpZeroTemplate.Authorization;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts.Dto;
-using MyCompanyName.AbpZeroTemplate.Authorization.Users;
-using MyCompanyName.AbpZeroTemplate.MultiTenancy;
-using MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer;
-using MyCompanyName.AbpZeroTemplate.Web.Authentication.TwoFactor;
-using MyCompanyName.AbpZeroTemplate.Web.Models.TokenAuth;
+using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
 using MyCompanyName.AbpZeroTemplate.Authorization.Impersonation;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
+using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Configuration;
 using MyCompanyName.AbpZeroTemplate.Identity;
+using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Net.Sms;
 using MyCompanyName.AbpZeroTemplate.Notifications;
 using MyCompanyName.AbpZeroTemplate.Security.Recaptcha;
 using MyCompanyName.AbpZeroTemplate.Web.Authentication.External;
+using MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer;
+using MyCompanyName.AbpZeroTemplate.Web.Authentication.TwoFactor;
 using MyCompanyName.AbpZeroTemplate.Web.Common;
-using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
+using MyCompanyName.AbpZeroTemplate.Web.Models.TokenAuth;
 
 namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
@@ -53,30 +53,29 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
     public class TokenAuthController : AbpZeroTemplateControllerBase
     {
         private const string UserIdentifierClaimType = "http://aspnetzero.com/claims/useridentifier";
-
-        private readonly LogInManager _logInManager;
-        private readonly ITenantCache _tenantCache;
         private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
-        private readonly TokenAuthConfiguration _configuration;
-        private readonly UserManager _userManager;
+        private readonly IAppNotifier _appNotifier;
         private readonly ICacheManager _cacheManager;
-        private readonly IOptions<JwtBearerOptions> _jwtOptions;
+        private readonly AbpUserClaimsPrincipalFactory<User, Role> _claimsPrincipalFactory;
+        private readonly TokenAuthConfiguration _configuration;
+        private readonly IEmailSender _emailSender;
         private readonly IExternalAuthConfiguration _externalAuthConfiguration;
         private readonly IExternalAuthManager _externalAuthManager;
-        private readonly UserRegistrationManager _userRegistrationManager;
-        private readonly IImpersonationManager _impersonationManager;
-        private readonly IUserLinkManager _userLinkManager;
-        private readonly IAppNotifier _appNotifier;
-        private readonly ISmsSender _smsSender;
-        private readonly IEmailSender _emailSender;
-        private readonly IdentityOptions _identityOptions;
-        private readonly GoogleAuthenticatorProvider _googleAuthenticatorProvider;
         private readonly ExternalLoginInfoManagerFactory _externalLoginInfoManagerFactory;
-        private readonly ISettingManager _settingManager;
+        private readonly GoogleAuthenticatorProvider _googleAuthenticatorProvider;
+        private readonly IdentityOptions _identityOptions;
+        private readonly IImpersonationManager _impersonationManager;
+        private readonly IOptions<JwtBearerOptions> _jwtOptions;
+
+        private readonly LogInManager _logInManager;
         private readonly IJwtSecurityStampHandler _securityStampHandler;
-        private readonly AbpUserClaimsPrincipalFactory<User, Role> _claimsPrincipalFactory;
-        public IRecaptchaValidator RecaptchaValidator { get; set; }
+        private readonly ISettingManager _settingManager;
+        private readonly ISmsSender _smsSender;
+        private readonly ITenantCache _tenantCache;
         private readonly IUserDelegationManager _userDelegationManager;
+        private readonly IUserLinkManager _userLinkManager;
+        private readonly UserManager _userManager;
+        private readonly UserRegistrationManager _userRegistrationManager;
 
         public TokenAuthController(
             LogInManager logInManager,
@@ -127,13 +126,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             _userDelegationManager = userDelegationManager;
         }
 
+        public IRecaptchaValidator RecaptchaValidator { get; set; }
+
         [HttpPost]
         public async Task<AuthenticateResultModel> Authenticate([FromBody] AuthenticateModel model)
         {
-            if (UseCaptchaOnLogin())
-            {
-                await ValidateReCaptcha(model.CaptchaResponse);
-            }
+            if (UseCaptchaOnLogin()) await ValidateReCaptcha(model.CaptchaResponse);
 
             var loginResult = await GetLoginResultAsync(
                 model.UserNameOrEmailAddress,
@@ -223,26 +221,18 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         [HttpPost]
         public async Task<RefreshTokenResult> RefreshToken(string refreshToken)
         {
-            if (string.IsNullOrWhiteSpace(refreshToken))
-            {
-                throw new ArgumentNullException(nameof(refreshToken));
-            }
+            if (string.IsNullOrWhiteSpace(refreshToken)) throw new ArgumentNullException(nameof(refreshToken));
 
             if (!IsRefreshTokenValid(refreshToken, out var principal))
-            {
                 throw new ValidationException("Refresh token is not valid!");
-            }
 
             try
             {
                 var user = await _userManager.GetUserAsync(
                     UserIdentifier.Parse(principal.Claims.First(x => x.Type == AppConsts.UserIdentifier).Value)
                 );
-                
-                if (user == null)
-                {
-                    throw new UserFriendlyException("Unknown user or user identifier");
-                }
+
+                if (user == null) throw new UserFriendlyException("Unknown user or user identifier");
 
                 principal = await _claimsPrincipalFactory.CreateAsync(user);
 
@@ -282,17 +272,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 var refreshTokenValidityKeyInClaims =
                     User.Claims.FirstOrDefault(c => c.Type == AppConsts.RefreshTokenValidityKey);
                 if (refreshTokenValidityKeyInClaims != null)
-                {
                     await RemoveTokenAsync(refreshTokenValidityKeyInClaims.Value);
-                }
 
                 if (AllowOneConcurrentLoginPerUser())
-                {
                     await _securityStampHandler.RemoveSecurityStampCacheItem(
                         AbpSession.TenantId,
                         AbpSession.GetUserId()
                     );
-                }
             }
         }
 
@@ -315,10 +301,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 .GetOrDefaultAsync(cacheKey);
 
             if (cacheItem == null)
-            {
                 //There should be a cache item added in Authenticate method! This check is needed to prevent sending unwanted two factor code to users.
                 throw new UserFriendlyException(L("SendSecurityCodeErrorMessage"));
-            }
 
             var user = await _userManager.FindByIdAsync(model.UserId.ToString());
 
@@ -328,21 +312,17 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 var message = L("EmailSecurityCodeBody", cacheItem.Code);
 
                 if (model.Provider == "Email")
-                {
                     await _emailSender.SendAsync(await _userManager.GetEmailAsync(user), L("EmailSecurityCodeSubject"),
                         message);
-                }
                 else if (model.Provider == "Phone")
-                {
                     await _smsSender.SendAsync(await _userManager.GetPhoneNumberAsync(user), message);
-                }
             }
 
             await _cacheManager.GetTwoFactorCodeCache().SetAsync(
                 cacheKey,
                 cacheItem
             );
-            
+
             await _cacheManager.GetCache("ProviderCache").SetAsync(
                 "Provider",
                 model.Provider
@@ -371,9 +351,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             var userDelegation = await _userDelegationManager.GetAsync(userDelegationId);
 
             if (!userDelegation.IsCreatedByUser(result.User.Id))
-            {
                 throw new UserFriendlyException("User delegation error...");
-            }
 
             var expiration = userDelegation.EndTime.Subtract(Clock.Now);
             var accessToken = CreateAccessToken(await CreateJwtClaims(result.Identity, result.User, expiration),
@@ -413,10 +391,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
         private bool IsSchemeEnabledOnTenant(ExternalLoginProviderInfo scheme)
         {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                return true;
-            }
+            if (!AbpSession.TenantId.HasValue) return true;
 
             switch (scheme.Name)
             {
@@ -486,12 +461,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 {
                     var newUser = await RegisterExternalUserAsync(externalUser);
                     if (!newUser.IsActive)
-                    {
                         return new ExternalAuthenticateResultModel
                         {
                             WaitingForActivation = true
                         };
-                    }
 
                     //Try to login again with newly registered user!
                     loginResult = await _logInManager.LoginAsync(
@@ -500,13 +473,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                     );
 
                     if (loginResult.Result != AbpLoginResultType.Success)
-                    {
                         throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
                             loginResult.Result,
                             model.ProviderKey,
                             GetTenancyNameOrNull()
                         );
-                    }
 
                     var refreshToken = CreateRefreshToken(await CreateJwtClaims(loginResult.Identity,
                         loginResult.User, tokenType: TokenType.RefreshToken)
@@ -541,10 +512,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         [HttpGet]
         public async Task<ActionResult> TestNotification(string message = "", string severity = "info")
         {
-            if (message.IsNullOrEmpty())
-            {
-                message = "This is a test notification, created at " + Clock.Now;
-            }
+            if (message.IsNullOrEmpty()) message = "This is a test notification, created at " + Clock.Now;
 
             await _appNotifier.SendMessageAsync(
                 AbpSession.ToUserIdentifier(),
@@ -579,7 +547,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
             user.Logins = new List<UserLogin>
             {
-                new UserLogin
+                new()
                 {
                     LoginProvider = externalLoginInfo.Provider,
                     ProviderKey = externalLoginInfo.ProviderKey,
@@ -596,19 +564,14 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         {
             var userInfo = await _externalAuthManager.GetUserInfo(model.AuthProvider, model.ProviderAccessCode);
             if (!ProviderKeysAreEqual(model, userInfo))
-            {
                 throw new UserFriendlyException(L("CouldNotValidateExternalUser"));
-            }
 
             return userInfo;
         }
 
         private bool ProviderKeysAreEqual(ExternalAuthenticateModel model, ExternalAuthUserInfo userInfo)
         {
-            if (userInfo.ProviderKey == model.ProviderKey)
-            {
-                return true;
-            }
+            if (userInfo.ProviderKey == model.ProviderKey) return true;
 
             ;
 
@@ -620,24 +583,14 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         {
             if (!await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement.TwoFactorLogin
                 .IsEnabled))
-            {
                 return false;
-            }
 
-            if (!loginResult.User.IsTwoFactorEnabled)
-            {
-                return false;
-            }
+            if (!loginResult.User.IsTwoFactorEnabled) return false;
 
-            if ((await _userManager.GetValidTwoFactorProvidersAsync(loginResult.User)).Count <= 0)
-            {
-                return false;
-            }
+            if ((await _userManager.GetValidTwoFactorProvidersAsync(loginResult.User)).Count <= 0) return false;
 
             if (await TwoFactorClientRememberedAsync(loginResult.User.ToUserIdentifier(), authenticateModel))
-            {
                 return false;
-            }
 
             return true;
         }
@@ -647,14 +600,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         {
             if (!await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement.TwoFactorLogin
                 .IsRememberBrowserEnabled))
-            {
                 return false;
-            }
 
-            if (string.IsNullOrWhiteSpace(authenticateModel.TwoFactorRememberClientToken))
-            {
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(authenticateModel.TwoFactorRememberClientToken)) return false;
 
             try
             {
@@ -666,18 +614,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 };
 
                 foreach (var validator in _jwtOptions.Value.SecurityTokenValidators)
-                {
                     if (validator.CanReadToken(authenticateModel.TwoFactorRememberClientToken))
-                    {
                         try
                         {
                             var principal = validator.ValidateToken(authenticateModel.TwoFactorRememberClientToken,
                                 validationParameters, out _);
                             var useridentifierClaim = principal.FindFirst(c => c.Type == UserIdentifierClaimType);
-                            if (useridentifierClaim == null)
-                            {
-                                return false;
-                            }
+                            if (useridentifierClaim == null) return false;
 
                             return useridentifierClaim.Value == userIdentifier.ToString();
                         }
@@ -685,8 +628,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                         {
                             Logger.Debug(ex.ToString(), ex);
                         }
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -708,9 +649,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             {
                 if (!await _googleAuthenticatorProvider.ValidateAsync("TwoFactor",
                     authenticateModel.TwoFactorVerificationCode, _userManager, user))
-                {
                     throw new UserFriendlyException(L("InvalidSecurityCode"));
-                }
             }
             else if (cachedCode?.Code == null || cachedCode.Code != authenticateModel.TwoFactorVerificationCode)
             {
@@ -721,28 +660,21 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             await twoFactorCodeCache.RemoveAsync(userIdentifier);
 
             if (authenticateModel.RememberClient)
-            {
                 if (await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement.TwoFactorLogin
                     .IsRememberBrowserEnabled))
-                {
                     return CreateAccessToken(new[]
                         {
                             new Claim(UserIdentifierClaimType, user.ToUserIdentifier().ToString())
                         },
                         TimeSpan.FromDays(365)
                     );
-                }
-            }
 
             return null;
         }
 
         private string GetTenancyNameOrNull()
         {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                return null;
-            }
+            if (!AbpSession.TenantId.HasValue) return null;
 
             return _tenantCache.GetOrNull(AbpSession.TenantId.Value)?.TenancyName;
         }
@@ -779,10 +711,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             var now = DateTime.UtcNow;
 
             var jwtSecurityToken = new JwtSecurityToken(
-                issuer: _configuration.Issuer,
-                audience: _configuration.Audience,
-                claims: claims,
-                notBefore: now,
+                _configuration.Issuer,
+                _configuration.Audience,
+                claims,
+                now,
                 signingCredentials: _configuration.SigningCredentials,
                 expires: expiration == null ? (DateTime?) null : now.Add(expiration.Value)
             );
@@ -806,9 +738,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             var nameIdClaim = claims.First(c => c.Type == _identityOptions.ClaimsIdentity.UserIdClaimType);
 
             if (_identityOptions.ClaimsIdentity.UserIdClaimType != JwtRegisteredClaimNames.Sub)
-            {
                 claims.Add(new Claim(JwtRegisteredClaimNames.Sub, nameIdClaim.Value));
-            }
 
             claims.AddRange(new[]
             {
@@ -821,16 +751,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             });
 
             if (!string.IsNullOrEmpty(refreshTokenKey))
-            {
                 claims.Add(new Claim(AppConsts.RefreshTokenValidityKey, refreshTokenKey));
-            }
 
             if (!expiration.HasValue)
-            {
                 expiration = tokenType == TokenType.AccessToken
                     ? _configuration.AccessTokenExpiration
                     : _configuration.RefreshTokenExpiration;
-            }
 
             var expirationDate = DateTime.UtcNow.Add(expiration.Value);
 
@@ -854,9 +780,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                          "accessToken=" + signInToken +
                          "&userId=" + Convert.ToBase64String(Encoding.UTF8.GetBytes(userId.ToString()));
             if (tenantId.HasValue)
-            {
                 returnUrl += "&tenantId=" + Convert.ToBase64String(Encoding.UTF8.GetBytes(tenantId.Value.ToString()));
-            }
 
             return returnUrl;
         }
@@ -877,10 +801,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
                 foreach (var validator in _jwtOptions.Value.SecurityTokenValidators)
                 {
-                    if (!validator.CanReadToken(refreshToken))
-                    {
-                        continue;
-                    }
+                    if (!validator.CanReadToken(refreshToken)) continue;
 
                     try
                     {
@@ -888,9 +809,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
                         if (principal.Claims.FirstOrDefault(x => x.Type == AppConsts.TokenType)?.Value ==
                             TokenType.RefreshToken.To<int>().ToString())
-                        {
                             return true;
-                        }
                     }
                     catch (Exception ex)
                     {
@@ -917,9 +836,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             var requestUserAgent = Request.Headers["User-Agent"].ToString();
             if (!requestUserAgent.IsNullOrWhiteSpace() &&
                 WebConsts.ReCaptchaIgnoreWhiteList.Contains(requestUserAgent.Trim()))
-            {
                 return;
-            }
 
             await RecaptchaValidator.ValidateAsync(captchaResponse);
         }

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Abp.Application.Services;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile.Dto;
-using MyCompanyName.AbpZeroTemplate.Dto;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
 {
@@ -22,7 +20,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
         Task<GetProfilePictureOutput> GetProfilePicture();
 
         Task<GetProfilePictureOutput> GetProfilePictureByUser(long userId);
-        
+
         Task<GetProfilePictureOutput> GetProfilePictureByUserName(string username);
 
         Task<GetProfilePictureOutput> GetFriendProfilePicture(GetFriendProfilePictureInput input);

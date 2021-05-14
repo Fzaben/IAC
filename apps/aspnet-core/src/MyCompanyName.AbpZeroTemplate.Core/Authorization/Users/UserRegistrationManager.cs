@@ -12,7 +12,6 @@ using Abp.UI;
 using Microsoft.AspNetCore.Identity;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
 using MyCompanyName.AbpZeroTemplate.Configuration;
-using MyCompanyName.AbpZeroTemplate.Debugging;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Notifications;
 
@@ -20,17 +19,15 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 {
     public class UserRegistrationManager : AbpZeroTemplateDomainServiceBase
     {
-        public IAbpSession AbpSession { get; set; }
-        public IAsyncQueryableExecuter AsyncQueryableExecuter { get; set; }
+        private readonly IAppNotifier _appNotifier;
+        private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
+        private readonly RoleManager _roleManager;
 
         private readonly TenantManager _tenantManager;
-        private readonly UserManager _userManager;
-        private readonly RoleManager _roleManager;
         private readonly IUserEmailer _userEmailer;
-        private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
-        private readonly IAppNotifier _appNotifier;
+        private readonly UserManager _userManager;
         private readonly IUserPolicy _userPolicy;
-        
+
 
         public UserRegistrationManager(
             TenantManager tenantManager,
@@ -53,13 +50,19 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             AsyncQueryableExecuter = NullAsyncQueryableExecuter.Instance;
         }
 
-        public async Task<User> RegisterAsync(string name, string surname, string emailAddress, string userName, string plainPassword, bool isEmailConfirmed, string emailActivationLink)
+        public IAbpSession AbpSession { get; set; }
+        public IAsyncQueryableExecuter AsyncQueryableExecuter { get; set; }
+
+        public async Task<User> RegisterAsync(string name, string surname, string emailAddress, string userName,
+            string plainPassword, bool isEmailConfirmed, string emailActivationLink)
         {
             CheckForTenant();
             CheckSelfRegistrationIsEnabled();
 
             var tenant = await GetActiveTenantAsync();
-            var isNewRegisteredUserActiveByDefault = await SettingManager.GetSettingValueAsync<bool>(AppSettings.UserManagement.IsNewRegisteredUserActiveByDefault);
+            var isNewRegisteredUserActiveByDefault =
+                await SettingManager.GetSettingValueAsync<bool>(AppSettings.UserManagement
+                    .IsNewRegisteredUserActiveByDefault);
 
             await _userPolicy.CheckMaxUserCountAsync(tenant.Id);
 
@@ -78,10 +81,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             user.SetNormalizedNames();
 
             var defaultRoles = await AsyncQueryableExecuter.ToListAsync(_roleManager.Roles.Where(r => r.IsDefault));
-            foreach (var defaultRole in defaultRoles)
-            {
-                user.Roles.Add(new UserRole(tenant.Id, user.Id, defaultRole.Id));
-            }
+            foreach (var defaultRole in defaultRoles) user.Roles.Add(new UserRole(tenant.Id, user.Id, defaultRole.Id));
 
             await _userManager.InitializeOptionsAsync(AbpSession.TenantId);
             CheckErrors(await _userManager.CreateAsync(user, plainPassword));
@@ -103,18 +103,13 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 
         private void CheckForTenant()
         {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                throw new InvalidOperationException("Can not register host users!");
-            }
+            if (!AbpSession.TenantId.HasValue) throw new InvalidOperationException("Can not register host users!");
         }
 
         private void CheckSelfRegistrationIsEnabled()
         {
             if (!SettingManager.GetSettingValue<bool>(AppSettings.UserManagement.AllowSelfRegistration))
-            {
                 throw new UserFriendlyException(L("SelfUserRegistrationIsDisabledMessage_Detail"));
-            }
         }
 
         private bool UseCaptchaOnRegistration()
@@ -124,10 +119,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 
         private async Task<Tenant> GetActiveTenantAsync()
         {
-            if (!AbpSession.TenantId.HasValue)
-            {
-                return null;
-            }
+            if (!AbpSession.TenantId.HasValue) return null;
 
             return await GetActiveTenantAsync(AbpSession.TenantId.Value);
         }
@@ -135,15 +127,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         private async Task<Tenant> GetActiveTenantAsync(int tenantId)
         {
             var tenant = await _tenantManager.FindByIdAsync(tenantId);
-            if (tenant == null)
-            {
-                throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId));
-            }
+            if (tenant == null) throw new UserFriendlyException(L("UnknownTenantId{0}", tenantId));
 
-            if (!tenant.IsActive)
-            {
-                throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
-            }
+            if (!tenant.IsActive) throw new UserFriendlyException(L("TenantIdIsNotActive{0}", tenantId));
 
             return tenant;
         }

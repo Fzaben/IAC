@@ -11,12 +11,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.External
             _iocManager = iocManager;
         }
 
-        public IDisposableDependencyObjectWrapper<IExternalLoginInfoManager> GetExternalLoginInfoManager(string loginProvider)
+        public IDisposableDependencyObjectWrapper<IExternalLoginInfoManager> GetExternalLoginInfoManager(
+            string loginProvider)
         {
             if (loginProvider == "WsFederation")
-            {
                 return _iocManager.ResolveAsDisposable<WsFederationExternalLoginInfoManager>();
-            }
 
             return _iocManager.ResolveAsDisposable<DefaultExternalLoginInfoManager>();
         }

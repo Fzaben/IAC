@@ -32,7 +32,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         typeof(AbpTestBaseModule))]
     public class AbpZeroTemplateTestBaseModule : AbpModule
     {
-        public AbpZeroTemplateTestBaseModule(AbpZeroTemplateEntityFrameworkCoreModule abpZeroTemplateEntityFrameworkCoreModule)
+        public AbpZeroTemplateTestBaseModule(
+            AbpZeroTemplateEntityFrameworkCoreModule abpZeroTemplateEntityFrameworkCoreModule)
         {
             abpZeroTemplateEntityFrameworkCoreModule.SkipDbContextRegistration = true;
         }

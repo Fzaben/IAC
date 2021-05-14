@@ -16,10 +16,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto
 
         public void Normalize()
         {
-            if (string.IsNullOrEmpty(Sorting))
-            {
-                Sorting = "Name,Surname";
-            }
+            if (string.IsNullOrEmpty(Sorting)) Sorting = "Name,Surname";
 
             Filter = Filter?.Trim();
         }

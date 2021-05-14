@@ -83,10 +83,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Auditing
 
                     var aUser = context.Users.FirstOrDefault(u => u.TenantId == null);
 
-                    if (aUser != null)
-                    {
-                        aUser.Name = "changed name";
-                    }
+                    if (aUser != null) aUser.Name = "changed name";
 
                     context.SaveChanges();
                 });

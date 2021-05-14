@@ -31,15 +31,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 var file = Request.Form.Files.First();
 
                 //Check input
-                if (file == null)
-                {
-                    throw new UserFriendlyException(L("File_Empty_Error"));
-                }
+                if (file == null) throw new UserFriendlyException(L("File_Empty_Error"));
 
                 if (file.Length > 10000000) //10MB
-                {
                     throw new UserFriendlyException(L("File_SizeLimit_Error"));
-                }
 
                 byte[] fileBytes;
                 using (var stream = file.OpenReadStream())
@@ -47,7 +42,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                     fileBytes = stream.GetAllBytes();
                 }
 
-                var fileObject = new BinaryObject(null, fileBytes, $"File uploaded from chat by {AbpSession.UserId}, File name: {file.FileName} {DateTime.UtcNow}");
+                var fileObject = new BinaryObject(null, fileBytes,
+                    $"File uploaded from chat by {AbpSession.UserId}, File name: {file.FileName} {DateTime.UtcNow}");
                 using (CurrentUnitOfWork.SetTenantId(null))
                 {
                     await BinaryObjectManager.SaveAsync(fileObject);

@@ -1,15 +1,15 @@
 ﻿using System.Threading.Tasks;
 using Abp.Dependency;
-using MyCompanyName.AbpZeroTemplate.Identity;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
+using Twilio.Types;
 
 namespace MyCompanyName.AbpZeroTemplate.Net.Sms
 {
     public class TwilioSmsSender : ISmsSender, ITransientDependency
     {
-        private TwilioSmsSenderConfiguration _twilioSmsSenderConfiguration;
-        
+        private readonly TwilioSmsSenderConfiguration _twilioSmsSenderConfiguration;
+
         public TwilioSmsSender(TwilioSmsSenderConfiguration twilioSmsSenderConfiguration)
         {
             _twilioSmsSenderConfiguration = twilioSmsSenderConfiguration;
@@ -19,10 +19,10 @@ namespace MyCompanyName.AbpZeroTemplate.Net.Sms
         {
             TwilioClient.Init(_twilioSmsSenderConfiguration.AccountSid, _twilioSmsSenderConfiguration.AuthToken);
 
-            MessageResource resource = await MessageResource.CreateAsync(
+            var resource = await MessageResource.CreateAsync(
                 body: message,
-                @from: new Twilio.Types.PhoneNumber(_twilioSmsSenderConfiguration.SenderNumber),
-                to: new Twilio.Types.PhoneNumber(number)
+                from: new PhoneNumber(_twilioSmsSenderConfiguration.SenderNumber),
+                to: new PhoneNumber(number)
             );
         }
     }

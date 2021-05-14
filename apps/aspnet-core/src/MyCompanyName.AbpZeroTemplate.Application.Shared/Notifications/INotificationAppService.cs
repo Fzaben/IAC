@@ -9,7 +9,7 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
     public interface INotificationAppService : IApplicationService
     {
         Task<GetNotificationsOutput> GetUserNotifications(GetUserNotificationsInput input);
-        
+
         Task SetAllNotificationsAsRead();
 
         Task SetNotificationAsRead(EntityDto<Guid> input);

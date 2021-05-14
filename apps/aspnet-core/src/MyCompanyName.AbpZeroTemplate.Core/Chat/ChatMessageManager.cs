@@ -17,15 +17,15 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
     [AbpAuthorize]
     public class ChatMessageManager : AbpZeroTemplateDomainServiceBase, IChatMessageManager
     {
-        private readonly IFriendshipManager _friendshipManager;
         private readonly IChatCommunicator _chatCommunicator;
-        private readonly IOnlineClientManager<ChatChannel> _onlineClientManager;
-        private readonly UserManager _userManager;
-        private readonly ITenantCache _tenantCache;
-        private readonly IUserFriendsCache _userFriendsCache;
-        private readonly IUserEmailer _userEmailer;
-        private readonly IRepository<ChatMessage, long> _chatMessageRepository;
         private readonly IChatFeatureChecker _chatFeatureChecker;
+        private readonly IRepository<ChatMessage, long> _chatMessageRepository;
+        private readonly IFriendshipManager _friendshipManager;
+        private readonly IOnlineClientManager<ChatChannel> _onlineClientManager;
+        private readonly ITenantCache _tenantCache;
+        private readonly IUserEmailer _userEmailer;
+        private readonly IUserFriendsCache _userFriendsCache;
+        private readonly UserManager _userManager;
 
         public ChatMessageManager(
             IFriendshipManager friendshipManager,
@@ -49,32 +49,22 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             _chatFeatureChecker = chatFeatureChecker;
         }
 
-        public async Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
+        public async Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message,
+            string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
         {
             CheckReceiverExists(receiver);
 
             _chatFeatureChecker.CheckChatFeatures(sender.TenantId, receiver.TenantId);
 
             var friendshipState = (await _friendshipManager.GetFriendshipOrNullAsync(sender, receiver))?.State;
-            if (friendshipState == FriendshipState.Blocked)
-            {
-                throw new UserFriendlyException(L("UserIsBlocked"));
-            }
+            if (friendshipState == FriendshipState.Blocked) throw new UserFriendlyException(L("UserIsBlocked"));
 
             var sharedMessageId = Guid.NewGuid();
 
             await HandleSenderToReceiverAsync(sender, receiver, message, sharedMessageId);
             await HandleReceiverToSenderAsync(sender, receiver, message, sharedMessageId);
-            await HandleSenderUserInfoChangeAsync(sender, receiver, senderTenancyName, senderUserName, senderProfilePictureId);
-        }
-
-        private void CheckReceiverExists(UserIdentifier receiver)
-        {
-            var receiverUser = _userManager.GetUserOrNull(receiver);
-            if (receiverUser == null)
-            {
-                throw new UserFriendlyException(L("TargetUserNotFoundProbablyDeleted"));
-            }
+            await HandleSenderUserInfoChangeAsync(sender, receiver, senderTenancyName, senderUserName,
+                senderProfilePictureId);
         }
 
         [UnitOfWork]
@@ -103,9 +93,17 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             return await _chatMessageRepository.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
         }
 
-        private async Task HandleSenderToReceiverAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
+        private void CheckReceiverExists(UserIdentifier receiver)
         {
-            var friendshipState = (await _friendshipManager.GetFriendshipOrNullAsync(senderIdentifier, receiverIdentifier))?.State;
+            var receiverUser = _userManager.GetUserOrNull(receiver);
+            if (receiverUser == null) throw new UserFriendlyException(L("TargetUserNotFoundProbablyDeleted"));
+        }
+
+        private async Task HandleSenderToReceiverAsync(UserIdentifier senderIdentifier,
+            UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
+        {
+            var friendshipState =
+                (await _friendshipManager.GetFriendshipOrNullAsync(senderIdentifier, receiverIdentifier))?.State;
             if (friendshipState == null)
             {
                 friendshipState = FriendshipState.Accepted;
@@ -127,10 +125,8 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             }
 
             if (friendshipState.Value == FriendshipState.Blocked)
-            {
                 //Do not send message if receiver banned the sender
                 return;
-            }
 
             var sentMessage = new ChatMessage(
                 senderIdentifier,
@@ -147,18 +143,20 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             await _chatCommunicator.SendMessageToClient(
                 _onlineClientManager.GetAllByUserId(senderIdentifier),
                 sentMessage
-                );
+            );
         }
 
-        private async Task HandleReceiverToSenderAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
+        private async Task HandleReceiverToSenderAsync(UserIdentifier senderIdentifier,
+            UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
         {
-            var friendshipState = (await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier))?.State;
+            var friendshipState =
+                (await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier))?.State;
 
             if (friendshipState == null)
             {
-                var senderTenancyName = senderIdentifier.TenantId.HasValue ?
-                    _tenantCache.Get(senderIdentifier.TenantId.Value).TenancyName :
-                    null;
+                var senderTenancyName = senderIdentifier.TenantId.HasValue
+                    ? _tenantCache.Get(senderIdentifier.TenantId.Value).TenancyName
+                    : null;
 
                 var senderUser = _userManager.GetUser(senderIdentifier);
                 await _friendshipManager.CreateFriendshipAsync(
@@ -174,20 +172,18 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             }
 
             if (friendshipState == FriendshipState.Blocked)
-            {
                 //Do not send message if receiver banned the sender
                 return;
-            }
 
             var sentMessage = new ChatMessage(
-                    receiverIdentifier,
-                    senderIdentifier,
-                    ChatSide.Receiver,
-                    message,
-                    ChatMessageReadState.Unread,
-                    sharedMessageId,
-                    ChatMessageReadState.Read
-                );
+                receiverIdentifier,
+                senderIdentifier,
+                ChatSide.Receiver,
+                message,
+                ChatMessageReadState.Unread,
+                sharedMessageId,
+                ChatMessageReadState.Read
+            );
 
             Save(sentMessage);
 
@@ -198,41 +194,35 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             }
             else if (GetUnreadMessageCount(senderIdentifier, receiverIdentifier) == 1)
             {
-                var senderTenancyName = senderIdentifier.TenantId.HasValue ?
-                    _tenantCache.Get(senderIdentifier.TenantId.Value).TenancyName :
-                    null;
+                var senderTenancyName = senderIdentifier.TenantId.HasValue
+                    ? _tenantCache.Get(senderIdentifier.TenantId.Value).TenancyName
+                    : null;
 
                 await _userEmailer.TryToSendChatMessageMail(
-                      _userManager.GetUser(receiverIdentifier),
-                      _userManager.GetUser(senderIdentifier).UserName,
-                      senderTenancyName,
-                      sentMessage
-                  );
+                    _userManager.GetUser(receiverIdentifier),
+                    _userManager.GetUser(senderIdentifier).UserName,
+                    senderTenancyName,
+                    sentMessage
+                );
             }
         }
 
-        private async Task HandleSenderUserInfoChangeAsync(UserIdentifier sender, UserIdentifier receiver, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
+        private async Task HandleSenderUserInfoChangeAsync(UserIdentifier sender, UserIdentifier receiver,
+            string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
         {
             var receiverCacheItem = _userFriendsCache.GetCacheItemOrNull(receiver);
 
-            var senderAsFriend = receiverCacheItem?.Friends.FirstOrDefault(f => f.FriendTenantId == sender.TenantId && f.FriendUserId == sender.UserId);
-            if (senderAsFriend == null)
-            {
-                return;
-            }
+            var senderAsFriend = receiverCacheItem?.Friends.FirstOrDefault(f =>
+                f.FriendTenantId == sender.TenantId && f.FriendUserId == sender.UserId);
+            if (senderAsFriend == null) return;
 
             if (senderAsFriend.FriendTenancyName == senderTenancyName &&
                 senderAsFriend.FriendUserName == senderUserName &&
                 senderAsFriend.FriendProfilePictureId == senderProfilePictureId)
-            {
                 return;
-            }
 
-            var friendship = (await _friendshipManager.GetFriendshipOrNullAsync(receiver, sender));
-            if (friendship == null)
-            {
-                return;
-            }
+            var friendship = await _friendshipManager.GetFriendshipOrNullAsync(receiver, sender);
+            if (friendship == null) return;
 
             friendship.FriendTenancyName = senderTenancyName;
             friendship.FriendUserName = senderUserName;

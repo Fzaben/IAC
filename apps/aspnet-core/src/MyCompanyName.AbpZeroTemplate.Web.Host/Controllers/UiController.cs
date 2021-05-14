@@ -18,12 +18,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
     public class UiController : AbpZeroTemplateControllerBase
     {
-        private readonly IPerRequestSessionCache _sessionCache;
-        private readonly IMultiTenancyConfig _multiTenancyConfig;
+        private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
         private readonly IAccountAppService _accountAppService;
         private readonly LogInManager _logInManager;
+        private readonly IMultiTenancyConfig _multiTenancyConfig;
+        private readonly IPerRequestSessionCache _sessionCache;
         private readonly SignInManager _signInManager;
-        private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
 
         public UiController(
             IPerRequestSessionCache sessionCache,
@@ -50,10 +50,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 IsMultiTenancyEnabled = _multiTenancyConfig.IsEnabled
             };
 
-            if (model.LoginInformation?.User == null)
-            {
-                return RedirectToAction("Login");
-            }
+            if (model.LoginInformation?.User == null) return RedirectToAction("Login");
 
             return View(model);
         }
@@ -61,10 +58,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         [HttpGet]
         public IActionResult Login(string returnUrl = "")
         {
-            if (!string.IsNullOrEmpty(returnUrl))
-            {
-                ViewBag.ReturnUrl = returnUrl;
-            }
+            if (!string.IsNullOrEmpty(returnUrl)) ViewBag.ReturnUrl = returnUrl;
 
             return View();
         }
@@ -88,24 +82,17 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 }
             }
 
-            var loginResult = await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
+            var loginResult =
+                await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
 
             if (loginResult.User.ShouldChangePasswordOnNextLogin)
-            {
                 throw new UserFriendlyException(L("RequiresPasswordChange"));
-            }
 
             var signInResult = await _signInManager.SignInOrTwoFactorAsync(loginResult, model.RememberMe);
 
-            if (signInResult.RequiresTwoFactor)
-            {
-                throw new UserFriendlyException(L("RequiresTwoFactorAuth"));
-            }
+            if (signInResult.RequiresTwoFactor) throw new UserFriendlyException(L("RequiresTwoFactorAuth"));
 
-            if (!string.IsNullOrEmpty(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
+            if (!string.IsNullOrEmpty(returnUrl)) return Redirect(returnUrl);
 
             return RedirectToAction("Index");
         }
@@ -117,7 +104,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             return RedirectToAction("Index");
         }
 
-        private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress, string password, string tenancyName)
+        private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress,
+            string password, string tenancyName)
         {
             var loginResult = await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName);
 
@@ -126,7 +114,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 case AbpLoginResultType.Success:
                     return loginResult;
                 default:
-                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(loginResult.Result, usernameOrEmailAddress, tenancyName);
+                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(loginResult.Result,
+                        usernameOrEmailAddress, tenancyName);
             }
         }
     }

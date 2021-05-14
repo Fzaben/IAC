@@ -6,6 +6,5 @@ namespace MyCompanyName.AbpZeroTemplate.Tests
     [DependsOn(typeof(AbpZeroTemplateTestBaseModule))]
     public class AbpZeroTemplateTestModule : AbpModule
     {
-       
     }
 }

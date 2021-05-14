@@ -19,12 +19,12 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
 {
     public class ChatUserCollectedDataProvider : IUserCollectedDataProvider, ITransientDependency
     {
-        private readonly IRepository<ChatMessage, long> _chatMessageRepository;
         private readonly IChatMessageListExcelExporter _chatMessageListExcelExporter;
+        private readonly IRepository<ChatMessage, long> _chatMessageRepository;
+        private readonly IObjectMapper _objectMapper;
+        private readonly IRepository<Tenant> _tenantRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IRepository<UserAccount, long> _userAccountRepository;
-        private readonly IRepository<Tenant> _tenantRepository;
-        private readonly IObjectMapper _objectMapper;
 
         public ChatUserCollectedDataProvider(
             IRepository<ChatMessage, long> chatMessageRepository,
@@ -52,7 +52,8 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
             using (_unitOfWorkManager.Current.SetTenantId(null))
             {
                 var tenantIds = conversations.Select(c => c.Key.TenantId);
-                relatedTenancyNames = _tenantRepository.GetAll().Where(t => tenantIds.Contains(t.Id)).ToDictionary(t => t.Id, t => t.TenancyName);
+                relatedTenancyNames = _tenantRepository.GetAll().Where(t => tenantIds.Contains(t.Id))
+                    .ToDictionary(t => t.Id, t => t.TenancyName);
                 relatedUsernames = GetFriendUsernames(conversations.Select(c => c.Key).ToList());
             }
 
@@ -66,7 +67,8 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
                         ? relatedTenancyNames[message.TargetTenantId.Value]
                         : ".";
 
-                    message.TargetUserName = relatedUsernames[new UserIdentifier(message.TargetTenantId, message.TargetUserId)];
+                    message.TargetUserName =
+                        relatedUsernames[new UserIdentifier(message.TargetTenantId, message.TargetUserId)];
                 }
 
                 var messages = conversation.Value.OrderBy(m => m.CreationTime).ToList();
@@ -81,9 +83,7 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
             var predicate = PredicateBuilder.New<UserAccount>();
 
             foreach (var user in users)
-            {
                 predicate = predicate.Or(ua => ua.TenantId == user.TenantId && ua.UserId == user.UserId);
-            }
 
             using (_unitOfWorkManager.Current.DisableFilter(AbpDataFilters.SoftDelete))
             {
@@ -98,7 +98,8 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
             }
         }
 
-        private async Task<Dictionary<UserIdentifier, List<ChatMessageExportDto>>> GetUserChatMessages(int? tenantId, long userId)
+        private async Task<Dictionary<UserIdentifier, List<ChatMessageExportDto>>> GetUserChatMessages(int? tenantId,
+            long userId)
         {
             var conversations = (await _chatMessageRepository.GetAll()
                     .Where(message => message.UserId == userId && message.TenantId == tenantId)
@@ -107,12 +108,13 @@ namespace MyCompanyName.AbpZeroTemplate.Gdpr
                 .GroupBy(message => new {message.TargetTenantId, message.TargetUserId})
                 .Select(messageGrouped => new
                 {
-                    TargetTenantId = messageGrouped.Key.TargetTenantId,
-                    TargetUserId = messageGrouped.Key.TargetUserId,
+                    messageGrouped.Key.TargetTenantId,
+                    messageGrouped.Key.TargetUserId,
                     Messages = messageGrouped
                 }).ToList();
 
-            return conversations.ToDictionary(c => new UserIdentifier(c.TargetTenantId, c.TargetUserId), c => _objectMapper.Map<List<ChatMessageExportDto>>(c.Messages));
+            return conversations.ToDictionary(c => new UserIdentifier(c.TargetTenantId, c.TargetUserId),
+                c => _objectMapper.Map<List<ChatMessageExportDto>>(c.Messages));
         }
     }
 }

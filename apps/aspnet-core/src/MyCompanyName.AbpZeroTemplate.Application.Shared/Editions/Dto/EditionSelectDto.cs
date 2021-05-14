@@ -5,6 +5,11 @@ namespace MyCompanyName.AbpZeroTemplate.Editions.Dto
 {
     public class EditionSelectDto
     {
+        public EditionSelectDto()
+        {
+            AdditionalData = new Dictionary<SubscriptionPaymentGatewayType, Dictionary<string, string>>();
+        }
+
         public int Id { get; set; }
 
         public virtual string Name { get; set; }
@@ -28,11 +33,6 @@ namespace MyCompanyName.AbpZeroTemplate.Editions.Dto
         public bool IsFree { get; set; }
 
         public Dictionary<SubscriptionPaymentGatewayType, Dictionary<string, string>> AdditionalData { get; set; }
-
-        public EditionSelectDto()
-        {
-            AdditionalData = new Dictionary<SubscriptionPaymentGatewayType, Dictionary<string, string>>();
-        }
 
         public decimal GetPaymentAmount(PaymentPeriodType? paymentPeriodType)
         {

@@ -32,6 +32,5 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard.Dto
         public int[] DailySales { get; set; }
 
         public int[] ProfitShares { get; set; }
-
     }
 }

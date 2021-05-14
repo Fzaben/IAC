@@ -14,15 +14,15 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
     public class ConsentController : AbpZeroTemplateControllerBase
     {
+        private readonly IClientStore _clientStore;
         private readonly IIdentityServerInteractionService _interaction;
         private readonly IResourceStore _resourceStore;
-        private readonly IClientStore _clientStore;
 
         public ConsentController(
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IResourceStore resourceStore
-            )
+        )
         {
             _interaction = interaction;
             _clientStore = clientStore;
@@ -41,20 +41,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         {
             var result = await ProcessConsent(model);
 
-            if (result.IsRedirect)
-            {
-                return Redirect(result.RedirectUri);
-            }
+            if (result.IsRedirect) return Redirect(result.RedirectUri);
 
-            if (result.HasValidationError)
-            {
-                ModelState.AddModelError("", result.ValidationError);
-            }
+            if (result.HasValidationError) ModelState.AddModelError("", result.ValidationError);
 
-            if (result.ShowView)
-            {
-                return View("Index", result.ViewModel);
-            }
+            if (result.ShowView) return View("Index", result.ViewModel);
 
             throw new Exception("Unexpected model/result!");
         }
@@ -67,7 +58,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
             if (model.Button == "no")
             {
-                grantedConsent = new ConsentResponse()
+                grantedConsent = new ConsentResponse
                 {
                     Error = AuthorizationError.AccessDenied
                 };
@@ -78,9 +69,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 {
                     var scopes = model.ScopesConsented;
                     if (ConsentOptions.EnableOfflineAccess == false)
-                    {
                         scopes = scopes.Where(x => x != IdentityServerConstants.StandardScopes.OfflineAccess);
-                    }
 
                     grantedConsent = new ConsentResponse
                     {
@@ -101,10 +90,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             if (grantedConsent != null)
             {
                 var request = await _interaction.GetAuthorizationContextAsync(model.ReturnUrl);
-                if (request == null)
-                {
-                    return result;
-                }
+                if (request == null) return result;
 
                 await _interaction.GrantConsentAsync(request, grantedConsent);
 
@@ -121,22 +107,15 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         private async Task<ConsentViewModel> BuildViewModelAsync(string returnUrl, ConsentInputModel model = null)
         {
             var request = await _interaction.GetAuthorizationContextAsync(returnUrl);
-            if (request == null)
-            {
-                return null;
-            }
+            if (request == null) return null;
 
             var client = await _clientStore.FindEnabledClientByIdAsync(request.Client.ClientId);
-            if (client == null)
-            {
-                return null;
-            }
+            if (client == null) return null;
 
-            var resources = await _resourceStore.FindEnabledResourcesByScopeAsync(request.ValidatedResources.RawScopeValues);
+            var resources =
+                await _resourceStore.FindEnabledResourcesByScopeAsync(request.ValidatedResources.RawScopeValues);
             if (resources != null && (resources.IdentityResources.Any() || resources.ApiResources.Any()))
-            {
                 return CreateConsentViewModel(returnUrl, client, resources, request, model);
-            }
 
             return null;
         }
@@ -144,7 +123,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         private ConsentViewModel CreateConsentViewModel(
             string returnUrl,
             Client client,
-            IdentityServer4.Models.Resources resources,
+            Resources resources,
             AuthorizationRequest request,
             ConsentInputModel model = null)
         {
@@ -159,49 +138,49 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 AllowRememberConsent = client.AllowRememberConsent
             };
 
-            vm.IdentityScopes = resources.IdentityResources.Select(x => CreateScopeViewModel(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
-            
+            vm.IdentityScopes = resources.IdentityResources
+                .Select(x => CreateScopeViewModel(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+
             var apiScopes = new List<ScopeViewModel>();
-            foreach(var parsedScope in request.ValidatedResources.ParsedScopes)
+            foreach (var parsedScope in request.ValidatedResources.ParsedScopes)
             {
                 var apiScope = request.ValidatedResources.Resources.FindApiScope(parsedScope.ParsedName);
                 if (apiScope != null)
                 {
-                    var scopeVm = CreateScopeViewModel(parsedScope, apiScope, vm.ScopesConsented.Contains(parsedScope.RawValue) || model == null);
+                    var scopeVm = CreateScopeViewModel(parsedScope, apiScope,
+                        vm.ScopesConsented.Contains(parsedScope.RawValue) || model == null);
                     apiScopes.Add(scopeVm);
                 }
             }
-            
+
             if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
-            {
-                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
-            }
+                apiScopes.Add(GetOfflineAccessScope(
+                    vm.ScopesConsented.Contains(IdentityServerConstants.StandardScopes.OfflineAccess) ||
+                    model == null));
 
             vm.ApiScopes = apiScopes;
-            
+
             return vm;
         }
 
         public ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
         {
-            return new ScopeViewModel
+            return new()
             {
                 Name = identity.Name,
                 DisplayName = identity.DisplayName,
                 Description = identity.Description,
                 Emphasize = identity.Emphasize,
                 Required = identity.Required,
-                Checked = check || identity.Required,
+                Checked = check || identity.Required
             };
         }
 
         public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
         {
             var displayName = apiScope.DisplayName ?? apiScope.Name;
-            if (!String.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
-            {
+            if (!string.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
                 displayName += ":" + parsedScopeValue.ParsedParameter;
-            }
 
             return new ScopeViewModel
             {
@@ -216,7 +195,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
         private ScopeViewModel GetOfflineAccessScope(bool check)
         {
-            return new ScopeViewModel
+            return new()
             {
                 Name = IdentityServerConstants.StandardScopes.OfflineAccess,
                 DisplayName = ConsentOptions.OfflineAccessDisplayName,

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Abp.Json;
-using IdentityModel.Client;
-using Abp.MultiTenancy;
 using Abp.Web.Models;
+using IdentityModel.Client;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
 using Newtonsoft.Json;
 
@@ -17,14 +15,14 @@ namespace MyCompanyName.AbpZeroTemplate.ConsoleApiClient
      * Enable IdentityServer from appsettings.json of Web.Host/Web.Mvc project first.
      */
 
-    class Program
+    internal class Program
     {
         private const string ServerUrlBase = "https://localhost:44302/";
-        
+
         // If you have changed "Configuration.MultiTenancy.TenantIdResolveKey" in your web app, use the same value here. 
         private const string TenantIdResolveKey = "Abp.TenantId";
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             RunDemoAsync().Wait();
             Console.ReadLine();
@@ -41,19 +39,16 @@ namespace MyCompanyName.AbpZeroTemplate.ConsoleApiClient
             var client = new HttpClient();
 
             var disco = await client.GetDiscoveryDocumentAsync(ServerUrlBase);
-            if (disco.IsError)
-            {
-                throw new Exception(disco.Error);
-            }
+            if (disco.IsError) throw new Exception(disco.Error);
 
-            client.DefaultRequestHeaders.Add("Abp.TenantId", "1");  //Set TenantId
+            client.DefaultRequestHeaders.Add("Abp.TenantId", "1"); //Set TenantId
             var tokenResponse = await client.RequestPasswordTokenAsync(new PasswordTokenRequest
             {
                 Address = disco.TokenEndpoint,
 
                 ClientId = "client",
                 ClientSecret = "def2edf7-5d42-4edc-a84a-30136c340e13",
-                
+
                 Scope = "default-api",
 
                 UserName = "admin",
@@ -87,9 +82,7 @@ namespace MyCompanyName.AbpZeroTemplate.ConsoleApiClient
                 var content = await response.Content.ReadAsStringAsync();
                 var ajaxResponse = JsonConvert.DeserializeObject<AjaxResponse<PagedResultDto<UserListDto>>>(content);
                 if (!ajaxResponse.Success)
-                {
                     throw new Exception(ajaxResponse.Error?.Message ?? "Remote service throws exception!");
-                }
 
                 Console.WriteLine();
                 Console.WriteLine("Total user count: " + ajaxResponse.Result.TotalCount);

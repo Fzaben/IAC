@@ -17,10 +17,10 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Accounting
 {
     public class InvoiceAppService : AbpZeroTemplateAppServiceBase, IInvoiceAppService
     {
-        private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
-        private readonly IInvoiceNumberGenerator _invoiceNumberGenerator;
         private readonly EditionManager _editionManager;
+        private readonly IInvoiceNumberGenerator _invoiceNumberGenerator;
         private readonly IRepository<Invoice> _invoiceRepository;
+        private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
 
         public InvoiceAppService(
             ISubscriptionPaymentRepository subscriptionPaymentRepository,
@@ -38,21 +38,13 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Accounting
         {
             var payment = await _subscriptionPaymentRepository.GetAsync(input.Id);
 
-            if (string.IsNullOrEmpty(payment.InvoiceNo))
-            {
-                throw new Exception("There is no invoice for this payment !");
-            }
+            if (string.IsNullOrEmpty(payment.InvoiceNo)) throw new Exception("There is no invoice for this payment !");
 
             if (payment.TenantId != AbpSession.GetTenantId())
-            {
                 throw new UserFriendlyException(L("ThisInvoiceIsNotYours"));
-            }
 
             var invoice = await _invoiceRepository.FirstOrDefaultAsync(b => b.InvoiceNo == payment.InvoiceNo);
-            if (invoice == null)
-            {
-                throw new UserFriendlyException();
-            }
+            if (invoice == null) throw new UserFriendlyException();
 
             var edition = await _editionManager.FindByIdAsync(payment.EditionId);
             var hostAddress = await SettingManager.GetSettingValueAsync(AppSettings.HostManagement.BillingAddress);
@@ -78,20 +70,18 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Accounting
         {
             var payment = await _subscriptionPaymentRepository.GetAsync(input.SubscriptionPaymentId);
             if (!string.IsNullOrEmpty(payment.InvoiceNo))
-            {
                 throw new Exception("Invoice is already generated for this payment.");
-            }
 
             var invoiceNo = await _invoiceNumberGenerator.GetNewInvoiceNumber();
 
-            var tenantLegalName = await SettingManager.GetSettingValueAsync(AppSettings.TenantManagement.BillingLegalName);
+            var tenantLegalName =
+                await SettingManager.GetSettingValueAsync(AppSettings.TenantManagement.BillingLegalName);
             var tenantAddress = await SettingManager.GetSettingValueAsync(AppSettings.TenantManagement.BillingAddress);
             var tenantTaxNo = await SettingManager.GetSettingValueAsync(AppSettings.TenantManagement.BillingTaxVatNo);
 
-            if (string.IsNullOrEmpty(tenantLegalName) || string.IsNullOrEmpty(tenantAddress) || string.IsNullOrEmpty(tenantTaxNo))
-            {
+            if (string.IsNullOrEmpty(tenantLegalName) || string.IsNullOrEmpty(tenantAddress) ||
+                string.IsNullOrEmpty(tenantTaxNo))
                 throw new UserFriendlyException(L("InvoiceInfoIsMissingOrNotCompleted"));
-            }
 
             await _invoiceRepository.InsertAsync(new Invoice
             {

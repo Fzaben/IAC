@@ -27,39 +27,28 @@ namespace MyCompanyName.AbpZeroTemplate.Chat
             if (sourceTenantId.HasValue)
             {
                 if (!_featureChecker.IsEnabled(sourceTenantId.Value, AppFeatures.ChatFeature))
-                {
                     throw new UserFriendlyException(L("ChatFeatureIsNotEnabled" + localizationPosfix));
-                }
 
                 if (targetTenantId.HasValue)
                 {
-                    if (sourceTenantId == targetTenantId)
-                    {
-                        return;
-                    }
+                    if (sourceTenantId == targetTenantId) return;
 
                     if (!_featureChecker.IsEnabled(sourceTenantId.Value, AppFeatures.TenantToTenantChatFeature))
-                    {
-                        throw new UserFriendlyException(L("TenantToTenantChatFeatureIsNotEnabled" + localizationPosfix));
-                    }
+                        throw new UserFriendlyException(L("TenantToTenantChatFeatureIsNotEnabled" +
+                                                          localizationPosfix));
                 }
                 else
                 {
                     if (!_featureChecker.IsEnabled(sourceTenantId.Value, AppFeatures.TenantToHostChatFeature))
-                    {
                         throw new UserFriendlyException(L("TenantToHostChatFeatureIsNotEnabled" + localizationPosfix));
-                    }
                 }
             }
             else
             {
                 if (targetTenantId.HasValue)
-                {
                     if (!_featureChecker.IsEnabled(targetTenantId.Value, AppFeatures.TenantToHostChatFeature))
-                    {
-                        throw new UserFriendlyException(L("TenantToHostChatFeatureIsNotEnabled" + (side == ChatSide.Sender ? "ForReceiver" : "ForSender")));
-                    }
-                }
+                        throw new UserFriendlyException(L("TenantToHostChatFeatureIsNotEnabled" +
+                                                          (side == ChatSide.Sender ? "ForReceiver" : "ForSender")));
             }
         }
     }

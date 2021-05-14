@@ -10,7 +10,5 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard.Dto
         }
 
         public List<MemberActivity> MemberActivities { get; set; }
-
-
     }
 }

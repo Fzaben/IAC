@@ -1,12 +1,10 @@
-﻿using Abp;
-using Abp.Dependency;
+﻿using Abp.Dependency;
 using Abp.EntityFrameworkCore.Configuration;
 using Abp.IdentityServer4vNext;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Abp.Zero.EntityFrameworkCore;
 using MyCompanyName.AbpZeroTemplate.Configuration;
-using MyCompanyName.AbpZeroTemplate.EntityHistory;
 using MyCompanyName.AbpZeroTemplate.Migrations.Seed;
 
 namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
@@ -15,7 +13,7 @@ namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
         typeof(AbpZeroCoreEntityFrameworkCoreModule),
         typeof(AbpZeroTemplateCoreModule),
         typeof(AbpZeroCoreIdentityServervNextEntityFrameworkCoreModule)
-        )]
+    )]
     public class AbpZeroTemplateEntityFrameworkCoreModule : AbpModule
     {
         /* Used it tests to skip DbContext registration, in order to use in-memory database of EF Core */
@@ -26,19 +24,15 @@ namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
         public override void PreInitialize()
         {
             if (!SkipDbContextRegistration)
-            {
                 Configuration.Modules.AbpEfCore().AddDbContext<AbpZeroTemplateDbContext>(options =>
                 {
                     if (options.ExistingConnection != null)
-                    {
-                        AbpZeroTemplateDbContextConfigurer.Configure(options.DbContextOptions, options.ExistingConnection);
-                    }
+                        AbpZeroTemplateDbContextConfigurer.Configure(options.DbContextOptions,
+                            options.ExistingConnection);
                     else
-                    {
-                        AbpZeroTemplateDbContextConfigurer.Configure(options.DbContextOptions, options.ConnectionString);
-                    }
+                        AbpZeroTemplateDbContextConfigurer.Configure(options.DbContextOptions,
+                            options.ConnectionString);
                 });
-            }
 
             // Set this setting to true for enabling entity history.
             Configuration.EntityHistory.IsEnabled = false;
@@ -59,10 +53,9 @@ namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
 
             using (var scope = IocManager.CreateScope())
             {
-                if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>().Exist(configurationAccessor.Configuration["ConnectionStrings:Default"]))
-                {
+                if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>()
+                    .Exist(configurationAccessor.Configuration["ConnectionStrings:Default"]))
                     SeedHelper.SeedHostDb(IocManager);
-                }
             }
         }
     }

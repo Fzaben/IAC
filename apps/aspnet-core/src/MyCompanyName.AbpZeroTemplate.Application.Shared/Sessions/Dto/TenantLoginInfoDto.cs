@@ -41,21 +41,18 @@ namespace MyCompanyName.AbpZeroTemplate.Sessions.Dto
         public bool SubscriptionIsExpiringSoon(int subscriptionExpireNootifyDayCount)
         {
             if (SubscriptionEndDateUtc.HasValue)
-            {
-                return Clock.Now.ToUniversalTime().AddDays(subscriptionExpireNootifyDayCount) >= SubscriptionEndDateUtc.Value;
-            }
+                return Clock.Now.ToUniversalTime().AddDays(subscriptionExpireNootifyDayCount) >=
+                       SubscriptionEndDateUtc.Value;
 
             return false;
         }
 
         public int GetSubscriptionExpiringDayCount()
         {
-            if (!SubscriptionEndDateUtc.HasValue)
-            {
-                return 0;
-            }
+            if (!SubscriptionEndDateUtc.HasValue) return 0;
 
-            return Convert.ToInt32(SubscriptionEndDateUtc.Value.ToUniversalTime().Subtract(Clock.Now.ToUniversalTime()).TotalDays);
+            return Convert.ToInt32(SubscriptionEndDateUtc.Value.ToUniversalTime().Subtract(Clock.Now.ToUniversalTime())
+                .TotalDays);
         }
 
         public bool HasRecurringSubscription()

@@ -7,8 +7,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile.Dto
 {
     public class UpdateProfilePictureInput : ICustomValidate
     {
-        [MaxLength(400)]
-        public string FileToken { get; set; }
+        [MaxLength(400)] public string FileToken { get; set; }
 
         public int X { get; set; }
 
@@ -17,14 +16,13 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile.Dto
         public int Width { get; set; }
 
         public int Height { get; set; }
-        
+
         public bool UseGravatarProfilePicture { get; set; }
+
         public void AddValidationErrors(CustomValidationContext context)
         {
             if (!UseGravatarProfilePicture && FileToken.IsNullOrEmpty())
-            {
                 throw new ArgumentNullException(nameof(FileToken));
-            }
         }
     }
 }

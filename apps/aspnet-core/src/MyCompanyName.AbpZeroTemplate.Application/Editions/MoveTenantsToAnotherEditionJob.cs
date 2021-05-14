@@ -12,14 +12,13 @@ using MyCompanyName.AbpZeroTemplate.Notifications;
 
 namespace MyCompanyName.AbpZeroTemplate.Editions
 {
-    public class MoveTenantsToAnotherEditionJob : AsyncBackgroundJob<MoveTenantsToAnotherEditionJobArgs>, ITransientDependency
+    public class MoveTenantsToAnotherEditionJob : AsyncBackgroundJob<MoveTenantsToAnotherEditionJobArgs>,
+        ITransientDependency
     {
-        private readonly IRepository<Tenant> _tenantRepository;
-        private readonly EditionManager _editionManager;
         private readonly IAppNotifier _appNotifier;
+        private readonly EditionManager _editionManager;
+        private readonly IRepository<Tenant> _tenantRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        
-        public IEventBus EventBus { get; set; }
 
         public MoveTenantsToAnotherEditionJob(
             IRepository<Tenant> tenantRepository,
@@ -35,12 +34,11 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
             EventBus = NullEventBus.Instance;
         }
 
+        public IEventBus EventBus { get; set; }
+
         public override async Task ExecuteAsync(MoveTenantsToAnotherEditionJobArgs args)
         {
-            if (args.SourceEditionId == args.TargetEditionId)
-            {
-                return;
-            }
+            if (args.SourceEditionId == args.TargetEditionId) return;
 
             List<int> tenantIds;
 
@@ -50,43 +48,38 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
                     .Where(t => t.EditionId == args.SourceEditionId)
                     .Select(t => t.Id)
                     .ToList();
-                
+
                 await uow.CompleteAsync();
             }
 
-            if (!tenantIds.Any())
-            {
-                return;
-            }
+            if (!tenantIds.Any()) return;
 
-            var changedTenantCount = await ChangeEditionOfTenantsAsync(tenantIds, args.SourceEditionId, args.TargetEditionId);
+            var changedTenantCount =
+                await ChangeEditionOfTenantsAsync(tenantIds, args.SourceEditionId, args.TargetEditionId);
 
             if (changedTenantCount != tenantIds.Count)
             {
-                Logger.Warn($"Unable to move all tenants from edition {args.SourceEditionId} to edition {args.TargetEditionId}");
+                Logger.Warn(
+                    $"Unable to move all tenants from edition {args.SourceEditionId} to edition {args.TargetEditionId}");
                 return;
             }
 
             await NotifyUserAsync(args);
         }
 
-        private async Task<int> ChangeEditionOfTenantsAsync(List<int> tenantIds, int sourceEditionId, int targetEditionId)
+        private async Task<int> ChangeEditionOfTenantsAsync(List<int> tenantIds, int sourceEditionId,
+            int targetEditionId)
         {
             var changedTenantCount = 0;
 
             foreach (var tenantId in tenantIds)
-            {
                 using (var uow = _unitOfWorkManager.Begin())
                 {
                     var changed = await ChangeEditionOfTenantAsync(tenantId, sourceEditionId, targetEditionId);
-                    if (changed)
-                    {
-                        changedTenantCount++;
-                    }
+                    if (changed) changedTenantCount++;
 
                     await uow.CompleteAsync();
                 }
-            }
 
             return changedTenantCount;
         }

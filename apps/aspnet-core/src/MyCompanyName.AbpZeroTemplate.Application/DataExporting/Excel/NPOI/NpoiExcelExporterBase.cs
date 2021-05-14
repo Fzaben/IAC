@@ -22,7 +22,8 @@ namespace MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI
 
         protected FileDto CreateExcelPackage(string fileName, Action<XSSFWorkbook> creator)
         {
-            var file = new FileDto(fileName, MimeTypeNames.ApplicationVndOpenxmlformatsOfficedocumentSpreadsheetmlSheet);
+            var file = new FileDto(fileName,
+                MimeTypeNames.ApplicationVndOpenxmlformatsOfficedocumentSpreadsheetmlSheet);
             var workbook = new XSSFWorkbook();
 
             creator(workbook);
@@ -34,17 +35,11 @@ namespace MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI
 
         protected void AddHeader(ISheet sheet, params string[] headerTexts)
         {
-            if (headerTexts.IsNullOrEmpty())
-            {
-                return;
-            }
+            if (headerTexts.IsNullOrEmpty()) return;
 
             sheet.CreateRow(0);
 
-            for (var i = 0; i < headerTexts.Length; i++)
-            {
-                AddHeader(sheet, i, headerTexts[i]);
-            }
+            for (var i = 0; i < headerTexts.Length; i++) AddHeader(sheet, i, headerTexts[i]);
         }
 
         protected void AddHeader(ISheet sheet, int columnIndex, string headerText)
@@ -61,10 +56,7 @@ namespace MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI
 
         protected void AddObjects<T>(ISheet sheet, IList<T> items, params Func<T, object>[] propertySelectors)
         {
-            if (items.IsNullOrEmpty() || propertySelectors.IsNullOrEmpty())
-            {
-                return;
-            }
+            if (items.IsNullOrEmpty() || propertySelectors.IsNullOrEmpty()) return;
 
             for (var i = 1; i <= items.Count; i++)
             {
@@ -74,10 +66,7 @@ namespace MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI
                 {
                     var cell = row.CreateCell(j);
                     var value = propertySelectors[j](items[i - 1]);
-                    if (value != null)
-                    {
-                        cell.SetCellValue(value.ToString());
-                    }
+                    if (value != null) cell.SetCellValue(value.ToString());
                 }
             }
         }
@@ -93,19 +82,13 @@ namespace MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI
 
         protected void SetCellDataFormat(ICell cell, string dataFormat)
         {
-            if (cell == null)
-            {
-                return;
-            }
+            if (cell == null) return;
 
             var dateStyle = cell.Sheet.Workbook.CreateCellStyle();
             var format = cell.Sheet.Workbook.CreateDataFormat();
             dateStyle.DataFormat = format.GetFormat(dataFormat);
             cell.CellStyle = dateStyle;
-            if (DateTime.TryParse(cell.StringCellValue, out var datetime))
-            {
-                cell.SetCellValue(datetime);
-            }
+            if (DateTime.TryParse(cell.StringCellValue, out var datetime)) cell.SetCellValue(datetime);
         }
     }
 }

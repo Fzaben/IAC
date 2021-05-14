@@ -4,18 +4,18 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Abp;
-using Abp.UI;
 using Abp.Dependency;
 using Abp.Domain.Uow;
 using Abp.Extensions;
 using Abp.Runtime.Caching;
-using Abp.Threading;
 using Abp.Runtime.Security;
+using Abp.Threading;
 using Abp.Timing;
+using Abp.UI;
 using Microsoft.IdentityModel.Tokens;
-using MyCompanyName.AbpZeroTemplate.Authorization.Users;
-using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
 using MyCompanyName.AbpZeroTemplate.Authorization;
+using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
+using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 
 namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
 {
@@ -43,32 +43,25 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
             var cacheManager = IocManager.Instance.Resolve<ICacheManager>();
             var principal = _tokenHandler.ValidateToken(securityToken, validationParameters, out validatedToken);
 
-            if (!HasAccessTokenType(principal))
-            {
-                throw new SecurityTokenException("invalid token type");
-            }
+            if (!HasAccessTokenType(principal)) throw new SecurityTokenException("invalid token type");
 
             AsyncHelper.RunSync(() => ValidateSecurityStampAsync(principal));
 
             var tokenValidityKeyClaim = principal.Claims.First(c => c.Type == AppConsts.TokenValidityKey);
-            if (TokenValidityKeyExistsInCache(tokenValidityKeyClaim, cacheManager))
-            {
-                return principal;
-            }
+            if (TokenValidityKeyExistsInCache(tokenValidityKeyClaim, cacheManager)) return principal;
 
             var userIdentifierString = principal.Claims.First(c => c.Type == AppConsts.UserIdentifier);
             var userIdentifier = UserIdentifier.Parse(userIdentifierString.Value);
 
             if (!ValidateTokenValidityKey(tokenValidityKeyClaim, userIdentifier))
-            {
                 throw new SecurityTokenException("invalid");
-            }
 
             var tokenAuthConfiguration = IocManager.Instance.Resolve<TokenAuthConfiguration>();
 
             cacheManager.GetCache(AppConsts.TokenValidityKey).Set(
                 tokenValidityKeyClaim.Value, "",
-                absoluteExpireTime: new DateTimeOffset(Clock.Now.AddMinutes(tokenAuthConfiguration.AccessTokenExpiration.TotalMinutes))
+                absoluteExpireTime: new DateTimeOffset(
+                    Clock.Now.AddMinutes(tokenAuthConfiguration.AccessTokenExpiration.TotalMinutes))
             );
 
             return principal;
@@ -115,10 +108,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
 
             using (var securityStampHandler = IocManager.Instance.ResolveAsDisposable<IJwtSecurityStampHandler>())
             {
-                if (!await securityStampHandler.Object.Validate(principal))
-                {
-                    throw new SecurityTokenException("invalid");
-                }
+                if (!await securityStampHandler.Object.Validate(principal)) throw new SecurityTokenException("invalid");
             }
         }
 
@@ -131,19 +121,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
         private static void ValidateUserDelegation(ClaimsPrincipal principal)
         {
             var _userDelegationConfiguration = IocManager.Instance.Resolve<IUserDelegationConfiguration>();
-            if (!_userDelegationConfiguration.IsEnabled)
-            {
-                return;
-            }
+            if (!_userDelegationConfiguration.IsEnabled) return;
 
             var impersonatorTenant = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
             var user = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.UserId);
             var impersonatorUser = principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorUserId);
 
-            if (impersonatorUser == null || user == null)
-            {
-                return;
-            }
+            if (impersonatorUser == null || user == null) return;
 
             var impersonatorTenantId = impersonatorTenant == null ? null :
                 impersonatorTenant.Value.IsNullOrEmpty() ? (int?) null : Convert.ToInt32(impersonatorTenant.Value);
@@ -154,9 +138,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
             {
                 if (_permissionChecker.Object.IsGranted(new UserIdentifier(impersonatorTenantId, impersonatorUserId),
                     AppPermissions.Pages_Administration_Users_Impersonation))
-                {
                     return;
-                }
             }
 
             using (var userDelegationManager = IocManager.Instance.ResolveAsDisposable<IUserDelegationManager>())
@@ -165,9 +147,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
                     userDelegationManager.Object.HasActiveDelegation(sourceUserId, impersonatorUserId);
 
                 if (!hasActiveDelegation)
-                {
                     throw new UserFriendlyException("ThereIsNoActiveUserDelegationBetweenYourUserAndCurrentUser");
-                }
             }
         }
     }

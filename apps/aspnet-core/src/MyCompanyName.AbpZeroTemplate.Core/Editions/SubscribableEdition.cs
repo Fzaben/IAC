@@ -6,12 +6,12 @@ using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
 namespace MyCompanyName.AbpZeroTemplate.Editions
 {
     /// <summary>
-    /// Extends <see cref="Edition"/> to add subscription features.
+    ///     Extends <see cref="Edition" /> to add subscription features.
     /// </summary>
     public class SubscribableEdition : Edition
     {
         /// <summary>
-        /// The edition that will assigned after expire date
+        ///     The edition that will assigned after expire date
         /// </summary>
         public int? ExpiringEditionId { get; set; }
 
@@ -26,19 +26,18 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
         public int? TrialDayCount { get; set; }
 
         /// <summary>
-        /// The account will be taken an action (termination of tenant account) after the specified days when the subscription is expired.
+        ///     The account will be taken an action (termination of tenant account) after the specified days when the subscription
+        ///     is expired.
         /// </summary>
         public int? WaitingDayAfterExpire { get; set; }
 
         [NotMapped]
-        public bool IsFree => !DailyPrice.HasValue && !WeeklyPrice.HasValue && !MonthlyPrice.HasValue && !AnnualPrice.HasValue;
+        public bool IsFree => !DailyPrice.HasValue && !WeeklyPrice.HasValue && !MonthlyPrice.HasValue &&
+                              !AnnualPrice.HasValue;
 
         public bool HasTrial()
         {
-            if (IsFree)
-            {
-                return false;
-            }
+            if (IsFree) return false;
 
             return TrialDayCount.HasValue && TrialDayCount.Value > 0;
         }
@@ -46,10 +45,7 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
         public decimal GetPaymentAmount(PaymentPeriodType? paymentPeriodType)
         {
             var amount = GetPaymentAmountOrNull(paymentPeriodType);
-            if (!amount.HasValue)
-            {
-                throw new Exception("No price information found for " + DisplayName + " edition!");
-            }
+            if (!amount.HasValue) throw new Exception("No price information found for " + DisplayName + " edition!");
 
             return amount.Value;
         }

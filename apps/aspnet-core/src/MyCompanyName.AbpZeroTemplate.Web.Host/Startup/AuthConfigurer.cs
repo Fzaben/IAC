@@ -23,16 +23,17 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
         public static void Configure(IServiceCollection services, IConfiguration configuration)
         {
             var authenticationBuilder = services.AddAuthentication();
-            
+
             if (bool.Parse(configuration["Authentication:JwtBearer:IsEnabled"]))
-            {
                 authenticationBuilder.AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         // The signing key must match!
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration["Authentication:JwtBearer:SecurityKey"])),
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(
+                                Encoding.ASCII.GetBytes(configuration["Authentication:JwtBearer:SecurityKey"])),
 
                         // Validate the JWT Issuer (iss) claim
                         ValidateIssuer = true,
@@ -57,7 +58,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
                         OnMessageReceived = QueryStringTokenResolver
                     };
                 });
-            }
 
             if (bool.Parse(configuration["IdentityServer:IsEnabled"]))
             {
@@ -76,10 +76,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
          * SignalR can not send authorization header. So, we are getting it from query string as an encrypted text. */
         private static Task QueryStringTokenResolver(MessageReceivedContext context)
         {
-            if (!context.HttpContext.Request.Path.HasValue)
-            {
-                return Task.CompletedTask;
-            }
+            if (!context.HttpContext.Request.Path.HasValue) return Task.CompletedTask;
 
             if (context.HttpContext.Request.Path.Value.StartsWith("/signalr"))
             {
@@ -90,7 +87,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
                 return SetToken(context, allowAnonymousSignalRConnection);
             }
 
-            List<string> urlsUsingEnchAuthToken = new List<string>()
+            var urlsUsingEnchAuthToken = new List<string>
             {
                 "/Chat/GetUploadedObject?",
                 "/Profile/GetProfilePictureByUser?"
@@ -98,14 +95,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
 
             if (urlsUsingEnchAuthToken.Any(url => context.HttpContext.Request.GetDisplayUrl().Contains(url)))
             {
-                if (context.HttpContext.Request.Headers.ContainsKey("authorization"))
-                {
-                    return Task.CompletedTask;
-                }
-                    
-                return SetToken(context, false);  
+                if (context.HttpContext.Request.Headers.ContainsKey("authorization")) return Task.CompletedTask;
+
+                return SetToken(context, false);
             }
-            
+
             return Task.CompletedTask;
         }
 
@@ -114,10 +108,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             var qsAuthToken = context.HttpContext.Request.Query["enc_auth_token"].FirstOrDefault();
             if (qsAuthToken == null)
             {
-                if (!allowAnonymous)
-                {
-                    throw new AbpAuthorizationException("SignalR auth token is missing.");
-                }
+                if (!allowAnonymous) throw new AbpAuthorizationException("SignalR auth token is missing.");
 
                 return Task.CompletedTask;
             }

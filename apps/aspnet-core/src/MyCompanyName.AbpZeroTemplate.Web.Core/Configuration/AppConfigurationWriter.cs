@@ -15,26 +15,22 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Configuration
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ILogger Logger { get; set; }
-
         public AppConfigurationWriter(IWebHostEnvironment webHostEnvironment)
         {
             _webHostEnvironment = webHostEnvironment;
             Logger = NullLogger.Instance;
         }
 
+        public ILogger Logger { get; set; }
+
         public void Write(string key, string value)
         {
             if (!File.Exists("appsettings.json"))
-            {
                 throw new UserFriendlyException("appsettings.json file does not exist");
-            }
             Writenternal("appsettings.json", key, value);
 
             if (File.Exists($"appsettings.{_webHostEnvironment.EnvironmentName}.json"))
-            {
                 Writenternal($"appsettings.{_webHostEnvironment.EnvironmentName}.json", key, value);
-            }
         }
 
         protected virtual void Writenternal(string filename, string key, string value)

@@ -14,17 +14,16 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto
 
         public string EditionDisplayName { get; set; }
 
-        [DisableAuditing]
-        public string ConnectionString { get; set; }
-
-        public bool IsActive { get; set; }
-
-        public DateTime CreationTime { get; set; }
+        [DisableAuditing] public string ConnectionString { get; set; }
 
         public DateTime? SubscriptionEndDateUtc { get; set; }
 
         public int? EditionId { get; set; }
 
         public bool IsInTrialPeriod { get; set; }
+
+        public DateTime CreationTime { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

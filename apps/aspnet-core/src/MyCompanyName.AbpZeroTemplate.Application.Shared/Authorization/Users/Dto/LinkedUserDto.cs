@@ -1,5 +1,4 @@
-﻿using System;
-using Abp.Application.Services.Dto;
+﻿using Abp.Application.Services.Dto;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto
 {
@@ -13,10 +12,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto
 
         public object GetShownLoginName(bool multiTenancyEnabled)
         {
-            if (!multiTenancyEnabled)
-            {
-                return Username;
-            }
+            if (!multiTenancyEnabled) return Username;
 
             return string.IsNullOrEmpty(TenancyName)
                 ? ".\\" + Username

@@ -23,7 +23,7 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base.Url
 
         public List<string> GetRedirectAllowedExternalWebSites()
         {
-            return new List<string>();
+            return new();
         }
     }
 }

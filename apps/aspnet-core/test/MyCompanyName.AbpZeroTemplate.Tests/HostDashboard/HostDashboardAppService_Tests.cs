@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using MyCompanyName.AbpZeroTemplate.Editions;
+using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard.Dto;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
 using Shouldly;
-using System.Globalization;
-using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore;
 
 namespace MyCompanyName.AbpZeroTemplate.Tests.HostDashboard
 {
@@ -318,7 +318,6 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.HostDashboard
                         EditionId = standardEdition.Id,
                         CreationTime = thirdWeek
                     });
-
                 });
 
             //Act
@@ -371,7 +370,6 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.HostDashboard
                         EditionId = standardEdition.Id,
                         CreationTime = thirdWeek
                     });
-
                 });
 
             //Act
@@ -419,7 +417,6 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.HostDashboard
                         EditionId = standardEdition.Id,
                         CreationTime = new DateTime(2017, 5, 18)
                     });
-
                 });
 
             //Act
@@ -438,10 +435,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.HostDashboard
         private static DateTime GetFirstDayOfWeek(DateTime date)
         {
             var firstDayOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
-            while (date.DayOfWeek != firstDayOfWeek)
-            {
-                date = date.AddDays(-1);
-            }
+            while (date.DayOfWeek != firstDayOfWeek) date = date.AddDays(-1);
 
             return date;
         }

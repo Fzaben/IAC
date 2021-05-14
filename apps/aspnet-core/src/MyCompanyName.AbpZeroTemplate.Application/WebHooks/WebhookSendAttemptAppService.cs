@@ -16,11 +16,11 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
     [AbpAuthorize(AppPermissions.Pages_Administration_Webhook_ListSendAttempts)]
     public class WebhookSendAttemptAppService : AbpZeroTemplateAppServiceBase, IWebhookAttemptAppService
     {
-        private readonly IWebhookSendAttemptStore _webhookSendAttemptStore;
         private readonly IBackgroundJobManager _backgroundJobManager;
-        private readonly IWebhookEventAppService _webhookEventAppService;
-        private readonly IWebhookSubscriptionAppService _webhookSubscriptionAppService;
         private readonly IRepository<WebhookSubscriptionInfo, Guid> _subscriptionRepository;
+        private readonly IWebhookEventAppService _webhookEventAppService;
+        private readonly IWebhookSendAttemptStore _webhookSendAttemptStore;
+        private readonly IWebhookSubscriptionAppService _webhookSubscriptionAppService;
 
         public WebhookSendAttemptAppService(
             IWebhookSendAttemptStore webhookSendAttemptStore,
@@ -28,7 +28,7 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
             IWebhookEventAppService webhookEventAppService,
             IWebhookSubscriptionAppService webhookSubscriptionAppService,
             IRepository<WebhookSubscriptionInfo, Guid> subscriptionRepository
-            )
+        )
         {
             _webhookSendAttemptStore = webhookSendAttemptStore;
             _backgroundJobManager = backgroundJobManager;
@@ -40,9 +40,7 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
         public async Task<PagedResultDto<GetAllSendAttemptsOutput>> GetAllSendAttempts(GetAllSendAttemptsInput input)
         {
             if (string.IsNullOrEmpty(input.SubscriptionId))
-            {
                 throw new ArgumentNullException(nameof(input.SubscriptionId));
-            }
 
             var list = await _webhookSendAttemptStore.GetAllSendAttemptsBySubscriptionAsPagedListAsync(
                 AbpSession.TenantId,
@@ -51,15 +49,14 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
                 input.SkipCount
             );
 
-            return new PagedResultDto<GetAllSendAttemptsOutput>(list.TotalCount, ObjectMapper.Map<List<GetAllSendAttemptsOutput>>(list.Items));
+            return new PagedResultDto<GetAllSendAttemptsOutput>(list.TotalCount,
+                ObjectMapper.Map<List<GetAllSendAttemptsOutput>>(list.Items));
         }
 
-        public async Task<ListResultDto<GetAllSendAttemptsOfWebhookEventOutput>> GetAllSendAttemptsOfWebhookEvent(GetAllSendAttemptsOfWebhookEventInput input)
+        public async Task<ListResultDto<GetAllSendAttemptsOfWebhookEventOutput>> GetAllSendAttemptsOfWebhookEvent(
+            GetAllSendAttemptsOfWebhookEventInput input)
         {
-            if (string.IsNullOrEmpty(input.Id))
-            {
-                throw new ArgumentNullException(nameof(input.Id));
-            }
+            if (string.IsNullOrEmpty(input.Id)) throw new ArgumentNullException(nameof(input.Id));
 
             var list = await _webhookSendAttemptStore.GetAllSendAttemptsByWebhookEventIdAsync(
                 AbpSession.TenantId,
@@ -69,14 +66,13 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
             var mappedList = ObjectMapper.Map<List<GetAllSendAttemptsOfWebhookEventOutput>>(list);
             var subscriptionIds = list.Select(x => x.WebhookSubscriptionId).Distinct().ToArray();
 
-            var subscriptionUrisDictionary = _subscriptionRepository.GetAll().Where(subscription => subscriptionIds.Contains(subscription.Id))
-                 .Select(subscription => new { subscription.Id, subscription.WebhookUri })
-                 .ToDictionary(s => s.Id, s => s.WebhookUri);
+            var subscriptionUrisDictionary = _subscriptionRepository.GetAll()
+                .Where(subscription => subscriptionIds.Contains(subscription.Id))
+                .Select(subscription => new {subscription.Id, subscription.WebhookUri})
+                .ToDictionary(s => s.Id, s => s.WebhookUri);
 
             foreach (var output in mappedList)
-            {
                 output.WebhookUri = subscriptionUrisDictionary[output.WebhookSubscriptionId];
-            }
 
             return new ListResultDto<GetAllSendAttemptsOfWebhookEventOutput>(mappedList);
         }
@@ -84,11 +80,14 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
         [AbpAuthorize(AppPermissions.Pages_Administration_Webhook_ResendWebhook)]
         public async Task Resend(string sendAttemptId)
         {
-            var webhookSendAttempt = await _webhookSendAttemptStore.GetAsync(AbpSession.TenantId, Guid.Parse(sendAttemptId));
+            var webhookSendAttempt =
+                await _webhookSendAttemptStore.GetAsync(AbpSession.TenantId, Guid.Parse(sendAttemptId));
             var webhookEvent = await _webhookEventAppService.Get(webhookSendAttempt.WebhookEventId.ToString());
-            var webhookSubscription = await _webhookSubscriptionAppService.GetSubscription(webhookSendAttempt.WebhookSubscriptionId.ToString());
+            var webhookSubscription =
+                await _webhookSubscriptionAppService.GetSubscription(
+                    webhookSendAttempt.WebhookSubscriptionId.ToString());
 
-            _backgroundJobManager.Enqueue<WebhookSenderJob, WebhookSenderArgs>(new WebhookSenderArgs()
+            _backgroundJobManager.Enqueue<WebhookSenderJob, WebhookSenderArgs>(new WebhookSenderArgs
             {
                 TenantId = AbpSession.TenantId,
                 WebhookEventId = webhookSendAttempt.WebhookEventId,

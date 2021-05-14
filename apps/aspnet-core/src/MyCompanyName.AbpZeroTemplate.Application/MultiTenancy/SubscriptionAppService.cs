@@ -7,12 +7,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 {
     public class SubscriptionAppService : AbpZeroTemplateAppServiceBase, ISubscriptionAppService
     {
-        public IEventBus EventBus { get; set; }
-
         public SubscriptionAppService()
         {
             EventBus = NullEventBus.Instance;
         }
+
+        public IEventBus EventBus { get; set; }
 
         public async Task DisableRecurringPayments()
         {

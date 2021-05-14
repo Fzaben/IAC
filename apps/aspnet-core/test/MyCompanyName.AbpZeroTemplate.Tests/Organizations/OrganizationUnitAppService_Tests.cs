@@ -6,7 +6,6 @@ using Abp.Authorization.Users;
 using Abp.Organizations;
 using MyCompanyName.AbpZeroTemplate.Organizations;
 using MyCompanyName.AbpZeroTemplate.Organizations.Dto;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 
@@ -114,7 +113,9 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Organizations
 
             UsingDbContext(context =>
             {
-                context.Users.FirstOrDefault(u => u.Id == AbpSession.UserId.Value && u.TenantId == AbpSession.TenantId.Value).ShouldNotBeNull();
+                context.Users
+                    .FirstOrDefault(u => u.Id == AbpSession.UserId.Value && u.TenantId == AbpSession.TenantId.Value)
+                    .ShouldNotBeNull();
             });
 
             //Act
@@ -135,17 +136,21 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Organizations
             await _organizationUnitAppService.AddUsersToOrganizationUnit(
                 new UsersToOrganizationUnitInput
                 {
-                    UserIds = new[] { admin.Id },
+                    UserIds = new[] {admin.Id},
                     OrganizationUnitId = ou12.Id
                 });
 
             //Assert
 
             //check from database
-            UsingDbContext(context => context.UserOrganizationUnits.FirstOrDefault(uou => uou.OrganizationUnitId == ou12.Id && uou.UserId == admin.Id)).ShouldNotBeNull();
+            UsingDbContext(context =>
+                context.UserOrganizationUnits.FirstOrDefault(uou =>
+                    uou.OrganizationUnitId == ou12.Id && uou.UserId == admin.Id)).ShouldNotBeNull();
 
             //Check also from app service
-            var output = await _organizationUnitAppService.GetOrganizationUnitUsers(new GetOrganizationUnitUsersInput { Id = ou12.Id });
+            var output =
+                await _organizationUnitAppService.GetOrganizationUnitUsers(new GetOrganizationUnitUsersInput
+                    {Id = ou12.Id});
             output.Items.FirstOrDefault(u => u.Id == admin.Id).ShouldNotBeNull();
         }
 
@@ -156,7 +161,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Organizations
             var ou12 = GetOrganizationUnitByName("OU12");
             var admin = GetUserByUserName(AbpUserBase.AdminUserName);
 
-            UsingDbContext(context => context.UserOrganizationUnits.Add(new UserOrganizationUnit(AbpSession.TenantId, admin.Id, ou12.Id)));
+            UsingDbContext(context =>
+                context.UserOrganizationUnits.Add(new UserOrganizationUnit(AbpSession.TenantId, admin.Id, ou12.Id)));
 
             //Act
             await _organizationUnitAppService.RemoveUserFromOrganizationUnit(
@@ -180,14 +186,16 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Organizations
 
         private OrganizationUnit GetOrganizationUnitByName(string diplayName)
         {
-            var organizationUnit = UsingDbContext(context => context.OrganizationUnits.FirstOrDefault(ou => ou.DisplayName == diplayName));
+            var organizationUnit = UsingDbContext(context =>
+                context.OrganizationUnits.FirstOrDefault(ou => ou.DisplayName == diplayName));
             organizationUnit.ShouldNotBeNull();
             return organizationUnit;
         }
 
         private OrganizationUnit GetOrganizationUnitById(long id)
         {
-            var organizationUnit = UsingDbContext(context => context.OrganizationUnits.FirstOrDefault(ou => ou.Id == id));
+            var organizationUnit =
+                UsingDbContext(context => context.OrganizationUnits.FirstOrDefault(ou => ou.Id == id));
             organizationUnit.ShouldNotBeNull();
             return organizationUnit;
         }

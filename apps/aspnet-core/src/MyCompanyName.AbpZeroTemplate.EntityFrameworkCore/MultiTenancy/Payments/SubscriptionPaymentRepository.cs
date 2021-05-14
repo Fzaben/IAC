@@ -8,19 +8,22 @@ using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore.Repositories;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
 {
-    public class SubscriptionPaymentRepository : AbpZeroTemplateRepositoryBase<SubscriptionPayment, long>, ISubscriptionPaymentRepository
+    public class SubscriptionPaymentRepository : AbpZeroTemplateRepositoryBase<SubscriptionPayment, long>,
+        ISubscriptionPaymentRepository
     {
         public SubscriptionPaymentRepository(IDbContextProvider<AbpZeroTemplateDbContext> dbContextProvider)
             : base(dbContextProvider)
         {
         }
 
-        public async Task<SubscriptionPayment> GetByGatewayAndPaymentIdAsync(SubscriptionPaymentGatewayType gateway, string paymentId)
+        public async Task<SubscriptionPayment> GetByGatewayAndPaymentIdAsync(SubscriptionPaymentGatewayType gateway,
+            string paymentId)
         {
             return await SingleAsync(p => p.ExternalPaymentId == paymentId && p.Gateway == gateway);
         }
 
-        public async Task<SubscriptionPayment> GetLastCompletedPaymentOrDefaultAsync(int tenantId, SubscriptionPaymentGatewayType? gateway, bool? isRecurring)
+        public async Task<SubscriptionPayment> GetLastCompletedPaymentOrDefaultAsync(int tenantId,
+            SubscriptionPaymentGatewayType? gateway, bool? isRecurring)
         {
             return (await GetAll()
                     .Where(p => p.TenantId == tenantId)
@@ -33,7 +36,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
                 .FirstOrDefault();
         }
 
-        public async Task<SubscriptionPayment> GetLastPaymentOrDefaultAsync(int tenantId, SubscriptionPaymentGatewayType? gateway, bool? isRecurring)
+        public async Task<SubscriptionPayment> GetLastPaymentOrDefaultAsync(int tenantId,
+            SubscriptionPaymentGatewayType? gateway, bool? isRecurring)
         {
             return (await GetAll()
                     .Where(p => p.TenantId == tenantId)

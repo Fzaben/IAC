@@ -10,13 +10,22 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Url
     {
         public const string TenancyNamePlaceHolder = "{TENANCY_NAME}";
 
+        private readonly IConfigurationRoot _appConfiguration;
+
+        public WebUrlServiceBase(IAppConfigurationAccessor configurationAccessor)
+        {
+            _appConfiguration = configurationAccessor.Configuration;
+        }
+
         public abstract string WebSiteRootAddressFormatKey { get; }
 
         public abstract string ServerRootAddressFormatKey { get; }
 
-        public string WebSiteRootAddressFormat => _appConfiguration[WebSiteRootAddressFormatKey] ?? "https://localhost:44302/";
+        public string WebSiteRootAddressFormat =>
+            _appConfiguration[WebSiteRootAddressFormatKey] ?? "https://localhost:44302/";
 
-        public string ServerRootAddressFormat => _appConfiguration[ServerRootAddressFormatKey] ?? "https://localhost:44302/";
+        public string ServerRootAddressFormat =>
+            _appConfiguration[ServerRootAddressFormatKey] ?? "https://localhost:44302/";
 
         public bool SupportsTenancyNameInUrl
         {
@@ -25,13 +34,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Url
                 var siteRootFormat = WebSiteRootAddressFormat;
                 return !siteRootFormat.IsNullOrEmpty() && siteRootFormat.Contains(TenancyNamePlaceHolder);
             }
-        }
-
-        readonly IConfigurationRoot _appConfiguration;
-
-        public WebUrlServiceBase(IAppConfigurationAccessor configurationAccessor)
-        {
-            _appConfiguration = configurationAccessor.Configuration;
         }
 
         public string GetSiteRootAddress(string tenancyName = null)
@@ -52,20 +54,12 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Url
 
         private string ReplaceTenancyNameInUrl(string siteRootFormat, string tenancyName)
         {
-            if (!siteRootFormat.Contains(TenancyNamePlaceHolder))
-            {
-                return siteRootFormat;
-            }
+            if (!siteRootFormat.Contains(TenancyNamePlaceHolder)) return siteRootFormat;
 
             if (siteRootFormat.Contains(TenancyNamePlaceHolder + "."))
-            {
                 siteRootFormat = siteRootFormat.Replace(TenancyNamePlaceHolder + ".", TenancyNamePlaceHolder);
-            }
 
-            if (tenancyName.IsNullOrEmpty())
-            {
-                return siteRootFormat.Replace(TenancyNamePlaceHolder, "");
-            }
+            if (tenancyName.IsNullOrEmpty()) return siteRootFormat.Replace(TenancyNamePlaceHolder, "");
 
             return siteRootFormat.Replace(TenancyNamePlaceHolder, tenancyName + ".");
         }

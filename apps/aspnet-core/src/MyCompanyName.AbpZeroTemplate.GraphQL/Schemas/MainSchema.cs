@@ -1,8 +1,8 @@
-﻿using Abp.Dependency;
+﻿using System;
+using Abp.Dependency;
 using GraphQL.Types;
 using GraphQL.Utilities;
 using MyCompanyName.AbpZeroTemplate.Queries.Container;
-using System;
 
 namespace MyCompanyName.AbpZeroTemplate.Schemas
 {

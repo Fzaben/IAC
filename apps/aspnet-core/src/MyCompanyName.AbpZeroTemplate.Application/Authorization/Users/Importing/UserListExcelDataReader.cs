@@ -26,25 +26,25 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
 
         private ImportUserDto ProcessExcelRow(ISheet worksheet, int row)
         {
-            if (IsRowEmpty(worksheet, row))
-            {
-                return null;
-            }
+            if (IsRowEmpty(worksheet, row)) return null;
 
             var exceptionMessage = new StringBuilder();
             var user = new ImportUserDto();
 
             try
             {
-                user.UserName = GetRequiredValueFromRowOrNull(worksheet, row, 0, nameof(user.UserName), exceptionMessage);
+                user.UserName =
+                    GetRequiredValueFromRowOrNull(worksheet, row, 0, nameof(user.UserName), exceptionMessage);
                 user.Name = GetRequiredValueFromRowOrNull(worksheet, row, 1, nameof(user.Name), exceptionMessage);
                 user.Surname = GetRequiredValueFromRowOrNull(worksheet, row, 2, nameof(user.Surname), exceptionMessage);
-                user.EmailAddress = GetRequiredValueFromRowOrNull(worksheet, row, 3, nameof(user.EmailAddress), exceptionMessage);
+                user.EmailAddress =
+                    GetRequiredValueFromRowOrNull(worksheet, row, 3, nameof(user.EmailAddress), exceptionMessage);
                 user.PhoneNumber = GetOptionalValueFromRowOrNull(worksheet, row, 4, exceptionMessage, CellType.String);
-                user.Password = GetRequiredValueFromRowOrNull(worksheet, row, 5, nameof(user.Password), exceptionMessage);
+                user.Password =
+                    GetRequiredValueFromRowOrNull(worksheet, row, 5, nameof(user.Password), exceptionMessage);
                 user.AssignedRoleNames = GetAssignedRoleNamesFromRow(worksheet, row, 6);
             }
-            catch (System.Exception exception)
+            catch (Exception exception)
             {
                 user.Exception = exception.Message;
             }
@@ -53,7 +53,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
         }
 
         private string GetRequiredValueFromRowOrNull(
-            ISheet worksheet, 
+            ISheet worksheet,
             int row,
             int column,
             string columnName,
@@ -62,52 +62,35 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
         {
             var cell = worksheet.GetRow(row).GetCell(column);
 
-            if (cellType.HasValue)
-            {
-                cell.SetCellType(cellType.Value);
-            }
-            
+            if (cellType.HasValue) cell.SetCellType(cellType.Value);
+
             var cellValue = cell.StringCellValue;
-            if (cellValue != null && !string.IsNullOrWhiteSpace(cellValue))
-            {
-                return cellValue;
-            }
+            if (cellValue != null && !string.IsNullOrWhiteSpace(cellValue)) return cellValue;
 
             exceptionMessage.Append(GetLocalizedExceptionMessagePart(columnName));
             return null;
         }
 
-        private string GetOptionalValueFromRowOrNull(ISheet worksheet, int row, int column, StringBuilder exceptionMessage, CellType? cellType = null)
+        private string GetOptionalValueFromRowOrNull(ISheet worksheet, int row, int column,
+            StringBuilder exceptionMessage, CellType? cellType = null)
         {
             var cell = worksheet.GetRow(row).GetCell(column);
-            if (cell == null)
-            {
-                return string.Empty;
-            }
+            if (cell == null) return string.Empty;
 
-            if (cellType != null)
-            {
-                cell.SetCellType(cellType.Value);
-            }
-            
+            if (cellType != null) cell.SetCellType(cellType.Value);
+
             var cellValue = worksheet.GetRow(row).GetCell(column).StringCellValue;
-            if (cellValue != null && !string.IsNullOrWhiteSpace(cellValue))
-            {
-                return cellValue;
-            }
-            
-            return String.Empty;
+            if (cellValue != null && !string.IsNullOrWhiteSpace(cellValue)) return cellValue;
+
+            return string.Empty;
         }
-        
+
         private string[] GetAssignedRoleNamesFromRow(ISheet worksheet, int row, int column)
         {
             var cellValue = worksheet.GetRow(row).GetCell(column).StringCellValue;
-            if (cellValue == null || string.IsNullOrWhiteSpace(cellValue))
-            {
-                return new string[0];
-            }
+            if (cellValue == null || string.IsNullOrWhiteSpace(cellValue)) return new string[0];
 
-            return cellValue.ToString().Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToArray();
+            return cellValue.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToArray();
         }
 
         private string GetLocalizedExceptionMessagePart(string parameter)

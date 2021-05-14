@@ -5,15 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Abp;
 using Abp.Dependency;
-using Abp.Extensions;
 using Abp.Runtime.Session;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
 {
     public class GravatarProfileImageService : IProfileImageService, ITransientDependency
     {
-        private readonly UserManager _userManager;
         private readonly IAbpSession _abpSession;
+        private readonly UserManager _userManager;
 
         public GravatarProfileImageService(
             UserManager userManager,
@@ -28,14 +27,15 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
             var user = await _userManager.GetUserAsync(userIdentifier);
             using (var client = new HttpClient())
             {
-                using (var response = await client.GetAsync($"https://www.gravatar.com/avatar/{GetMd5Hash(user.EmailAddress)}"))
+                using (var response =
+                    await client.GetAsync($"https://www.gravatar.com/avatar/{GetMd5Hash(user.EmailAddress)}"))
                 {
                     var imageBytes = await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
                     return Convert.ToBase64String(imageBytes);
                 }
             }
         }
-        
+
         private static string GetMd5Hash(string input)
         {
             // Convert the input string to a byte array and compute the hash.
@@ -47,10 +47,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
 
             // Loop through each byte of the hashed data
             // and format each one as a hexadecimal string.
-            foreach (var t in data)
-            {
-                sBuilder.Append(t.ToString("x2"));
-            }
+            foreach (var t in data) sBuilder.Append(t.ToString("x2"));
 
             // Return the hexadecimal string.
             return sBuilder.ToString();

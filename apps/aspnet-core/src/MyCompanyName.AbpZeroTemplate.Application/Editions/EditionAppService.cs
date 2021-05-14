@@ -20,10 +20,10 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
 {
     public class EditionAppService : AbpZeroTemplateAppServiceBase, IEditionAppService
     {
+        private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly EditionManager _editionManager;
         private readonly IRepository<SubscribableEdition> _editionRepository;
         private readonly IRepository<Tenant> _tenantRepository;
-        private readonly IBackgroundJobManager _backgroundJobManager;
 
         public EditionAppService(
             EditionManager editionManager,
@@ -41,13 +41,14 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
         public async Task<ListResultDto<EditionListDto>> GetEditions()
         {
             var editions = await (from edition in _editionRepository.GetAll()
-                                  join expiringEdition in _editionRepository.GetAll() on edition.ExpiringEditionId equals expiringEdition.Id into expiringEditionJoined
-                                  from expiringEdition in expiringEditionJoined.DefaultIfEmpty()
-                                  select new
-                                  {
-                                      Edition = edition,
-                                      expiringEditionDisplayName = expiringEdition.DisplayName
-                                  }).ToListAsync();
+                join expiringEdition in _editionRepository.GetAll() on edition.ExpiringEditionId equals expiringEdition
+                    .Id into expiringEditionJoined
+                from expiringEdition in expiringEditionJoined.DefaultIfEmpty()
+                select new
+                {
+                    Edition = edition,
+                    expiringEditionDisplayName = expiringEdition.DisplayName
+                }).ToListAsync();
 
             var result = new List<EditionListDto>();
 
@@ -109,10 +110,7 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
         public async Task DeleteEdition(EntityDto input)
         {
             var tenantCount = await _tenantRepository.CountAsync(t => t.EditionId == input.Id);
-            if (tenantCount > 0)
-            {
-                throw new UserFriendlyException(L("ThereAreTenantsSubscribedToThisEdition"));
-            }
+            if (tenantCount > 0) throw new UserFriendlyException(L("ThereAreTenantsSubscribedToThisEdition"));
 
             var edition = await _editionManager.GetByIdAsync(input.Id);
             await _editionManager.DeleteAsync(edition);
@@ -121,16 +119,19 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
         [AbpAuthorize(AppPermissions.Pages_Editions_MoveTenantsToAnotherEdition)]
         public async Task MoveTenantsToAnotherEdition(MoveTenantsToAnotherEditionDto input)
         {
-            await _backgroundJobManager.EnqueueAsync<MoveTenantsToAnotherEditionJob, MoveTenantsToAnotherEditionJobArgs>(new MoveTenantsToAnotherEditionJobArgs
-            {
-                SourceEditionId = input.SourceEditionId,
-                TargetEditionId = input.TargetEditionId,
-                User = AbpSession.ToUserIdentifier()
-            });
+            await _backgroundJobManager
+                .EnqueueAsync<MoveTenantsToAnotherEditionJob, MoveTenantsToAnotherEditionJobArgs>(
+                    new MoveTenantsToAnotherEditionJobArgs
+                    {
+                        SourceEditionId = input.SourceEditionId,
+                        TargetEditionId = input.TargetEditionId,
+                        User = AbpSession.ToUserIdentifier()
+                    });
         }
 
-        [AbpAuthorize(AppPermissions.Pages_Editions,AppPermissions.Pages_Tenants)]
-        public async Task<List<SubscribableEditionComboboxItemDto>> GetEditionComboboxItems(int? selectedEditionId = null, bool addAllItem = false, bool onlyFreeItems = false)
+        [AbpAuthorize(AppPermissions.Pages_Editions, AppPermissions.Pages_Tenants)]
+        public async Task<List<SubscribableEditionComboboxItemDto>> GetEditionComboboxItems(
+            int? selectedEditionId = null, bool addAllItem = false, bool onlyFreeItems = false)
         {
             var editions = await _editionManager.Editions.ToListAsync();
             var subscribableEditions = editions.Cast<SubscribableEdition>()
@@ -139,23 +140,19 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
 
             var editionItems =
                 new ListResultDto<SubscribableEditionComboboxItemDto>(subscribableEditions
-                    .Select(e => new SubscribableEditionComboboxItemDto(e.Id.ToString(), e.DisplayName, e.IsFree)).ToList()).Items.ToList();
+                    .Select(e => new SubscribableEditionComboboxItemDto(e.Id.ToString(), e.DisplayName, e.IsFree))
+                    .ToList()).Items.ToList();
 
             var defaultItem = new SubscribableEditionComboboxItemDto("", L("NotAssigned"), null);
             editionItems.Insert(0, defaultItem);
 
             if (addAllItem)
-            {
                 editionItems.Insert(0, new SubscribableEditionComboboxItemDto("-1", "- " + L("All") + " -", null));
-            }
 
             if (selectedEditionId.HasValue)
             {
                 var selectedEdition = editionItems.FirstOrDefault(e => e.Value == selectedEditionId.Value.ToString());
-                if (selectedEdition != null)
-                {
-                    selectedEdition.IsSelected = true;
-                }
+                if (selectedEdition != null) selectedEdition.IsSelected = true;
             }
             else
             {
@@ -177,11 +174,9 @@ namespace MyCompanyName.AbpZeroTemplate.Editions
 
             if (edition.ExpiringEditionId.HasValue)
             {
-                var expiringEdition = (SubscribableEdition)await _editionManager.GetByIdAsync(edition.ExpiringEditionId.Value);
-                if (!expiringEdition.IsFree)
-                {
-                    throw new UserFriendlyException(L("ExpiringEditionMustBeAFreeEdition"));
-                }
+                var expiringEdition =
+                    (SubscribableEdition) await _editionManager.GetByIdAsync(edition.ExpiringEditionId.Value);
+                if (!expiringEdition.IsFree) throw new UserFriendlyException(L("ExpiringEditionMustBeAFreeEdition"));
             }
 
             await _editionManager.CreateAsync(edition);

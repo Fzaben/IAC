@@ -2,11 +2,11 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Paypal
 {
     public class PayPalCaptureOrderRequestInput
     {
-        public string OrderId { get; set; }
-
         public PayPalCaptureOrderRequestInput(string orderId)
         {
             OrderId = orderId;
         }
+
+        public string OrderId { get; set; }
     }
 }

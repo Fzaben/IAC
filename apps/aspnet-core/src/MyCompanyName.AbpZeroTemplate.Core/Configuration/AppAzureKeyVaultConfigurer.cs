@@ -9,17 +9,14 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
     {
         public void Configure(IConfigurationBuilder builder, IConfigurationRoot config)
         {
-            var azureKeyVaultConfiguration = config.GetSection("Configuration:AzureKeyVault").Get<AzureKeyVaultConfiguration>();
+            var azureKeyVaultConfiguration =
+                config.GetSection("Configuration:AzureKeyVault").Get<AzureKeyVaultConfiguration>();
 
-            if (azureKeyVaultConfiguration == null || !azureKeyVaultConfiguration.IsEnabled)
-            {
-                return;
-            }
+            if (azureKeyVaultConfiguration == null || !azureKeyVaultConfiguration.IsEnabled) return;
 
             var azureKeyVaultUrl = $"https://{azureKeyVaultConfiguration.KeyVaultName}.vault.azure.net/";
 
             if (azureKeyVaultConfiguration.UsesCertificate())
-            {
                 using (var store = new X509Store(StoreLocation.CurrentUser))
                 {
                     store.Open(OpenFlags.ReadOnly);
@@ -36,14 +33,11 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
 
                     store.Close();
                 }
-            }
             else if (azureKeyVaultConfiguration.UsesManagedIdentity())
-            {
                 builder.AddAzureKeyVault(
                     azureKeyVaultUrl,
                     azureKeyVaultConfiguration.ClientId,
                     azureKeyVaultConfiguration.ClientSecret, new DefaultKeyVaultSecretManager());
-            }
         }
     }
 }

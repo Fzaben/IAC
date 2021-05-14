@@ -7,16 +7,15 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile.Cache
     {
         public const string CacheName = "AppSmsVerificationCodeCache";
 
-        public string Code { get; set; }
-
         public SmsVerificationCodeCacheItem()
         {
-
         }
 
         public SmsVerificationCodeCacheItem(string code)
         {
             Code = code;
         }
+
+        public string Code { get; set; }
     }
 }

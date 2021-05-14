@@ -92,23 +92,6 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
                 localizableMessageData, severity);
         }
 
-        protected async Task SendNotificationAsync(string notificationName, UserIdentifier user,
-            LocalizableString localizableMessage, IDictionary<string, object> localizableMessageData = null,
-            NotificationSeverity severity = NotificationSeverity.Info)
-        {
-            var notificationData = new LocalizableMessageNotificationData(localizableMessage);
-            if (localizableMessageData != null)
-            {
-                foreach (var pair in localizableMessageData)
-                {
-                    notificationData[pair.Key] = pair.Value;
-                }
-            }
-
-            await _notificationPublisher.PublishAsync(notificationName, notificationData, severity: severity,
-                userIds: new[] {user});
-        }
-
         public Task TenantsMovedToEdition(UserIdentifier user, string sourceEditionName, string targetEditionName)
         {
             return SendNotificationAsync(AppNotificationNames.TenantsMovedToEdition, user,
@@ -123,25 +106,38 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
                 });
         }
 
+        public Task SomeUsersCouldntBeImported(UserIdentifier user, string fileToken, string fileType, string fileName)
+        {
+            return SendNotificationAsync(AppNotificationNames.DownloadInvalidImportUsers, user,
+                new LocalizableString(
+                    "ClickToSeeInvalidUsers",
+                    AbpZeroTemplateConsts.LocalizationSourceName
+                ),
+                new Dictionary<string, object>
+                {
+                    {"fileToken", fileToken},
+                    {"fileType", fileType},
+                    {"fileName", fileName}
+                });
+        }
+
+        protected async Task SendNotificationAsync(string notificationName, UserIdentifier user,
+            LocalizableString localizableMessage, IDictionary<string, object> localizableMessageData = null,
+            NotificationSeverity severity = NotificationSeverity.Info)
+        {
+            var notificationData = new LocalizableMessageNotificationData(localizableMessage);
+            if (localizableMessageData != null)
+                foreach (var pair in localizableMessageData)
+                    notificationData[pair.Key] = pair.Value;
+
+            await _notificationPublisher.PublishAsync(notificationName, notificationData, severity: severity,
+                userIds: new[] {user});
+        }
+
         public Task<TResult> TenantsMovedToEdition<TResult>(UserIdentifier argsUser, int sourceEditionId,
             int targetEditionId)
         {
             throw new NotImplementedException();
-        }
-
-        public Task SomeUsersCouldntBeImported(UserIdentifier user, string fileToken, string fileType, string fileName)
-        {
-            return SendNotificationAsync(AppNotificationNames.DownloadInvalidImportUsers, user, 
-                new LocalizableString(
-                    "ClickToSeeInvalidUsers",
-                    AbpZeroTemplateConsts.LocalizationSourceName
-                ), 
-                new Dictionary<string, object>
-                {
-                    { "fileToken", fileToken },
-                    { "fileType", fileType },
-                    { "fileName", fileName }
-                });
         }
     }
 }

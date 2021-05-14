@@ -16,8 +16,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration.Dto
 
         public string SmtpUserName { get; set; }
 
-        [DisableAuditing]
-        public string SmtpPassword { get; set; }
+        [DisableAuditing] public string SmtpPassword { get; set; }
 
         public string SmtpDomain { get; set; }
 

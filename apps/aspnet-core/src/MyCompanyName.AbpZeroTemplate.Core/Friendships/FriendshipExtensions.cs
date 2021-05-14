@@ -6,12 +6,12 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
     {
         public static UserIdentifier ToUserIdentifier(this Friendship friendship)
         {
-            return new UserIdentifier(friendship.TenantId, friendship.UserId);
+            return new(friendship.TenantId, friendship.UserId);
         }
 
         public static UserIdentifier ToFriendIdentifier(this Friendship friendship)
         {
-            return new UserIdentifier(friendship.FriendTenantId, friendship.FriendUserId);
+            return new(friendship.FriendTenantId, friendship.FriendUserId);
         }
     }
 }

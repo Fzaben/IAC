@@ -19,22 +19,17 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.External
             return userInfo.EmailAddress.ToMd5();
         }
 
-        public (string name, string surname) GetNameAndSurnameFromClaims(List<Claim> claims, IdentityOptions identityOptions)
+        public (string name, string surname) GetNameAndSurnameFromClaims(List<Claim> claims,
+            IdentityOptions identityOptions)
         {
             string name = null;
             string surname = null;
 
             var givenNameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName);
-            if (givenNameClaim != null && !givenNameClaim.Value.IsNullOrEmpty())
-            {
-                name = givenNameClaim.Value;
-            }
+            if (givenNameClaim != null && !givenNameClaim.Value.IsNullOrEmpty()) name = givenNameClaim.Value;
 
             var surnameClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Surname);
-            if (surnameClaim != null && !surnameClaim.Value.IsNullOrEmpty())
-            {
-                surname = surnameClaim.Value;
-            }
+            if (surnameClaim != null && !surnameClaim.Value.IsNullOrEmpty()) surname = surnameClaim.Value;
 
             if (name == null || surname == null)
             {
@@ -45,7 +40,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.External
                     if (!nameSurName.IsNullOrEmpty())
                     {
                         var lastSpaceIndex = nameSurName.LastIndexOf(' ');
-                        if (lastSpaceIndex < 1 || lastSpaceIndex > (nameSurName.Length - 2))
+                        if (lastSpaceIndex < 1 || lastSpaceIndex > nameSurName.Length - 2)
                         {
                             name = surname = nameSurName;
                         }

@@ -11,7 +11,7 @@ namespace MyCompanyName.AbpZeroTemplate.Timing
         Task<string> GetDefaultTimezoneAsync(SettingScopes scope, int? tenantId);
 
         TimeZoneInfo FindTimeZoneById(string timezoneId);
-        
+
         List<NameValueDto> GetWindowsTimezones();
     }
 }

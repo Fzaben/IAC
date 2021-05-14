@@ -12,9 +12,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             RoleManager roleManager,
             IOptions<IdentityOptions> optionsAccessor)
             : base(
-                  userManager,
-                  roleManager,
-                  optionsAccessor)
+                userManager,
+                roleManager,
+                optionsAccessor)
         {
         }
     }

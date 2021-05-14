@@ -6,11 +6,13 @@ using MyCompanyName.AbpZeroTemplate.Authorization;
 namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
 {
     [AbpAuthorize(AppPermissions.Pages_Administration_DynamicProperties)]
-    public class DynamicEntityPropertyDefinitionAppService : AbpZeroTemplateAppServiceBase, IDynamicEntityPropertyDefinitionAppService
+    public class DynamicEntityPropertyDefinitionAppService : AbpZeroTemplateAppServiceBase,
+        IDynamicEntityPropertyDefinitionAppService
     {
         private readonly IDynamicEntityPropertyDefinitionManager _dynamicEntityPropertyDefinitionManager;
 
-        public DynamicEntityPropertyDefinitionAppService(IDynamicEntityPropertyDefinitionManager dynamicEntityPropertyDefinitionManager)
+        public DynamicEntityPropertyDefinitionAppService(
+            IDynamicEntityPropertyDefinitionManager dynamicEntityPropertyDefinitionManager)
         {
             _dynamicEntityPropertyDefinitionManager = dynamicEntityPropertyDefinitionManager;
         }

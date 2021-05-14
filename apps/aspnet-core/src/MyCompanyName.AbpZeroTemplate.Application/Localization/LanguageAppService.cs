@@ -20,10 +20,10 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
     [AbpAuthorize(AppPermissions.Pages_Administration_Languages)]
     public class LanguageAppService : AbpZeroTemplateAppServiceBase, ILanguageAppService
     {
+        private readonly IApplicationCulturesProvider _applicationCulturesProvider;
         private readonly IApplicationLanguageManager _applicationLanguageManager;
         private readonly IApplicationLanguageTextManager _applicationLanguageTextManager;
         private readonly IRepository<ApplicationLanguage> _languageRepository;
-        private readonly IApplicationCulturesProvider _applicationCulturesProvider;
 
         public LanguageAppService(
             IApplicationLanguageManager applicationLanguageManager,
@@ -54,10 +54,7 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
         public async Task<GetLanguageForEditOutput> GetLanguageForEdit(NullableIdDto input)
         {
             ApplicationLanguage language = null;
-            if (input.Id.HasValue)
-            {
-                language = await _languageRepository.GetAsync(input.Id.Value);
-            }
+            if (input.Id.HasValue) language = await _languageRepository.GetAsync(input.Id.Value);
 
             var output = new GetLanguageForEditOutput();
 
@@ -87,13 +84,9 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
         public async Task CreateOrUpdateLanguage(CreateOrUpdateLanguageInput input)
         {
             if (input.Language.Id.HasValue)
-            {
                 await UpdateLanguageAsync(input);
-            }
             else
-            {
                 await CreateLanguageAsync(input);
-            }
         }
 
         public async Task DeleteLanguage(EntityDto input)
@@ -125,10 +118,7 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
                 {
                     defaultLanguage = (await _applicationLanguageManager.GetLanguagesAsync(AbpSession.TenantId))
                         .FirstOrDefault();
-                    if (defaultLanguage == null)
-                    {
-                        throw new Exception("No language found in the application!");
-                    }
+                    if (defaultLanguage == null) throw new Exception("No language found in the application!");
                 }
 
                 input.BaseLanguageName = defaultLanguage.Name;
@@ -157,45 +147,32 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
             {
                 Key = t.Name,
                 BaseValue = GetValueOrNull(baseValues, i),
-                TargetValue = GetValueOrNull(targetValues, i) ?? GetValueOrNull(baseValues, i) 
+                TargetValue = GetValueOrNull(targetValues, i) ?? GetValueOrNull(baseValues, i)
             }).AsQueryable();
 
             //Filters
             if (input.TargetValueFilter == "EMPTY")
-            {
                 languageTexts = languageTexts.Where(s => s.TargetValue.IsNullOrEmpty());
-            }
 
             if (!input.FilterText.IsNullOrEmpty())
-            {
                 languageTexts = languageTexts.Where(
-                    l => (l.Key != null &&
-                          l.Key.IndexOf(input.FilterText, StringComparison.CurrentCultureIgnoreCase) >= 0) ||
-                         (l.BaseValue != null &&
-                          l.BaseValue.IndexOf(input.FilterText, StringComparison.CurrentCultureIgnoreCase) >= 0) ||
-                         (l.TargetValue != null &&
-                          l.TargetValue.IndexOf(input.FilterText, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                    l => l.Key != null &&
+                         l.Key.IndexOf(input.FilterText, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                         l.BaseValue != null &&
+                         l.BaseValue.IndexOf(input.FilterText, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                         l.TargetValue != null &&
+                         l.TargetValue.IndexOf(input.FilterText, StringComparison.CurrentCultureIgnoreCase) >= 0
                 );
-            }
 
             var totalCount = languageTexts.Count();
 
             //Ordering
-            if (!input.Sorting.IsNullOrEmpty())
-            {
-                languageTexts = languageTexts.OrderBy(input.Sorting);
-            }
+            if (!input.Sorting.IsNullOrEmpty()) languageTexts = languageTexts.OrderBy(input.Sorting);
 
             //Paging
-            if (input.SkipCount > 0)
-            {
-                languageTexts = languageTexts.Skip(input.SkipCount);
-            }
+            if (input.SkipCount > 0) languageTexts = languageTexts.Skip(input.SkipCount);
 
-            if (input.MaxResultCount > 0)
-            {
-                languageTexts = languageTexts.Take(input.MaxResultCount);
-            }
+            if (input.MaxResultCount > 0) languageTexts = languageTexts.Take(input.MaxResultCount);
 
             return new PagedResultDto<LanguageTextListDto>(
                 totalCount,
@@ -220,9 +197,7 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
         protected virtual async Task CreateLanguageAsync(CreateOrUpdateLanguageInput input)
         {
             if (AbpSession.MultiTenancySide != MultiTenancySides.Host)
-            {
                 throw new UserFriendlyException(L("TenantsCannotCreateLanguage"));
-            }
 
             var culture = CultureHelper.GetCultureInfoByChecking(input.Language.Name);
 
@@ -265,15 +240,9 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
             var existingLanguage = (await _applicationLanguageManager.GetLanguagesAsync(AbpSession.TenantId))
                 .FirstOrDefault(l => l.Name == languageName);
 
-            if (existingLanguage == null)
-            {
-                return;
-            }
+            if (existingLanguage == null) return;
 
-            if (expectedId != null && existingLanguage.Id == expectedId.Value)
-            {
-                return;
-            }
+            if (expectedId != null && existingLanguage.Id == expectedId.Value) return;
 
             throw new UserFriendlyException(L("ThisLanguageAlreadyExists"));
         }

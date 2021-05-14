@@ -14,14 +14,14 @@ namespace MyCompanyName.AbpZeroTemplate.HealthChecks
             _checkHelper = checkHelper;
         }
 
-        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = new CancellationToken())
+        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             if (_checkHelper.Exist("db"))
-            {
                 return Task.FromResult(HealthCheckResult.Healthy("AbpZeroTemplateDbContext connected to database."));
-            }
 
-            return Task.FromResult(HealthCheckResult.Unhealthy("AbpZeroTemplateDbContext could not connect to database"));
+            return Task.FromResult(
+                HealthCheckResult.Unhealthy("AbpZeroTemplateDbContext could not connect to database"));
         }
     }
 }

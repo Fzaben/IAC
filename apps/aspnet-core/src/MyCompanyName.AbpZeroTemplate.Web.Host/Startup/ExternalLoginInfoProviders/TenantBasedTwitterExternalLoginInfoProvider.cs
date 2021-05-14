@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Abp.AspNetZeroCore.Web.Authentication.External;
+﻿using Abp.AspNetZeroCore.Web.Authentication.External;
 using Abp.AspNetZeroCore.Web.Authentication.External.Twitter;
 using Abp.Configuration;
 using Abp.Dependency;
@@ -15,10 +14,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup.ExternalLoginInfoProviders
     public class TenantBasedTwitterExternalLoginInfoProvider : TenantBasedExternalLoginInfoProviderBase,
         ISingletonDependency
     {
-        private readonly ISettingManager _settingManager;
         private readonly IAbpSession _abpSession;
-
-        public override string Name { get; } = TwitterAuthProviderApi.Name;
+        private readonly ISettingManager _settingManager;
 
         public TenantBasedTwitterExternalLoginInfoProvider(
             ISettingManager settingManager,
@@ -29,9 +26,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup.ExternalLoginInfoProviders
             _abpSession = abpSession;
         }
 
+        public override string Name { get; } = TwitterAuthProviderApi.Name;
+
         private ExternalLoginProviderInfo CreateExternalLoginInfo(TwitterExternalLoginProviderSettings settings)
         {
-            return new ExternalLoginProviderInfo(
+            return new(
                 Name,
                 settings.ConsumerKey,
                 settings.ConsumerSecret,
@@ -55,14 +54,15 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup.ExternalLoginInfoProviders
                 AppSettings.ExternalLoginProvider.Tenant.Twitter,
                 _abpSession.GetTenantId()
             );
-            
+
             var settings = settingValue.FromJsonString<TwitterExternalLoginProviderSettings>();
             return CreateExternalLoginInfo(settings);
         }
 
         protected override ExternalLoginProviderInfo GetHostInformation()
         {
-            var settingValue = _settingManager.GetSettingValueForApplication(AppSettings.ExternalLoginProvider.Host.Twitter);
+            var settingValue =
+                _settingManager.GetSettingValueForApplication(AppSettings.ExternalLoginProvider.Host.Twitter);
             var settings = settingValue.FromJsonString<TwitterExternalLoginProviderSettings>();
             return CreateExternalLoginInfo(settings);
         }

@@ -20,10 +20,10 @@ using MyCompanyName.AbpZeroTemplate.Test.Base.TestData;
 namespace MyCompanyName.AbpZeroTemplate.Test.Base
 {
     /// <summary>
-    /// This is base class for all our test classes.
-    /// It prepares ABP system, modules and a fake, in-memory database.
-    /// Seeds database with initial data.
-    /// Provides methods to easily work with <see cref="AbpZeroTemplateDbContext"/>.
+    ///     This is base class for all our test classes.
+    ///     It prepares ABP system, modules and a fake, in-memory database.
+    ///     Seeds database with initial data.
+    ///     Provides methods to easily work with <see cref="AbpZeroTemplateDbContext" />.
     /// </summary>
     public abstract class AppTestBase<T> : AbpIntegratedTestBase<T> where T : AbpModule
     {
@@ -119,7 +119,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
             return result;
         }
 
-        protected async Task<TResult> UsingDbContextAsync<TResult>(int? tenantId, Func<AbpZeroTemplateDbContext, Task<TResult>> func)
+        protected async Task<TResult> UsingDbContextAsync<TResult>(int? tenantId,
+            Func<AbpZeroTemplateDbContext, Task<TResult>> func)
         {
             TResult result;
 
@@ -151,11 +152,9 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         {
             AbpSession.TenantId = null;
 
-            var user = UsingDbContext(context => context.Users.FirstOrDefault(u => u.TenantId == AbpSession.TenantId && u.UserName == userName));
-            if (user == null)
-            {
-                throw new Exception("There is no user: " + userName + " for host.");
-            }
+            var user = UsingDbContext(context =>
+                context.Users.FirstOrDefault(u => u.TenantId == AbpSession.TenantId && u.UserName == userName));
+            if (user == null) throw new Exception("There is no user: " + userName + " for host.");
 
             AbpSession.UserId = user.Id;
         }
@@ -165,18 +164,13 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
             AbpSession.TenantId = null;
 
             var tenant = UsingDbContext(context => context.Tenants.FirstOrDefault(t => t.TenancyName == tenancyName));
-            if (tenant == null)
-            {
-                throw new Exception("There is no tenant: " + tenancyName);
-            }
+            if (tenant == null) throw new Exception("There is no tenant: " + tenancyName);
 
             AbpSession.TenantId = tenant.Id;
 
-            var user = UsingDbContext(context => context.Users.FirstOrDefault(u => u.TenantId == AbpSession.TenantId && u.UserName == userName));
-            if (user == null)
-            {
-                throw new Exception("There is no user: " + userName + " for tenant: " + tenancyName);
-            }
+            var user = UsingDbContext(context =>
+                context.Users.FirstOrDefault(u => u.TenantId == AbpSession.TenantId && u.UserName == userName));
+            if (user == null) throw new Exception("There is no user: " + userName + " for tenant: " + tenancyName);
 
             AbpSession.UserId = user.Id;
         }
@@ -186,8 +180,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         #region GetCurrentUser
 
         /// <summary>
-        /// Gets current user if <see cref="IAbpSession.UserId"/> is not null.
-        /// Throws exception if it's null.
+        ///     Gets current user if <see cref="IAbpSession.UserId" /> is not null.
+        ///     Throws exception if it's null.
         /// </summary>
         protected User GetCurrentUser()
         {
@@ -196,8 +190,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         }
 
         /// <summary>
-        /// Gets current user if <see cref="IAbpSession.UserId"/> is not null.
-        /// Throws exception if it's null.
+        ///     Gets current user if <see cref="IAbpSession.UserId" /> is not null.
+        ///     Throws exception if it's null.
         /// </summary>
         protected async Task<User> GetCurrentUserAsync()
         {
@@ -210,8 +204,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         #region GetCurrentTenant
 
         /// <summary>
-        /// Gets current tenant if <see cref="IAbpSession.TenantId"/> is not null.
-        /// Throws exception if there is no current tenant.
+        ///     Gets current tenant if <see cref="IAbpSession.TenantId" /> is not null.
+        ///     Throws exception if there is no current tenant.
         /// </summary>
         protected Tenant GetCurrentTenant()
         {
@@ -220,8 +214,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         }
 
         /// <summary>
-        /// Gets current tenant if <see cref="IAbpSession.TenantId"/> is not null.
-        /// Throws exception if there is no current tenant.
+        ///     Gets current tenant if <see cref="IAbpSession.TenantId" /> is not null.
+        ///     Throws exception if there is no current tenant.
         /// </summary>
         protected async Task<Tenant> GetCurrentTenantAsync()
         {
@@ -240,7 +234,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
 
         protected async Task<Tenant> GetTenantAsync(string tenancyName)
         {
-            return await UsingDbContext(null, async context => await context.Tenants.SingleAsync(t => t.TenancyName == tenancyName));
+            return await UsingDbContext(null,
+                async context => await context.Tenants.SingleAsync(t => t.TenancyName == tenancyName));
         }
 
         protected Tenant GetTenantOrNull(string tenancyName)
@@ -250,7 +245,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
 
         protected async Task<Tenant> GetTenantOrNullAsync(string tenancyName)
         {
-            return await UsingDbContext(null, async context => await context.Tenants.FirstOrDefaultAsync(t => t.TenancyName == tenancyName));
+            return await UsingDbContext(null,
+                async context => await context.Tenants.FirstOrDefaultAsync(t => t.TenancyName == tenancyName));
         }
 
         #endregion
@@ -259,12 +255,14 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
 
         protected Role GetRole(string roleName)
         {
-            return UsingDbContext(context => context.Roles.Single(r => r.Name == roleName && r.TenantId == AbpSession.TenantId));
+            return UsingDbContext(context =>
+                context.Roles.Single(r => r.Name == roleName && r.TenantId == AbpSession.TenantId));
         }
 
         protected async Task<Role> GetRoleAsync(string roleName)
         {
-            return await UsingDbContext(async context => await context.Roles.SingleAsync(r => r.Name == roleName && r.TenantId == AbpSession.TenantId));
+            return await UsingDbContext(async context =>
+                await context.Roles.SingleAsync(r => r.Name == roleName && r.TenantId == AbpSession.TenantId));
         }
 
         #endregion
@@ -274,10 +272,7 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         protected User GetUserByUserName(string userName)
         {
             var user = GetUserByUserNameOrNull(userName);
-            if (user == null)
-            {
-                throw new Exception("Can not find a user with username: " + userName);
-            }
+            if (user == null) throw new Exception("Can not find a user with username: " + userName);
 
             return user;
         }
@@ -285,10 +280,7 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
         protected async Task<User> GetUserByUserNameAsync(string userName)
         {
             var user = await GetUserByUserNameOrNullAsync(userName);
-            if (user == null)
-            {
-                throw new Exception("Can not find a user with username: " + userName);
-            }
+            if (user == null) throw new Exception("Can not find a user with username: " + userName);
 
             return user;
         }
@@ -299,7 +291,7 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
                 context.Users.FirstOrDefault(u =>
                     u.UserName == userName &&
                     u.TenantId == AbpSession.TenantId
-                    ));
+                ));
         }
 
         protected async Task<User> GetUserByUserNameOrNullAsync(string userName, bool includeRoles = false)
@@ -308,8 +300,8 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base
                 await context.Users
                     .IncludeIf(includeRoles, u => u.Roles)
                     .FirstOrDefaultAsync(u =>
-                            u.UserName == userName &&
-                            u.TenantId == AbpSession.TenantId
+                        u.UserName == userName &&
+                        u.TenantId == AbpSession.TenantId
                     ));
         }
 

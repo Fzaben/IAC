@@ -1,7 +1,7 @@
 ﻿using Abp.AspNetCore.Mvc.Authorization;
+using Abp.BackgroundJobs;
 using MyCompanyName.AbpZeroTemplate.Authorization;
 using MyCompanyName.AbpZeroTemplate.Storage;
-using Abp.BackgroundJobs;
 
 namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {

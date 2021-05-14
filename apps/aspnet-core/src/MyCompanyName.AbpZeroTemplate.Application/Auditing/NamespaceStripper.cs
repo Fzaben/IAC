@@ -1,6 +1,6 @@
-﻿using Abp.Dependency;
+﻿using System.Linq;
+using Abp.Dependency;
 using Abp.Extensions;
-using System.Linq;
 
 namespace MyCompanyName.AbpZeroTemplate.Auditing
 {
@@ -8,15 +8,9 @@ namespace MyCompanyName.AbpZeroTemplate.Auditing
     {
         public string StripNameSpace(string serviceName)
         {
-            if (serviceName.IsNullOrEmpty() || !serviceName.Contains("."))
-            {
-                return serviceName;
-            }
+            if (serviceName.IsNullOrEmpty() || !serviceName.Contains(".")) return serviceName;
 
-            if (serviceName.Contains("["))
-            {
-                return StripGenericNamespace(serviceName);
-            }
+            if (serviceName.Contains("[")) return StripGenericNamespace(serviceName);
 
             return GetTextAfterLastDot(serviceName);
         }
@@ -38,13 +32,15 @@ namespace MyCompanyName.AbpZeroTemplate.Auditing
                 var serviceNamePart = serviceNameParts[i];
                 if (serviceNamePart.Contains("`"))
                 {
-                    genericServiceName += GetTextAfterLastDot(serviceNamePart.Substring(0, serviceNamePart.IndexOf('`'))) + "<";
+                    genericServiceName +=
+                        GetTextAfterLastDot(serviceNamePart.Substring(0, serviceNamePart.IndexOf('`'))) + "<";
                     openBracketCount++;
                 }
 
                 if (serviceNamePart.Contains(","))
                 {
-                    genericServiceName += GetTextAfterLastDot(serviceNamePart.Substring(0, serviceNamePart.IndexOf(',')));
+                    genericServiceName +=
+                        GetTextAfterLastDot(serviceNamePart.Substring(0, serviceNamePart.IndexOf(',')));
                     if (i + 1 < serviceNameParts.Count && serviceNameParts[i + 1].Contains(","))
                     {
                         genericServiceName += ", ";
@@ -57,10 +53,7 @@ namespace MyCompanyName.AbpZeroTemplate.Auditing
                 }
             }
 
-            for (int i = 0; i < openBracketCount; i++)
-            {
-                genericServiceName += ">";
-            }
+            for (var i = 0; i < openBracketCount; i++) genericServiceName += ">";
 
             return genericServiceName;
         }

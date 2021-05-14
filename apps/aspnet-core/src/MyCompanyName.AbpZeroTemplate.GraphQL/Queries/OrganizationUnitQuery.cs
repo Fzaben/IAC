@@ -16,16 +16,10 @@ using MyCompanyName.AbpZeroTemplate.Types;
 
 namespace MyCompanyName.AbpZeroTemplate.Queries
 {
-    public class OrganizationUnitQuery : AbpZeroTemplateQueryBase<ListGraphType<OrganizationUnitType>, List<OrganizationUnitDto>>
+    public class
+        OrganizationUnitQuery : AbpZeroTemplateQueryBase<ListGraphType<OrganizationUnitType>, List<OrganizationUnitDto>>
     {
         private readonly IRepository<OrganizationUnit, long> _organizationUnitRepository;
-
-        public static class Args
-        {
-            public const string Id = "id";
-            public const string TenantId = "tenantId";
-            public const string Code = "code";
-        }
 
         public OrganizationUnitQuery(IRepository<OrganizationUnit, long> organizationUnitRepository)
             : base("organizationUnits", new Dictionary<string, Type>
@@ -45,10 +39,18 @@ namespace MyCompanyName.AbpZeroTemplate.Queries
 
             context
                 .ContainsArgument<long>(Args.Id, id => query = query.Where(o => o.Id == id))
-                .ContainsArgument<int?>(Args.TenantId, tenantId => query = query.Where(o => o.TenantId == tenantId.Value))
+                .ContainsArgument<int?>(Args.TenantId,
+                    tenantId => query = query.Where(o => o.TenantId == tenantId.Value))
                 .ContainsArgument<string>(Args.Code, code => query = query.Where(o => o.Code == code));
 
             return await ProjectToListAsync<OrganizationUnitDto>(query);
+        }
+
+        public static class Args
+        {
+            public const string Id = "id";
+            public const string TenantId = "tenantId";
+            public const string Code = "code";
         }
     }
 }

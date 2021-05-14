@@ -24,7 +24,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Swagger
             {
                 var trimmed = part.Trim('{', '}');
                 builder.AppendFormat("{0}{1}",
-                    (part.StartsWith("{") ? "By" : string.Empty),
+                    part.StartsWith("{") ? "By" : string.Empty,
                     CultureInfo.InvariantCulture.TextInfo.ToTitleCase(trimmed)
                 );
             }

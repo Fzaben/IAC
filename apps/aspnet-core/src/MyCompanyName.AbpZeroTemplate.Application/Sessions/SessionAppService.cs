@@ -7,19 +7,19 @@ using Abp.Auditing;
 using Abp.Runtime.Session;
 using Microsoft.EntityFrameworkCore;
 using MyCompanyName.AbpZeroTemplate.Authentication.TwoFactor;
+using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
+using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Editions;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
 using MyCompanyName.AbpZeroTemplate.Sessions.Dto;
 using MyCompanyName.AbpZeroTemplate.UiCustomization;
-using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
-using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 
 namespace MyCompanyName.AbpZeroTemplate.Sessions
 {
     public class SessionAppService : AbpZeroTemplateAppServiceBase, ISessionAppService
     {
-        private readonly IUiThemeCustomizerFactory _uiThemeCustomizerFactory;
         private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
+        private readonly IUiThemeCustomizerFactory _uiThemeCustomizerFactory;
         private readonly IUserDelegationConfiguration _userDelegationConfiguration;
 
         public SessionAppService(
@@ -54,103 +54,46 @@ namespace MyCompanyName.AbpZeroTemplate.Sessions
             output.Theme = await uiCustomizer.GetUiSettings();
 
             if (AbpSession.TenantId.HasValue)
-            {
                 output.Tenant = ObjectMapper
                     .Map<TenantLoginInfoDto>(await TenantManager
                         .Tenants
                         .Include(t => t.Edition)
                         .FirstAsync(t => t.Id == AbpSession.GetTenantId()));
-            }
-            
+
             if (AbpSession.ImpersonatorTenantId.HasValue)
-            {
                 output.ImpersonatorTenant = ObjectMapper
                     .Map<TenantLoginInfoDto>(await TenantManager
                         .Tenants
                         .Include(t => t.Edition)
                         .FirstAsync(t => t.Id == AbpSession.ImpersonatorTenantId));
-            }
 
             if (AbpSession.UserId.HasValue)
-            {
                 output.User = ObjectMapper.Map<UserLoginInfoDto>(await GetCurrentUserAsync());
-            }
-            
-            if (AbpSession.ImpersonatorUserId.HasValue)
-            {
-                output.ImpersonatorUser = ObjectMapper.Map<UserLoginInfoDto>(await GetImpersonatorUserAsync());
-            }
 
-            if (output.Tenant == null)
-            {
-                return output;
-            }
+            if (AbpSession.ImpersonatorUserId.HasValue)
+                output.ImpersonatorUser = ObjectMapper.Map<UserLoginInfoDto>(await GetImpersonatorUserAsync());
+
+            if (output.Tenant == null) return output;
 
             if (output.Tenant.Edition != null)
             {
-                var lastPayment = await _subscriptionPaymentRepository.GetLastCompletedPaymentOrDefaultAsync(output.Tenant.Id, null, null);
+                var lastPayment =
+                    await _subscriptionPaymentRepository.GetLastCompletedPaymentOrDefaultAsync(output.Tenant.Id, null,
+                        null);
                 if (lastPayment != null)
-                {
-                    output.Tenant.Edition.IsHighestEdition = IsEditionHighest(output.Tenant.Edition.Id, lastPayment.GetPaymentPeriodType());
-                }
+                    output.Tenant.Edition.IsHighestEdition =
+                        IsEditionHighest(output.Tenant.Edition.Id, lastPayment.GetPaymentPeriodType());
             }
 
             output.Tenant.SubscriptionDateString = GetTenantSubscriptionDateString(output);
             output.Tenant.CreationTimeString = output.Tenant.CreationTime.ToString("d");
 
             return output;
-
-        }
-
-        private bool IsEditionHighest(int editionId, PaymentPeriodType paymentPeriodType)
-        {
-            var topEdition = GetHighestEditionOrNullByPaymentPeriodType(paymentPeriodType);
-            if (topEdition == null)
-            {
-                return false;
-            }
-
-            return editionId == topEdition.Id;
-        }
-
-        private SubscribableEdition GetHighestEditionOrNullByPaymentPeriodType(PaymentPeriodType paymentPeriodType)
-        {
-            var editions = TenantManager.EditionManager.Editions;
-            if (editions == null || !editions.Any())
-            {
-                return null;
-            }
-
-            var query = editions.Cast<SubscribableEdition>();
-
-            switch (paymentPeriodType)
-            {
-                case PaymentPeriodType.Daily:
-                    query = query.OrderByDescending(e => e.DailyPrice ?? 0); break;
-                case PaymentPeriodType.Weekly:
-                    query = query.OrderByDescending(e => e.WeeklyPrice ?? 0); break;
-                case PaymentPeriodType.Monthly:
-                    query = query.OrderByDescending(e => e.MonthlyPrice ?? 0); break;
-                case PaymentPeriodType.Annual:
-                    query = query.OrderByDescending(e => e.AnnualPrice ?? 0); break;
-            }
-
-            return query.FirstOrDefault();
-        }
-
-        private string GetTenantSubscriptionDateString(GetCurrentLoginInformationsOutput output)
-        {
-            return output.Tenant.SubscriptionEndDateUtc == null
-                ? L("Unlimited")
-                : output.Tenant.SubscriptionEndDateUtc?.ToString("d");
         }
 
         public async Task<UpdateUserSignInTokenOutput> UpdateUserSignInToken()
         {
-            if (AbpSession.UserId <= 0)
-            {
-                throw new Exception(L("ThereIsNoLoggedInUser"));
-            }
+            if (AbpSession.UserId <= 0) throw new Exception(L("ThereIsNoLoggedInUser"));
 
             var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
             user.SetSignInToken();
@@ -163,16 +106,54 @@ namespace MyCompanyName.AbpZeroTemplate.Sessions
                     : ""
             };
         }
-        
+
+        private bool IsEditionHighest(int editionId, PaymentPeriodType paymentPeriodType)
+        {
+            var topEdition = GetHighestEditionOrNullByPaymentPeriodType(paymentPeriodType);
+            if (topEdition == null) return false;
+
+            return editionId == topEdition.Id;
+        }
+
+        private SubscribableEdition GetHighestEditionOrNullByPaymentPeriodType(PaymentPeriodType paymentPeriodType)
+        {
+            var editions = TenantManager.EditionManager.Editions;
+            if (editions == null || !editions.Any()) return null;
+
+            var query = editions.Cast<SubscribableEdition>();
+
+            switch (paymentPeriodType)
+            {
+                case PaymentPeriodType.Daily:
+                    query = query.OrderByDescending(e => e.DailyPrice ?? 0);
+                    break;
+                case PaymentPeriodType.Weekly:
+                    query = query.OrderByDescending(e => e.WeeklyPrice ?? 0);
+                    break;
+                case PaymentPeriodType.Monthly:
+                    query = query.OrderByDescending(e => e.MonthlyPrice ?? 0);
+                    break;
+                case PaymentPeriodType.Annual:
+                    query = query.OrderByDescending(e => e.AnnualPrice ?? 0);
+                    break;
+            }
+
+            return query.FirstOrDefault();
+        }
+
+        private string GetTenantSubscriptionDateString(GetCurrentLoginInformationsOutput output)
+        {
+            return output.Tenant.SubscriptionEndDateUtc == null
+                ? L("Unlimited")
+                : output.Tenant.SubscriptionEndDateUtc?.ToString("d");
+        }
+
         protected virtual async Task<User> GetImpersonatorUserAsync()
         {
             using (CurrentUnitOfWork.SetTenantId(AbpSession.ImpersonatorTenantId))
             {
                 var user = await UserManager.FindByIdAsync(AbpSession.ImpersonatorUserId.ToString());
-                if (user == null)
-                {
-                    throw new Exception("User not found!");
-                }
+                if (user == null) throw new Exception("User not found!");
 
                 return user;
             }

@@ -6,15 +6,14 @@ using Abp.Application.Services.Dto;
 using Abp.Configuration;
 using Abp.Dependency;
 using Abp.Timing;
-using Abp.Timing.Timezone;
 using TimeZoneConverter;
 
 namespace MyCompanyName.AbpZeroTemplate.Timing
 {
     public class TimeZoneService : ITimeZoneService, ITransientDependency
     {
-        readonly ISettingManager _settingManager;
-        readonly ISettingDefinitionManager _settingDefinitionManager;
+        private readonly ISettingDefinitionManager _settingDefinitionManager;
+        private readonly ISettingManager _settingManager;
 
         public TimeZoneService(
             ISettingManager settingManager,
@@ -29,21 +28,19 @@ namespace MyCompanyName.AbpZeroTemplate.Timing
             if (scope == SettingScopes.User)
             {
                 if (tenantId.HasValue)
-                {
-                    return await _settingManager.GetSettingValueForTenantAsync(TimingSettingNames.TimeZone, tenantId.Value);
-                }
+                    return await _settingManager.GetSettingValueForTenantAsync(TimingSettingNames.TimeZone,
+                        tenantId.Value);
 
                 return await _settingManager.GetSettingValueForApplicationAsync(TimingSettingNames.TimeZone);
             }
 
             if (scope == SettingScopes.Tenant)
-            {
                 return await _settingManager.GetSettingValueForApplicationAsync(TimingSettingNames.TimeZone);
-            }
 
             if (scope == SettingScopes.Application)
             {
-                var timezoneSettingDefinition = _settingDefinitionManager.GetSettingDefinition(TimingSettingNames.TimeZone);
+                var timezoneSettingDefinition =
+                    _settingDefinitionManager.GetSettingDefinition(TimingSettingNames.TimeZone);
                 return timezoneSettingDefinition.DefaultValue;
             }
 

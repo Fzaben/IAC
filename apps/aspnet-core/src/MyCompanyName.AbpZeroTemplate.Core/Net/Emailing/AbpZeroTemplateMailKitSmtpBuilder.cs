@@ -8,9 +8,9 @@ namespace MyCompanyName.AbpZeroTemplate.Net.Emailing
     {
         public AbpZeroTemplateMailKitSmtpBuilder(
             ISmtpEmailSenderConfiguration smtpEmailSenderConfiguration,
-            IAbpMailKitConfiguration abpMailKitConfiguration) : base(smtpEmailSenderConfiguration, abpMailKitConfiguration)
+            IAbpMailKitConfiguration abpMailKitConfiguration) : base(smtpEmailSenderConfiguration,
+            abpMailKitConfiguration)
         {
-
         }
 
         protected override void ConfigureClient(SmtpClient client)

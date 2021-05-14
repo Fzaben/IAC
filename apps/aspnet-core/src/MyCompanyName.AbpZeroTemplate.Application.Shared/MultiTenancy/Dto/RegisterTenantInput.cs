@@ -3,7 +3,6 @@ using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
-using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Dto;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto
 {
@@ -26,8 +25,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto
         [DisableAuditing]
         public string AdminPassword { get; set; }
 
-        [DisableAuditing]
-        public string CaptchaResponse { get; set; }
+        [DisableAuditing] public string CaptchaResponse { get; set; }
 
         public SubscriptionStartType SubscriptionStartType { get; set; }
 

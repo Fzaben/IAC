@@ -5,18 +5,6 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
 {
     public class WidgetDefinition
     {
-        public string Id { get; }
-
-        public string Name { get; }
-
-        public MultiTenancySides Side { get; }
-
-        public List<string> Permissions { get; }
-
-        public List<string> UsedWidgetFilters { get; }
-
-        public string Description { get; }
-
         public WidgetDefinition(
             string id,
             string name,
@@ -32,5 +20,17 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization.Definitions
             UsedWidgetFilters = usedWidgetFilters;
             Description = description;
         }
+
+        public string Id { get; }
+
+        public string Name { get; }
+
+        public MultiTenancySides Side { get; }
+
+        public List<string> Permissions { get; }
+
+        public List<string> UsedWidgetFilters { get; }
+
+        public string Description { get; }
     }
 }

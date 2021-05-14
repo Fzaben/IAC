@@ -31,25 +31,16 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
 
         public async Task<bool> Validate(ClaimsPrincipal claimsPrincipal)
         {
-            if (claimsPrincipal?.Claims == null || !claimsPrincipal.Claims.Any())
-            {
-                return false;
-            }
+            if (claimsPrincipal?.Claims == null || !claimsPrincipal.Claims.Any()) return false;
 
             var securityStampKey = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == AppConsts.SecurityStampKey);
-            if (securityStampKey == null)
-            {
-                return false;
-            }
+            if (securityStampKey == null) return false;
 
             var userIdentifierString = claimsPrincipal.Claims.First(c => c.Type == AppConsts.UserIdentifier);
             var userIdentifier = UserIdentifier.Parse(userIdentifierString.Value);
 
             var isValid = await ValidateSecurityStampFromCache(userIdentifier, securityStampKey.Value);
-            if (!isValid)
-            {
-                isValid = await ValidateSecurityStampFromDb(userIdentifier, securityStampKey.Value);
-            }
+            if (!isValid) isValid = await ValidateSecurityStampFromDb(userIdentifier, securityStampKey.Value);
 
             return isValid;
         }
@@ -65,7 +56,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
             await _cacheManager.GetCache(AppConsts.SecurityStampKey).RemoveAsync(GenerateCacheKey(tenantId, userId));
         }
 
-        private string GenerateCacheKey(int? tenantId, long userId) => $"{tenantId}.{userId}";
+        private string GenerateCacheKey(int? tenantId, long userId)
+        {
+            return $"{tenantId}.{userId}";
+        }
 
         private async Task<bool> ValidateSecurityStampFromCache(UserIdentifier userIdentifier, string securityStamp)
         {
@@ -73,7 +67,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer
                 .GetCache(AppConsts.SecurityStampKey)
                 .GetOrDefaultAsync(GenerateCacheKey(userIdentifier.TenantId, userIdentifier.UserId));
 
-            return securityStampKey != null && (string)securityStampKey == securityStamp;
+            return securityStampKey != null && (string) securityStampKey == securityStamp;
         }
 
         private async Task<bool> ValidateSecurityStampFromDb(UserIdentifier userIdentifier, string securityStamp)

@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using MyCompanyName.AbpZeroTemplate.Notifications;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 

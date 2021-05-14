@@ -22,7 +22,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
                 excelPackage =>
                 {
                     var sheet = excelPackage.CreateSheet(L("InvalidUserImports"));
-                    
+
                     AddHeader(
                         sheet,
                         L("UserName"),
@@ -47,10 +47,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing
                         _ => _.Exception
                     );
 
-                    for (var i = 0; i < 8; i++)
-                    {
-                        sheet.AutoSizeColumn(i);
-                    }
+                    for (var i = 0; i < 8; i++) sheet.AutoSizeColumn(i);
                 });
         }
     }

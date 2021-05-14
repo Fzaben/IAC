@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Application.Editions;
-using Abp.Domain.Entities;
 using Abp.Domain.Entities.Auditing;
 using Abp.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Editions;
@@ -12,6 +11,11 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
     [MultiTenancySide(MultiTenancySides.Host)]
     public class SubscriptionPayment : FullAuditedEntity<long>
     {
+        public SubscriptionPayment()
+        {
+            Status = SubscriptionPaymentStatus.NotPaid;
+        }
+
         public string Description { get; set; }
 
         public SubscriptionPaymentGatewayType Gateway { get; set; }
@@ -44,10 +48,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
 
         public void SetAsCancelled()
         {
-            if (Status == SubscriptionPaymentStatus.NotPaid)
-            {
-                Status = SubscriptionPaymentStatus.Cancelled;
-            }
+            if (Status == SubscriptionPaymentStatus.NotPaid) Status = SubscriptionPaymentStatus.Cancelled;
         }
 
         public void SetAsFailed()
@@ -57,23 +58,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
 
         public void SetAsPaid()
         {
-            if (Status == SubscriptionPaymentStatus.NotPaid)
-            {
-                Status = SubscriptionPaymentStatus.Paid;
-            }
+            if (Status == SubscriptionPaymentStatus.NotPaid) Status = SubscriptionPaymentStatus.Paid;
         }
 
         public void SetAsCompleted()
         {
-            if (Status == SubscriptionPaymentStatus.Paid)
-            {
-                Status = SubscriptionPaymentStatus.Completed;
-            }
-        }
-
-        public SubscriptionPayment()
-        {
-            Status = SubscriptionPaymentStatus.NotPaid;
+            if (Status == SubscriptionPaymentStatus.Paid) Status = SubscriptionPaymentStatus.Completed;
         }
 
         public PaymentPeriodType GetPaymentPeriodType()

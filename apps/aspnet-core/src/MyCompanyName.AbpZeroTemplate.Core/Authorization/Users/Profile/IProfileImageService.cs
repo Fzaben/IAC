@@ -1,6 +1,6 @@
-﻿using Abp;
+﻿using System.Threading.Tasks;
+using Abp;
 using Abp.Domain.Services;
-using System.Threading.Tasks;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile
 {

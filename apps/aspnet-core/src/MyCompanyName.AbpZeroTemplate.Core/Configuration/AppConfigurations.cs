@@ -23,23 +23,19 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
             );
         }
 
-        private static IConfigurationRoot BuildConfiguration(string path, string environmentName = null, bool addUserSecrets = false)
+        private static IConfigurationRoot BuildConfiguration(string path, string environmentName = null,
+            bool addUserSecrets = false)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(path)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                .AddJsonFile("appsettings.json", true, true);
 
             if (!environmentName.IsNullOrWhiteSpace())
-            {
-                builder = builder.AddJsonFile($"appsettings.{environmentName}.json", optional: true);
-            }
+                builder = builder.AddJsonFile($"appsettings.{environmentName}.json", true);
 
             builder = builder.AddEnvironmentVariables();
 
-            if (addUserSecrets)
-            {
-                builder.AddUserSecrets(typeof(AppConfigurations).GetAssembly());
-            }
+            if (addUserSecrets) builder.AddUserSecrets(typeof(AppConfigurations).GetAssembly());
 
             var builtConfig = builder.Build();
             new AppAzureKeyVaultConfigurer().Configure(builder, builtConfig);

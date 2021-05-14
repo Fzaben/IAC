@@ -1,14 +1,13 @@
 ﻿using Abp.Authorization.Users;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
-using Abp.Linq;
 using Abp.Organizations;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 {
     /// <summary>
-    /// Used to perform database operations for <see cref="UserManager"/>.
+    ///     Used to perform database operations for <see cref="UserManager" />.
     /// </summary>
     public class UserStore : AbpUserStore<Role, User>
     {

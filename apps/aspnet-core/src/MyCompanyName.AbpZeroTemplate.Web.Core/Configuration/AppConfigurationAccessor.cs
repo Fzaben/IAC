@@ -5,13 +5,13 @@ using MyCompanyName.AbpZeroTemplate.Configuration;
 
 namespace MyCompanyName.AbpZeroTemplate.Web.Configuration
 {
-    public class AppConfigurationAccessor: IAppConfigurationAccessor, ISingletonDependency
+    public class AppConfigurationAccessor : IAppConfigurationAccessor, ISingletonDependency
     {
-        public IConfigurationRoot Configuration { get; }
-
         public AppConfigurationAccessor(IWebHostEnvironment env)
         {
             Configuration = env.GetAppConfiguration();
         }
+
+        public IConfigurationRoot Configuration { get; }
     }
 }

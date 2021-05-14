@@ -15,9 +15,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup.ExternalLoginInfoProviders
     public class TenantBasedGoogleExternalLoginInfoProvider : TenantBasedExternalLoginInfoProviderBase,
         ISingletonDependency
     {
-        private readonly ISettingManager _settingManager;
         private readonly IAbpSession _abpSession;
-        public override string Name { get; } = GoogleAuthProviderApi.Name;
+        private readonly ISettingManager _settingManager;
 
         public TenantBasedGoogleExternalLoginInfoProvider(
             ISettingManager settingManager,
@@ -28,9 +27,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup.ExternalLoginInfoProviders
             _abpSession = abpSession;
         }
 
+        public override string Name { get; } = GoogleAuthProviderApi.Name;
+
         private ExternalLoginProviderInfo CreateExternalLoginInfo(GoogleExternalLoginProviderSettings settings)
         {
-            return new ExternalLoginProviderInfo(
+            return new(
                 GoogleAuthProviderApi.Name,
                 settings.ClientId,
                 settings.ClientSecret,
@@ -44,20 +45,23 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup.ExternalLoginInfoProviders
 
         protected override bool TenantHasSettings()
         {
-            var settingValue = _settingManager.GetSettingValueForTenant(AppSettings.ExternalLoginProvider.Tenant.Google, _abpSession.TenantId.Value);
+            var settingValue = _settingManager.GetSettingValueForTenant(AppSettings.ExternalLoginProvider.Tenant.Google,
+                _abpSession.TenantId.Value);
             return !settingValue.IsNullOrWhiteSpace();
         }
 
         protected override ExternalLoginProviderInfo GetTenantInformation()
         {
-            string settingValue = _settingManager.GetSettingValueForTenant(AppSettings.ExternalLoginProvider.Tenant.Google, _abpSession.TenantId.Value);
+            var settingValue = _settingManager.GetSettingValueForTenant(AppSettings.ExternalLoginProvider.Tenant.Google,
+                _abpSession.TenantId.Value);
             var settings = settingValue.FromJsonString<GoogleExternalLoginProviderSettings>();
             return CreateExternalLoginInfo(settings);
         }
 
         protected override ExternalLoginProviderInfo GetHostInformation()
         {
-            string settingValue = _settingManager.GetSettingValueForApplication(AppSettings.ExternalLoginProvider.Host.Google);
+            var settingValue =
+                _settingManager.GetSettingValueForApplication(AppSettings.ExternalLoginProvider.Host.Google);
             var settings = settingValue.FromJsonString<GoogleExternalLoginProviderSettings>();
             return CreateExternalLoginInfo(settings);
         }

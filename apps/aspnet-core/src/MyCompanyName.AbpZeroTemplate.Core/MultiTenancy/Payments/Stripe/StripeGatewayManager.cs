@@ -15,12 +15,11 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
         ISupportsRecurringPayments,
         ITransientDependency
     {
-        private readonly TenantManager _tenantManager;
-        private readonly EditionManager _editionManager;
-        private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
-
         public static string ProductName = "AbpZeroTemplate";
         public static string StripeSessionIdSubscriptionPaymentExtensionDataKey = "StripeSessionId";
+        private readonly EditionManager _editionManager;
+        private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
+        private readonly TenantManager _tenantManager;
 
         public StripeGatewayManager(
             TenantManager tenantManager,
@@ -32,32 +31,123 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             _editionManager = editionManager;
         }
 
-        public async Task UpdateSubscription(int newEditionId, int tenantId, bool isProrateCharged = false)
+        public void HandleEvent(RecurringPaymentsDisabledEventData eventData)
         {
-            var lastPayment = await _subscriptionPaymentRepository.GetLastCompletedPaymentOrDefaultAsync(
-                tenantId: tenantId,
-                SubscriptionPaymentGatewayType.Stripe,
-                isRecurring: true);
+            var subscriptionPayment = GetLastCompletedSubscriptionPayment(eventData.TenantId);
+
+            int daysUntilDue;
+
+            using (CurrentUnitOfWork.SetTenantId(null))
+            {
+                var edition =
+                    (SubscribableEdition) AsyncHelper.RunSync(() => _editionManager.GetByIdAsync(eventData.EditionId));
+                daysUntilDue = edition.WaitingDayAfterExpire ?? 3;
+            }
+
+            var subscriptionService = new SubscriptionService();
+            subscriptionService.Update(subscriptionPayment.ExternalPaymentId, new SubscriptionUpdateOptions
+            {
+                CancelAtPeriodEnd = false,
+                CollectionMethod = "send_invoice",
+                DaysUntilDue = daysUntilDue
+            });
+        }
+
+        public void HandleEvent(RecurringPaymentsEnabledEventData eventData)
+        {
+            var subscriptionPayment = GetLastCompletedSubscriptionPayment(eventData.TenantId);
+
+            if (subscriptionPayment == null || subscriptionPayment.ExternalPaymentId.IsNullOrEmpty()) return;
+
+            var subscriptionService = new SubscriptionService();
+            subscriptionService.Update(subscriptionPayment.ExternalPaymentId, new SubscriptionUpdateOptions
+            {
+                CancelAtPeriodEnd = false,
+                CollectionMethod = "charge_automatically"
+            });
+        }
+
+        public void HandleEvent(TenantEditionChangedEventData eventData)
+        {
+            if (!eventData.OldEditionId.HasValue) return;
+
+            var subscriptionPayment = GetLastCompletedSubscriptionPayment(eventData.TenantId);
+
+            if (subscriptionPayment == null || subscriptionPayment.ExternalPaymentId.IsNullOrEmpty())
+                // no subscription on stripe !
+                return;
+
+            if (!eventData.NewEditionId.HasValue)
+            {
+                AsyncHelper.RunSync(() => CancelSubscription(subscriptionPayment.ExternalPaymentId));
+                return;
+            }
 
             string newPlanId;
             decimal? newPlanAmount;
 
             using (CurrentUnitOfWork.SetTenantId(null))
             {
-                var edition = (SubscribableEdition)AsyncHelper.RunSync(() => _editionManager.GetByIdAsync(newEditionId));
+                var edition = (SubscribableEdition) AsyncHelper.RunSync(() =>
+                    _editionManager.GetByIdAsync(eventData.NewEditionId.Value));
+                newPlanId = GetPlanId(edition.Name, subscriptionPayment.GetPaymentPeriodType());
+                newPlanAmount = edition.GetPaymentAmountOrNull(subscriptionPayment.PaymentPeriodType);
+            }
+
+            if (!newPlanAmount.HasValue || newPlanAmount.Value == 0)
+            {
+                AsyncHelper.RunSync(() => CancelSubscription(subscriptionPayment.ExternalPaymentId));
+                return;
+            }
+
+            var payment = new SubscriptionPayment
+            {
+                TenantId = eventData.TenantId,
+                Amount = 0,
+                PaymentPeriodType = subscriptionPayment.GetPaymentPeriodType(),
+                Description = $"Edition change by admin from {eventData.OldEditionId} to {eventData.NewEditionId}",
+                EditionId = eventData.NewEditionId.Value,
+                Gateway = SubscriptionPaymentGatewayType.Stripe,
+                DayCount = subscriptionPayment.DayCount,
+                IsRecurring = true
+            };
+
+            _subscriptionPaymentRepository.InsertAndGetId(payment);
+
+            CurrentUnitOfWork.SaveChanges();
+
+            if (!AsyncHelper.RunSync(() => DoesPlanExistAsync(newPlanId)))
+                AsyncHelper.RunSync(() => CreatePlanAsync(newPlanId, newPlanAmount.Value,
+                    GetPlanInterval(subscriptionPayment.PaymentPeriodType), ProductName));
+
+            AsyncHelper.RunSync(() => UpdateSubscription(subscriptionPayment.ExternalPaymentId, newPlanId));
+        }
+
+        public async Task UpdateSubscription(int newEditionId, int tenantId, bool isProrateCharged = false)
+        {
+            var lastPayment = await _subscriptionPaymentRepository.GetLastCompletedPaymentOrDefaultAsync(
+                tenantId,
+                SubscriptionPaymentGatewayType.Stripe,
+                true);
+
+            string newPlanId;
+            decimal? newPlanAmount;
+
+            using (CurrentUnitOfWork.SetTenantId(null))
+            {
+                var edition =
+                    (SubscribableEdition) AsyncHelper.RunSync(() => _editionManager.GetByIdAsync(newEditionId));
                 newPlanId = GetPlanId(edition.Name, lastPayment.GetPaymentPeriodType());
                 newPlanAmount = edition.GetPaymentAmount(lastPayment.PaymentPeriodType);
             }
 
-            if (!(await DoesPlanExistAsync(newPlanId)))
-            {
+            if (!await DoesPlanExistAsync(newPlanId))
                 await CreatePlanAsync(
                     newPlanId,
                     newPlanAmount.Value,
                     GetPlanInterval(lastPayment.PaymentPeriodType),
                     ProductName
                 );
-            }
 
             await UpdateSubscription(lastPayment.ExternalPaymentId, newPlanId, isProrateCharged);
         }
@@ -70,20 +160,24 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             await subscriptionService.UpdateAsync(subscriptionId, new SubscriptionUpdateOptions
             {
                 CancelAtPeriodEnd = false,
-                Items = new List<SubscriptionItemOptions> {
-                    new SubscriptionItemOptions {
+                Items = new List<SubscriptionItemOptions>
+                {
+                    new()
+                    {
                         Id = subscription.Items.Data[0].Id,
                         Plan = newPlanId
                     }
                 },
-                ProrationBehavior = !isProrateCharged ? "always_invoice": "none"  
+                ProrationBehavior = !isProrateCharged ? "always_invoice" : "none"
             });
 
-            var lastRecurringPayment = await _subscriptionPaymentRepository.GetByGatewayAndPaymentIdAsync(SubscriptionPaymentGatewayType.Stripe, subscriptionId);
+            var lastRecurringPayment =
+                await _subscriptionPaymentRepository.GetByGatewayAndPaymentIdAsync(
+                    SubscriptionPaymentGatewayType.Stripe, subscriptionId);
             var payment = await _subscriptionPaymentRepository.GetLastPaymentOrDefaultAsync(
-                tenantId: lastRecurringPayment.TenantId,
+                lastRecurringPayment.TenantId,
                 SubscriptionPaymentGatewayType.Stripe,
-                isRecurring: true);
+                true);
 
             payment.IsRecurring = false;
         }
@@ -91,7 +185,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
         public async Task CancelSubscription(string subscriptionId)
         {
             var subscriptionService = new SubscriptionService();
-            await subscriptionService.CancelAsync(subscriptionId, null);
+            await subscriptionService.CancelAsync(subscriptionId);
 
             var payment = await _subscriptionPaymentRepository.GetByGatewayAndPaymentIdAsync(
                 SubscriptionPaymentGatewayType.Stripe,
@@ -116,7 +210,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             }
         }
 
-        public async Task<StripeIdResponse> GetOrCreatePlanAsync(string planId, decimal amount, string interval, string productId)
+        public async Task<StripeIdResponse> GetOrCreatePlanAsync(string planId, decimal amount, string interval,
+            string productId)
         {
             try
             {
@@ -155,10 +250,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
 
         public string GetPlanInterval(PaymentPeriodType? paymentPeriod)
         {
-            if (!paymentPeriod.HasValue)
-            {
-                throw new ArgumentNullException(nameof(paymentPeriod));
-            }
+            if (!paymentPeriod.HasValue) throw new ArgumentNullException(nameof(paymentPeriod));
 
             switch (paymentPeriod.Value)
             {
@@ -180,7 +272,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             var customerService = new CustomerService();
             var sessionService = new SessionService();
             var session = await sessionService.GetAsync(sessionId);
-            
+
             var customer = await customerService.UpdateAsync(session.CustomerId, new CustomerUpdateOptions
             {
                 Description = description
@@ -190,105 +282,6 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             {
                 Id = customer.Id
             };
-        }
-        
-        public void HandleEvent(RecurringPaymentsDisabledEventData eventData)
-        {
-            var subscriptionPayment = GetLastCompletedSubscriptionPayment(eventData.TenantId);
-
-            int daysUntilDue;
-
-            using (CurrentUnitOfWork.SetTenantId(null))
-            {
-                var edition = (SubscribableEdition)AsyncHelper.RunSync(() => _editionManager.GetByIdAsync(eventData.EditionId));
-                daysUntilDue = edition.WaitingDayAfterExpire ?? 3;
-            }
-
-            var subscriptionService = new SubscriptionService();
-            subscriptionService.Update(subscriptionPayment.ExternalPaymentId, new SubscriptionUpdateOptions
-            {
-                CancelAtPeriodEnd = false,
-                CollectionMethod = "send_invoice",
-                DaysUntilDue = daysUntilDue
-            });
-        }
-
-        public void HandleEvent(RecurringPaymentsEnabledEventData eventData)
-        {
-            var subscriptionPayment = GetLastCompletedSubscriptionPayment(eventData.TenantId);
-
-            if (subscriptionPayment == null || subscriptionPayment.ExternalPaymentId.IsNullOrEmpty())
-            {
-                return;
-            }
-
-            var subscriptionService = new SubscriptionService();
-            subscriptionService.Update(subscriptionPayment.ExternalPaymentId, new SubscriptionUpdateOptions
-            {
-                CancelAtPeriodEnd = false,
-                CollectionMethod = "charge_automatically"
-            });
-        }
-
-        public void HandleEvent(TenantEditionChangedEventData eventData)
-        {
-            if (!eventData.OldEditionId.HasValue)
-            {
-                return;
-            }
-
-            var subscriptionPayment = GetLastCompletedSubscriptionPayment(eventData.TenantId);
-
-            if (subscriptionPayment == null || subscriptionPayment.ExternalPaymentId.IsNullOrEmpty())
-            {
-                // no subscription on stripe !
-                return;
-            }
-
-            if (!eventData.NewEditionId.HasValue)
-            {
-                AsyncHelper.RunSync(() => CancelSubscription(subscriptionPayment.ExternalPaymentId));
-                return;
-            }
-
-            string newPlanId;
-            decimal? newPlanAmount;
-
-            using (CurrentUnitOfWork.SetTenantId(null))
-            {
-                var edition = (SubscribableEdition)AsyncHelper.RunSync(() => _editionManager.GetByIdAsync(eventData.NewEditionId.Value));
-                newPlanId = GetPlanId(edition.Name, subscriptionPayment.GetPaymentPeriodType());
-                newPlanAmount = edition.GetPaymentAmountOrNull(subscriptionPayment.PaymentPeriodType);
-            }
-
-            if (!newPlanAmount.HasValue || newPlanAmount.Value == 0)
-            {
-                AsyncHelper.RunSync(() => CancelSubscription(subscriptionPayment.ExternalPaymentId));
-                return;
-            }
-
-            var payment = new SubscriptionPayment
-            {
-                TenantId = eventData.TenantId,
-                Amount = 0,
-                PaymentPeriodType = subscriptionPayment.GetPaymentPeriodType(),
-                Description = $"Edition change by admin from {eventData.OldEditionId} to {eventData.NewEditionId}",
-                EditionId = eventData.NewEditionId.Value,
-                Gateway = SubscriptionPaymentGatewayType.Stripe,
-                DayCount = subscriptionPayment.DayCount,
-                IsRecurring = true
-            };
-
-            _subscriptionPaymentRepository.InsertAndGetId(payment);
-
-            CurrentUnitOfWork.SaveChanges();
-
-            if (!AsyncHelper.RunSync(() => DoesPlanExistAsync(newPlanId)))
-            {
-                AsyncHelper.RunSync(() => CreatePlanAsync(newPlanId, newPlanAmount.Value, GetPlanInterval(subscriptionPayment.PaymentPeriodType), ProductName));
-            }
-
-            AsyncHelper.RunSync(() => UpdateSubscription(subscriptionPayment.ExternalPaymentId, newPlanId));
         }
 
         public async Task HandleInvoicePaymentSucceededAsync(Invoice invoice)
@@ -315,8 +308,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
 
                 await _tenantManager.UpdateTenantAsync(
                     tenant.Id,
-                    isActive: true,
-                    isInTrialPeriod: false,
+                    true,
+                    false,
                     paymentPeriodType,
                     tenant.EditionId.Value,
                     EditionPaymentType.Extend);
@@ -326,7 +319,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             {
                 TenantId = tenantId,
                 Amount = ConvertFromStripePrice(invoice.AmountPaid),
-                DayCount = (int)paymentPeriodType,
+                DayCount = (int) paymentPeriodType,
                 PaymentPeriodType = paymentPeriodType,
                 EditionId = editionId,
                 ExternalPaymentId = invoice.ChargeId,
@@ -366,7 +359,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
                 .FirstOrDefault();
         }
 
-        private async Task<StripeIdResponse> CreatePlanAsync(string planId, decimal amount, string interval, string productId)
+        private async Task<StripeIdResponse> CreatePlanAsync(string planId, decimal amount, string interval,
+            string productId)
         {
             var planService = new PlanService();
             var plan = await planService.CreateAsync(new PlanCreateOptions
@@ -408,7 +402,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Stripe
             decimal amount;
             using (CurrentUnitOfWork.SetTenantId(null))
             {
-                var edition = (SubscribableEdition)await _editionManager.GetByIdAsync(payment.EditionId);
+                var edition = (SubscribableEdition) await _editionManager.GetByIdAsync(payment.EditionId);
                 planId = GetPlanId(edition.Name, payment.GetPaymentPeriodType());
                 amount = edition.GetPaymentAmount(payment.GetPaymentPeriodType());
             }

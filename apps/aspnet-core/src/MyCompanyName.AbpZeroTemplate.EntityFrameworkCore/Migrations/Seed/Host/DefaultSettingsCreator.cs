@@ -24,9 +24,7 @@ namespace MyCompanyName.AbpZeroTemplate.Migrations.Seed.Host
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (!AbpZeroTemplateConsts.MultiTenancyEnabled)
 #pragma warning disable 162
-            {
                 tenantId = MultiTenancyConsts.DefaultTenantId;
-            }
 #pragma warning restore 162
 
             //Emailing
@@ -39,10 +37,8 @@ namespace MyCompanyName.AbpZeroTemplate.Migrations.Seed.Host
 
         private void AddSettingIfNotExists(string name, string value, int? tenantId = null)
         {
-            if (_context.Settings.IgnoreQueryFilters().Any(s => s.Name == name && s.TenantId == tenantId && s.UserId == null))
-            {
-                return;
-            }
+            if (_context.Settings.IgnoreQueryFilters()
+                .Any(s => s.Name == name && s.TenantId == tenantId && s.UserId == null)) return;
 
             _context.Settings.Add(new Setting(tenantId, null, name, value));
             _context.SaveChanges();

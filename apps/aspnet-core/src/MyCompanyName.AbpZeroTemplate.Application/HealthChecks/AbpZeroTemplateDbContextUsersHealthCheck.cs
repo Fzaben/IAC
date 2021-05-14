@@ -17,13 +17,14 @@ namespace MyCompanyName.AbpZeroTemplate.HealthChecks
         public AbpZeroTemplateDbContextUsersHealthCheck(
             IDbContextProvider<AbpZeroTemplateDbContext> dbContextProvider,
             IUnitOfWorkManager unitOfWorkManager
-            )
+        )
         {
             _dbContextProvider = dbContextProvider;
             _unitOfWorkManager = unitOfWorkManager;
         }
 
-        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = new CancellationToken())
+        public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             try
             {
@@ -33,22 +34,19 @@ namespace MyCompanyName.AbpZeroTemplate.HealthChecks
                     using (_unitOfWorkManager.Current.SetTenantId(null))
                     {
                         if (!await _dbContextProvider.GetDbContext().Database.CanConnectAsync(cancellationToken))
-                        {
                             return HealthCheckResult.Unhealthy(
                                 "AbpZeroTemplateDbContext could not connect to database"
                             );
-                        }
 
                         var user = await _dbContextProvider.GetDbContext().Users.AnyAsync(cancellationToken);
                         uow.Complete();
 
                         if (user)
-                        {
-                            return HealthCheckResult.Healthy("AbpZeroTemplateDbContext connected to database and checked whether user added");
-                        }
+                            return HealthCheckResult.Healthy(
+                                "AbpZeroTemplateDbContext connected to database and checked whether user added");
 
-                        return HealthCheckResult.Unhealthy("AbpZeroTemplateDbContext connected to database but there is no user.");
-
+                        return HealthCheckResult.Unhealthy(
+                            "AbpZeroTemplateDbContext connected to database but there is no user.");
                     }
                 }
             }

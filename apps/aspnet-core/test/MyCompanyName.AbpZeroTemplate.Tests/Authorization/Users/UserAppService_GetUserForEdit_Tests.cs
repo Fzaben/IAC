@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Abp.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
-using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using Shouldly;
 using Xunit;
 
@@ -40,7 +39,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             var roleCount = UsingDbContext(context => context.Roles.Count(r => r.TenantId == AbpSession.TenantId));
 
             //Act
-            var output = await UserAppService.GetUserForEdit(new NullableIdDto<long> { Id = adminUser.Id });
+            var output = await UserAppService.GetUserForEdit(new NullableIdDto<long> {Id = adminUser.Id});
 
             //Assert
             output.User.Id.ShouldBe(adminUser.Id);
@@ -60,7 +59,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
 
         protected Role CreateRole(string roleName)
         {
-            return UsingDbContext(context => context.Roles.Add(new Role(AbpSession.TenantId, roleName, roleName)).Entity);
+            return UsingDbContext(
+                context => context.Roles.Add(new Role(AbpSession.TenantId, roleName, roleName)).Entity);
         }
     }
 }

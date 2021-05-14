@@ -8,17 +8,17 @@ namespace MyCompanyName.AbpZeroTemplate.Types
         public RoleType()
         {
             Name = "RoleType";
-            
+
             Field(x => x.Id);
             Field(x => x.IsDefault);
             Field(x => x.IsStatic);
             Field(x => x.Name);
             Field(x => x.DisplayName);
             Field(x => x.CreationTime);
-            Field(x => x.CreatorUserId, nullable: true);
-            Field(x => x.LastModificationTime, nullable: true);
-            Field(x => x.LastModifierUserId, nullable: true);
-            Field(x => x.TenantId, nullable: true);
+            Field(x => x.CreatorUserId, true);
+            Field(x => x.LastModificationTime, true);
+            Field(x => x.LastModifierUserId, true);
+            Field(x => x.TenantId, true);
         }
     }
 }

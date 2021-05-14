@@ -24,8 +24,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto
 
         public List<UserListRoleDto> Roles { get; set; }
 
-        public bool IsActive { get; set; }
-
         public DateTime CreationTime { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

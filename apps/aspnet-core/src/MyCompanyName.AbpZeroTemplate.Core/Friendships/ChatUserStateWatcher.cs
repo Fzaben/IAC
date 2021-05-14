@@ -11,8 +11,8 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
     public class ChatUserStateWatcher : ISingletonDependency
     {
         private readonly IChatCommunicator _chatCommunicator;
-        private readonly IUserFriendsCache _userFriendsCache;
         private readonly IOnlineClientManager<ChatChannel> _onlineClientManager;
+        private readonly IUserFriendsCache _userFriendsCache;
 
         public ChatUserStateWatcher(
             IChatCommunicator chatCommunicator,
@@ -46,13 +46,12 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
 
             foreach (var friend in cacheItem.Friends)
             {
-                var friendUserClients = _onlineClientManager.GetAllByUserId(new UserIdentifier(friend.FriendTenantId, friend.FriendUserId));
-                if (!friendUserClients.Any())
-                {
-                    continue;
-                }
+                var friendUserClients =
+                    _onlineClientManager.GetAllByUserId(new UserIdentifier(friend.FriendTenantId, friend.FriendUserId));
+                if (!friendUserClients.Any()) continue;
 
-                AsyncHelper.RunSync(() => _chatCommunicator.SendUserConnectionChangeToClients(friendUserClients, user, isConnected));
+                AsyncHelper.RunSync(() =>
+                    _chatCommunicator.SendUserConnectionChangeToClients(friendUserClients, user, isConnected));
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Abp.Collections.Extensions;
 using Abp.Runtime.Session;
@@ -8,14 +7,13 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
 using MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI;
 using MyCompanyName.AbpZeroTemplate.Dto;
 using MyCompanyName.AbpZeroTemplate.Storage;
-using NPOI.SS.UserModel;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Exporting
 {
     public class UserListExcelExporter : NpoiExcelExporterBase, IUserListExcelExporter
     {
-        private readonly ITimeZoneConverter _timeZoneConverter;
         private readonly IAbpSession _abpSession;
+        private readonly ITimeZoneConverter _timeZoneConverter;
 
         public UserListExcelExporter(
             ITimeZoneConverter timeZoneConverter,
@@ -46,7 +44,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Exporting
                         L("Roles"),
                         L("Active"),
                         L("CreationTime")
-                        );
+                    );
 
                     AddObjects(
                         sheet, userListDtos,
@@ -59,18 +57,13 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Exporting
                         _ => _.Roles.Select(r => r.RoleName).JoinAsString(", "),
                         _ => _.IsActive,
                         _ => _timeZoneConverter.Convert(_.CreationTime, _abpSession.TenantId, _abpSession.GetUserId())
-                        );
-                    
+                    );
+
                     for (var i = 1; i <= userListDtos.Count; i++)
-                    {
                         //Formatting cells
                         SetCellDataFormat(sheet.GetRow(i).Cells[8], "yyyy-mm-dd");
-                    }
-                    
-                    for (var i = 0; i < 9; i++)
-                    {
-                        sheet.AutoSizeColumn(i);
-                    }
+
+                    for (var i = 0; i < 9; i++) sheet.AutoSizeColumn(i);
                 });
         }
     }

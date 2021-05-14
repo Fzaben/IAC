@@ -17,6 +17,7 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
 
         Task Delete(int id);
 
-        Task<GetAllDynamicEntityPropertyValuesOutput> GetAllDynamicEntityPropertyValues(GetAllDynamicEntityPropertyValuesInput input);
+        Task<GetAllDynamicEntityPropertyValuesOutput> GetAllDynamicEntityPropertyValues(
+            GetAllDynamicEntityPropertyValuesInput input);
     }
 }

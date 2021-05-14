@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Identity;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts.Dto;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using NSubstitute;
 using Shouldly;
 using Xunit;
@@ -29,12 +28,13 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Accounts
             {
                 var calledUser = callInfo.Arg<User>();
                 calledUser.EmailAddress.ShouldBe(localUser.EmailAddress);
-                passResetCode = calledUser.PasswordResetCode; //Getting the password reset code sent to the email address
+                passResetCode =
+                    calledUser.PasswordResetCode; //Getting the password reset code sent to the email address
                 return Task.CompletedTask;
             });
 
             LocalIocManager.IocContainer.Register(Component.For<IUserEmailer>().Instance(fakeUserEmailer).IsDefault());
-            
+
             var accountAppService = Resolve<IAccountAppService>();
 
             //Act

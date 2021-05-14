@@ -76,7 +76,6 @@ namespace MyCompanyName.AbpZeroTemplate
             configuration.CreateMap<Role, RoleListDto>();
             configuration.CreateMap<UserRole, UserListRoleDto>();
 
-            
 
             //Edition
             configuration.CreateMap<EditionEditDto, SubscribableEdition>().ReverseMap();
@@ -155,11 +154,14 @@ namespace MyCompanyName.AbpZeroTemplate
             configuration.CreateMap<DynamicPropertyValue, DynamicPropertyValueDto>().ReverseMap();
             configuration.CreateMap<DynamicEntityProperty, DynamicEntityPropertyDto>()
                 .ForMember(dto => dto.DynamicPropertyName,
-                    options => options.MapFrom(entity => entity.DynamicProperty.DisplayName.IsNullOrEmpty() ? entity.DynamicProperty.PropertyName : entity.DynamicProperty.DisplayName));
+                    options => options.MapFrom(entity =>
+                        entity.DynamicProperty.DisplayName.IsNullOrEmpty()
+                            ? entity.DynamicProperty.PropertyName
+                            : entity.DynamicProperty.DisplayName));
             configuration.CreateMap<DynamicEntityPropertyDto, DynamicEntityProperty>();
 
             configuration.CreateMap<DynamicEntityPropertyValue, DynamicEntityPropertyValueDto>().ReverseMap();
-            
+
             //User Delegations
             configuration.CreateMap<CreateUserDelegationDto, UserDelegation>();
 

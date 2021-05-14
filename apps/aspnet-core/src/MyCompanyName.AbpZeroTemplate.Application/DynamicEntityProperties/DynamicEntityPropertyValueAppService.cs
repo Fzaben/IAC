@@ -13,12 +13,13 @@ using MyCompanyName.AbpZeroTemplate.DynamicEntityPropertyValues.Dto;
 namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
 {
     [AbpAuthorize(AppPermissions.Pages_Administration_DynamicEntityPropertyValue)]
-    public class DynamicEntityPropertyValueAppService : AbpZeroTemplateAppServiceBase, IDynamicEntityPropertyValueAppService
+    public class DynamicEntityPropertyValueAppService : AbpZeroTemplateAppServiceBase,
+        IDynamicEntityPropertyValueAppService
     {
+        private readonly IDynamicEntityPropertyDefinitionManager _dynamicEntityPropertyDefinitionManager;
+        private readonly IDynamicEntityPropertyManager _dynamicEntityPropertyManager;
         private readonly IDynamicEntityPropertyValueManager _dynamicEntityPropertyValueManager;
         private readonly IDynamicPropertyValueManager _dynamicPropertyValueManager;
-        private readonly IDynamicEntityPropertyManager _dynamicEntityPropertyManager;
-        private readonly IDynamicEntityPropertyDefinitionManager _dynamicEntityPropertyDefinitionManager;
 
         public DynamicEntityPropertyValueAppService(
             IDynamicEntityPropertyValueManager dynamicEntityPropertyValueManager,
@@ -59,9 +60,7 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
         {
             var entity = await _dynamicEntityPropertyValueManager.GetAsync(input.Id);
             if (entity == null || entity.TenantId != AbpSession.TenantId)
-            {
                 throw new EntityNotFoundException(typeof(DynamicEntityPropertyValue), input.Id);
-            }
 
             entity.Value = input.Value;
             entity.DynamicEntityPropertyId = input.DynamicEntityPropertyId;
@@ -76,18 +75,17 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
             await _dynamicEntityPropertyValueManager.DeleteAsync(id);
         }
 
-        public async Task<GetAllDynamicEntityPropertyValuesOutput> GetAllDynamicEntityPropertyValues(GetAllDynamicEntityPropertyValuesInput input)
+        public async Task<GetAllDynamicEntityPropertyValuesOutput> GetAllDynamicEntityPropertyValues(
+            GetAllDynamicEntityPropertyValuesInput input)
         {
             var localCacheOfDynamicPropertyValues = new Dictionary<int, List<string>>();
 
             async Task<List<string>> LocalGetAllValuesOfDynamicProperty(int dynamicPropertyId)
             {
                 if (!localCacheOfDynamicPropertyValues.ContainsKey(dynamicPropertyId))
-                {
                     localCacheOfDynamicPropertyValues[dynamicPropertyId] = (await _dynamicPropertyValueManager
                             .GetAllValuesOfDynamicPropertyAsync(dynamicPropertyId))
                         .Select(x => x.Value).ToList();
-                }
 
                 return localCacheOfDynamicPropertyValues[dynamicPropertyId];
             }
@@ -95,7 +93,8 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
             var output = new GetAllDynamicEntityPropertyValuesOutput();
             var dynamicEntityProperties = await _dynamicEntityPropertyManager.GetAllAsync(input.EntityFullName);
 
-            var dynamicEntityPropertySelectedValues = (await _dynamicEntityPropertyValueManager.GetValuesAsync(input.EntityFullName, input.EntityId))
+            var dynamicEntityPropertySelectedValues =
+                (await _dynamicEntityPropertyValueManager.GetValuesAsync(input.EntityFullName, input.EntityId))
                 .GroupBy(value => value.DynamicEntityPropertyId)
                 .ToDictionary(
                     group => group.Key,
@@ -108,9 +107,11 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
                 var outputItem = new GetAllDynamicEntityPropertyValuesOutputItem
                 {
                     DynamicEntityPropertyId = dynamicEntityProperty.Id,
-                    InputType = _dynamicEntityPropertyDefinitionManager.GetOrNullAllowedInputType(dynamicEntityProperty.DynamicProperty.InputType),
+                    InputType = _dynamicEntityPropertyDefinitionManager.GetOrNullAllowedInputType(dynamicEntityProperty
+                        .DynamicProperty.InputType),
                     PropertyName = dynamicEntityProperty.DynamicProperty.PropertyName,
-                    AllValuesInputTypeHas = await LocalGetAllValuesOfDynamicProperty(dynamicEntityProperty.DynamicProperty.Id),
+                    AllValuesInputTypeHas =
+                        await LocalGetAllValuesOfDynamicProperty(dynamicEntityProperty.DynamicProperty.Id),
                     SelectedValues = dynamicEntityPropertySelectedValues.ContainsKey(dynamicEntityProperty.Id)
                         ? dynamicEntityPropertySelectedValues[dynamicEntityProperty.Id]
                         : new List<string>()
@@ -126,17 +127,13 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
         [AbpAuthorize(AppPermissions.Pages_Administration_DynamicEntityPropertyValue_Edit)]
         public async Task InsertOrUpdateAllValues(InsertOrUpdateAllValuesInput input)
         {
-            if (input.Items.IsNullOrEmpty())
-            {
-                return;
-            }
+            if (input.Items.IsNullOrEmpty()) return;
 
             foreach (var item in input.Items)
             {
                 await _dynamicEntityPropertyValueManager.CleanValuesAsync(item.DynamicEntityPropertyId, item.EntityId);
 
                 foreach (var newValue in item.Values)
-                {
                     await _dynamicEntityPropertyValueManager.AddAsync(new DynamicEntityPropertyValue
                     {
                         DynamicEntityPropertyId = item.DynamicEntityPropertyId,
@@ -144,7 +141,6 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
                         Value = newValue,
                         TenantId = AbpSession.TenantId
                     });
-                }
             }
         }
 

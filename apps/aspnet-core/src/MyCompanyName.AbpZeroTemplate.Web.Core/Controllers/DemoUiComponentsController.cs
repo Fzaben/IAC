@@ -29,19 +29,14 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 var files = Request.Form.Files;
 
                 //Check input
-                if (files == null)
-                {
-                    throw new UserFriendlyException(L("File_Empty_Error"));
-                }
+                if (files == null) throw new UserFriendlyException(L("File_Empty_Error"));
 
-                List<UploadFileOutput> filesOutput = new List<UploadFileOutput>();
+                var filesOutput = new List<UploadFileOutput>();
 
                 foreach (var file in files)
                 {
                     if (file.Length > 1048576) //1MB
-                    {
                         throw new UserFriendlyException(L("File_SizeLimit_Error"));
-                    }
 
                     byte[] fileBytes;
                     using (var stream = file.OpenReadStream())
@@ -49,7 +44,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                         fileBytes = stream.GetAllBytes();
                     }
 
-                    var fileObject = new BinaryObject(AbpSession.TenantId, fileBytes, $"Demo ui, uploaded file {DateTime.UtcNow}");
+                    var fileObject = new BinaryObject(AbpSession.TenantId, fileBytes,
+                        $"Demo ui, uploaded file {DateTime.UtcNow}");
                     await _binaryObjectManager.SaveAsync(fileObject);
 
                     filesOutput.Add(new UploadFileOutput

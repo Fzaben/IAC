@@ -15,7 +15,8 @@ namespace MyCompanyName.AbpZeroTemplate.Migrator
     {
         private readonly IConfigurationRoot _appConfiguration;
 
-        public AbpZeroTemplateMigratorModule(AbpZeroTemplateEntityFrameworkCoreModule abpZeroTemplateEntityFrameworkCoreModule)
+        public AbpZeroTemplateMigratorModule(
+            AbpZeroTemplateEntityFrameworkCoreModule abpZeroTemplateEntityFrameworkCoreModule)
         {
             abpZeroTemplateEntityFrameworkCoreModule.SkipDbSeed = true;
 
@@ -29,7 +30,7 @@ namespace MyCompanyName.AbpZeroTemplate.Migrator
         {
             Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
                 AbpZeroTemplateConsts.ConnectionStringName
-                );
+            );
             Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
 
             Configuration.BackgroundJobs.IsJobExecutionEnabled = false;

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Abp;
 using MyCompanyName.AbpZeroTemplate.Configuration.Dto;
 using MyCompanyName.AbpZeroTemplate.UiCustomization;
@@ -15,27 +16,27 @@ namespace MyCompanyName.AbpZeroTemplate.Test.Base.UiCustomization
 
         public Task UpdateUserUiManagementSettingsAsync(UserIdentifier user, ThemeSettingsDto settings)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task UpdateTenantUiManagementSettingsAsync(int tenantId, ThemeSettingsDto settings)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task UpdateApplicationUiManagementSettingsAsync(ThemeSettingsDto settings)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task<ThemeSettingsDto> GetHostUiManagementSettings()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public Task<ThemeSettingsDto> GetTenantUiCustomizationSettings(int tenantId)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

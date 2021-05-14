@@ -20,21 +20,15 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
         public ActionResult Index(int statusCode = 0)
         {
-            if (statusCode == 404)
-            {
-                return E404();
-            }
+            if (statusCode == 404) return E404();
 
-            if (statusCode == 403)
-            {
-                return E403();
-            }
+            if (statusCode == 403) return E403();
 
             var exHandlerFeature = HttpContext.Features.Get<IExceptionHandlerFeature>();
 
             var exception = exHandlerFeature != null
-                                ? exHandlerFeature.Error
-                                : new Exception("Unhandled exception!");
+                ? exHandlerFeature.Error
+                : new Exception("Unhandled exception!");
 
             return View(
                 "Error",
@@ -44,7 +38,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
                 )
             );
         }
-        
+
         public ActionResult E403()
         {
             return View("Error403");

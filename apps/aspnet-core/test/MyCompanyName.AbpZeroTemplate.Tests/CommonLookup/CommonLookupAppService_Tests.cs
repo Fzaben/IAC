@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using MyCompanyName.AbpZeroTemplate.Common;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 
 namespace MyCompanyName.AbpZeroTemplate.Tests.CommonLookup

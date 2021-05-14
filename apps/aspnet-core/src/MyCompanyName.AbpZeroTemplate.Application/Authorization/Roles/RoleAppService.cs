@@ -14,13 +14,13 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Roles.Dto;
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
 {
     /// <summary>
-    /// Application service that is used by 'role management' page.
+    ///     Application service that is used by 'role management' page.
     /// </summary>
     [AbpAuthorize(AppPermissions.Pages_Administration_Roles)]
     public class RoleAppService : AbpZeroTemplateAppServiceBase, IRoleAppService
     {
-        private readonly RoleManager _roleManager;
         private readonly IRoleManagementConfig _roleManagementConfig;
+        private readonly RoleManager _roleManager;
 
         public RoleAppService(
             RoleManager roleManager,
@@ -45,13 +45,11 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
                 ).Select(r => r.RoleName).ToList();
 
                 foreach (var permission in input.Permissions)
-                {
                     query = query.Where(r =>
                         r.Permissions.Any(rp => rp.Name == permission)
                             ? r.Permissions.Any(rp => rp.Name == permission && rp.IsGranted)
                             : staticRoleNames.Contains(r.Name)
                     );
-                }
             }
 
             var roles = await query.ToListAsync();
@@ -80,7 +78,8 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
             return new GetRoleForEditOutput
             {
                 Role = roleEditDto,
-                Permissions = ObjectMapper.Map<List<FlatPermissionDto>>(permissions).OrderBy(p => p.DisplayName).ToList(),
+                Permissions = ObjectMapper.Map<List<FlatPermissionDto>>(permissions).OrderBy(p => p.DisplayName)
+                    .ToList(),
                 GrantedPermissionNames = grantedPermissions.Select(p => p.Name).ToList()
             };
         }
@@ -88,13 +87,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
         public async Task CreateOrUpdateRole(CreateOrUpdateRoleInput input)
         {
             if (input.Role.Id.HasValue)
-            {
                 await UpdateRoleAsync(input);
-            }
             else
-            {
                 await CreateRoleAsync(input);
-            }
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Roles_Delete)]
@@ -103,10 +98,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
             var role = await _roleManager.GetRoleByIdAsync(input.Id);
 
             var users = await UserManager.GetUsersInRoleAsync(role.Name);
-            foreach (var user in users)
-            {
-                CheckErrors(await UserManager.RemoveFromRoleAsync(user, role.Name));
-            }
+            foreach (var user in users) CheckErrors(await UserManager.RemoveFromRoleAsync(user, role.Name));
 
             CheckErrors(await _roleManager.DeleteAsync(role));
         }
@@ -126,7 +118,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
         [AbpAuthorize(AppPermissions.Pages_Administration_Roles_Create)]
         protected virtual async Task CreateRoleAsync(CreateOrUpdateRoleInput input)
         {
-            var role = new Role(AbpSession.TenantId, input.Role.DisplayName) { IsDefault = input.Role.IsDefault };
+            var role = new Role(AbpSession.TenantId, input.Role.DisplayName) {IsDefault = input.Role.IsDefault};
             CheckErrors(await _roleManager.CreateAsync(role));
             await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
             await UpdateGrantedPermissionsAsync(role, input.GrantedPermissionNames);

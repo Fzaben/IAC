@@ -21,14 +21,16 @@
 <div class="login-form">
     @if (Model.ClientLogoUrl != null)
     {
-        <div class="client-logo"><img src="@Model.ClientLogoUrl"></div>
+        <div class="client-logo">
+            <img src="@Model.ClientLogoUrl">
+        </div>
     }
     <h3>
         <small>@L("ClientIsRequestingYourPermission", Model.ClientName)</small>
     </h3>
 
     <form asp-action="Index">
-        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="ReturnUrl"/>
 
         @if (Model.IdentityScopes.Any())
         {
@@ -66,7 +68,7 @@
         {
             <div class="consent-remember">
                 <label>
-                    <input class="consent-scopecheck" asp-for="RememberConsent" />
+                    <input class="consent-scopecheck" asp-for="RememberConsent"/>
                     <strong>@L("RememberMyDecision")</strong>
                 </label>
             </div>

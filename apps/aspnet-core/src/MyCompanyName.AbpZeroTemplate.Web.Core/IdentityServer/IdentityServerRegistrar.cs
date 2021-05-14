@@ -10,7 +10,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.IdentityServer
 {
     public static class IdentityServerRegistrar
     {
-        public static void Register(IServiceCollection services, IConfigurationRoot configuration, Action<IdentityServerOptions> setupOptions)
+        public static void Register(IServiceCollection services, IConfigurationRoot configuration,
+            Action<IdentityServerOptions> setupOptions)
         {
             services.AddIdentityServer(setupOptions)
                 .AddDeveloperSigningCredential()

@@ -8,8 +8,6 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Demo
 {
     public class RandomUserGenerator : ITransientDependency
     {
-        private readonly IPasswordHasher<User> _passwordHasher;
-
         public static string[] Names =
         {
             "Agatha Christie",
@@ -86,6 +84,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Demo
             "aspnetboilerplate.com"
         };
 
+        private readonly IPasswordHasher<User> _passwordHasher;
+
         public RandomUserGenerator(IPasswordHasher<User> passwordHasher)
         {
             _passwordHasher = passwordHasher;
@@ -97,16 +97,14 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Demo
 
             var randomNames = RandomHelper.GenerateRandomizedList(Names);
             for (var i = 0; i < userCount && i < randomNames.Count; i++)
-            {
                 users.Add(CreateUser(tenantId, randomNames[i]));
-            }
 
             return users;
         }
 
         private User CreateUser(int? tenantId, string nameSurname)
         {
-            var user =  new User
+            var user = new User
             {
                 TenantId = tenantId,
                 UserName = GenerateUsername(nameSurname),
@@ -114,7 +112,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Demo
                 Name = nameSurname.Split(' ')[0],
                 Surname = nameSurname.Split(' ')[1],
                 ShouldChangePasswordOnNextLogin = false,
-                IsActive = (RandomHelper.GetRandom(0, 100) < 80), //A user will be active by 80% probability
+                IsActive = RandomHelper.GetRandom(0, 100) < 80, //A user will be active by 80% probability
                 IsEmailConfirmed = true
             };
 

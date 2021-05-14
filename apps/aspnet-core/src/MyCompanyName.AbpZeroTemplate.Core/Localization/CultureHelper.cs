@@ -4,9 +4,10 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
 {
     public static class CultureHelper
     {
-        public static bool IsRtl => CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
+        public static bool UsingLunarCalendar = CultureInfo.CurrentUICulture.DateTimeFormat.Calendar.AlgorithmType ==
+                                                CalendarAlgorithmType.LunarCalendar;
 
-        public static bool UsingLunarCalendar = CultureInfo.CurrentUICulture.DateTimeFormat.Calendar.AlgorithmType == CalendarAlgorithmType.LunarCalendar;
+        public static bool IsRtl => CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
 
         public static CultureInfo GetCultureInfoByChecking(string name)
         {

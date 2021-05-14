@@ -271,7 +271,7 @@ namespace MyCompanyName.AbpZeroTemplate.Localization
                 famfamFlagName.LastIndexOf(
                     " ",
                     StringComparison.OrdinalIgnoreCase) + 1
-                );
+            );
         }
     }
 }

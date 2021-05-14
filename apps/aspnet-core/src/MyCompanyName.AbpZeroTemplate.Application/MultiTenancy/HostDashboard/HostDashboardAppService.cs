@@ -21,10 +21,10 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
         private const int MaxExpiringTenantsShownCount = 10;
         private const int MaxRecentTenantsShownCount = 10;
         private const int RecentTenantsDayCount = 7;
+        private readonly IIncomeStatisticsService _incomeStatisticsService;
 
         private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
         private readonly IRepository<Tenant> _tenantRepository;
-        private readonly IIncomeStatisticsService _incomeStatisticsService;
 
         public HostDashboardAppService(
             ISubscriptionPaymentRepository subscriptionPaymentRepository,
@@ -53,7 +53,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
 
             var recentTenants = await GetRecentTenantsData(tenantCreationStartDate, MaxRecentTenantsShownCount);
 
-            return new GetRecentTenantsOutput()
+            return new GetRecentTenantsOutput
             {
                 RecentTenants = recentTenants,
                 TenantCreationStartDate = tenantCreationStartDate,
@@ -70,7 +70,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
             var expiringTenants = await GetExpiringTenantsData(subscriptionEndDateStartUtc, subscriptionEndDateEndUtc,
                 MaxExpiringTenantsShownCount);
 
-            return new GetExpiringTenantsOutput()
+            return new GetExpiringTenantsOutput
             {
                 ExpiringTenants = expiringTenants,
                 MaxExpiringTenantsShownCount = MaxExpiringTenantsShownCount,
@@ -84,13 +84,14 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
         {
             return new GetIncomeStatisticsDataOutput(
                 await _incomeStatisticsService.GetIncomeStatisticsData(
-                    input.StartDate, 
+                    input.StartDate,
                     input.EndDate,
                     input.IncomeStatisticsDateInterval)
             );
         }
 
-        public async Task<GetEditionTenantStatisticsOutput> GetEditionTenantStatistics(GetEditionTenantStatisticsInput input)
+        public async Task<GetEditionTenantStatisticsOutput> GetEditionTenantStatistics(
+            GetEditionTenantStatisticsInput input)
         {
             return new GetEditionTenantStatisticsOutput(
                 await GetEditionTenantStatisticsData(input.StartDate, input.EndDate)
@@ -100,12 +101,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
         private async Task<List<TenantEdition>> GetEditionTenantStatisticsData(DateTime startDate, DateTime endDate)
         {
             return (await _tenantRepository.GetAll()
-                .Where(t => t.EditionId.HasValue &&
-                            t.IsActive &&
-                            t.CreationTime >= startDate &&
-                            t.CreationTime <= endDate)
-                .Select(t => new { t.EditionId, t.Edition.DisplayName })
-                .ToListAsync()
+                    .Where(t => t.EditionId.HasValue &&
+                                t.IsActive &&
+                                t.CreationTime >= startDate &&
+                                t.CreationTime <= endDate)
+                    .Select(t => new {t.EditionId, t.Edition.DisplayName})
+                    .ToListAsync()
                 )
                 .GroupBy(t => t.EditionId)
                 .Select(t => new TenantEdition
@@ -119,12 +120,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
 
         private decimal GetNewSubscriptionAmount(DateTime startDate, DateTime endDate)
         {
-            return  _subscriptionPaymentRepository.GetAll()
-                  .Where(s => s.CreationTime >= startDate &&
-                              s.CreationTime <= endDate &&
-                              s.Status == SubscriptionPaymentStatus.Paid)
-                  .Select(x => x.Amount).AsEnumerable()
-                  .Sum();
+            return _subscriptionPaymentRepository.GetAll()
+                .Where(s => s.CreationTime >= startDate &&
+                            s.CreationTime <= endDate &&
+                            s.Status == SubscriptionPaymentStatus.Paid)
+                .Select(x => x.Amount).AsEnumerable()
+                .Sum();
         }
 
         private async Task<int> GetTenantsCountByDate(DateTime startDate, DateTime endDate)
@@ -134,7 +135,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
                 .CountAsync();
         }
 
-        private async Task<List<ExpiringTenant>> GetExpiringTenantsData(DateTime subscriptionEndDateStartUtc, DateTime subscriptionEndDateEndUtc, int? maxExpiringTenantsShownCount = null)
+        private async Task<List<ExpiringTenant>> GetExpiringTenantsData(DateTime subscriptionEndDateStartUtc,
+            DateTime subscriptionEndDateEndUtc, int? maxExpiringTenantsShownCount = null)
         {
             var query = _tenantRepository.GetAll()
                 .Where(t =>
@@ -147,32 +149,29 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
                     t.SubscriptionEndDateUtc
                 });
 
-            if (maxExpiringTenantsShownCount.HasValue)
-            {
-                query = query.Take(maxExpiringTenantsShownCount.Value);
-            }
+            if (maxExpiringTenantsShownCount.HasValue) query = query.Take(maxExpiringTenantsShownCount.Value);
 
             return (await query.ToListAsync())
                 .Select(t => new ExpiringTenant
                 {
                     TenantName = t.Name,
-                    RemainingDayCount = Convert.ToInt32(t.SubscriptionEndDateUtc.Value.Subtract(subscriptionEndDateStartUtc).TotalDays)
+                    RemainingDayCount = Convert.ToInt32(t.SubscriptionEndDateUtc.Value
+                        .Subtract(subscriptionEndDateStartUtc).TotalDays)
                 })
                 .OrderBy(t => t.RemainingDayCount)
                 .ThenBy(t => t.TenantName)
                 .ToList();
         }
 
-        private async Task<List<RecentTenant>> GetRecentTenantsData(DateTime creationDateStart, int? maxRecentTenantsShownCount = null)
+        private async Task<List<RecentTenant>> GetRecentTenantsData(DateTime creationDateStart,
+            int? maxRecentTenantsShownCount = null)
         {
             var query = _tenantRepository.GetAll()
                 .Where(t => t.CreationTime >= creationDateStart)
                 .OrderByDescending(t => t.CreationTime);
 
             if (maxRecentTenantsShownCount.HasValue)
-            {
-                query = (IOrderedQueryable<Tenant>)query.Take(maxRecentTenantsShownCount.Value);
-            }
+                query = (IOrderedQueryable<Tenant>) query.Take(maxRecentTenantsShownCount.Value);
 
             return (await query.ToListAsync())
                 .Select(t => ObjectMapper.Map<RecentTenant>(t))

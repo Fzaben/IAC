@@ -13,7 +13,6 @@ using Abp.Extensions;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Abp.Threading.BackgroundWorkers;
-using Abp.Timing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using MyCompanyName.AbpZeroTemplate.Auditing;
@@ -29,8 +28,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
     )]
     public class AbpZeroTemplateWebHostModule : AbpModule
     {
-        private readonly IWebHostEnvironment _env;
         private readonly IConfigurationRoot _appConfiguration;
+        private readonly IWebHostEnvironment _env;
 
         public AbpZeroTemplateWebHostModule(
             IWebHostEnvironment env)
@@ -55,10 +54,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
         {
             using (var scope = IocManager.CreateScope())
             {
-                if (!scope.Resolve<DatabaseCheckHelper>().Exist(_appConfiguration["ConnectionStrings:Default"]))
-                {
-                    return;
-                }
+                if (!scope.Resolve<DatabaseCheckHelper>().Exist(_appConfiguration["ConnectionStrings:Default"])) return;
             }
 
             var workManager = IocManager.Resolve<IBackgroundWorkerManager>();
@@ -69,9 +65,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             }
 
             if (Configuration.Auditing.IsEnabled && ExpiredAuditLogDeleterWorker.IsEnabled)
-            {
                 workManager.Add(IocManager.Resolve<ExpiredAuditLogDeleterWorker>());
-            }
 
             ConfigureExternalAuthProviders();
         }
@@ -132,17 +126,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             if (bool.Parse(_appConfiguration["Authentication:Facebook:IsEnabled"]))
             {
                 if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
-                {
                     externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                         IocManager.Resolve<TenantBasedFacebookExternalLoginInfoProvider>());
-                }
                 else
-                {
                     externalAuthConfiguration.ExternalLoginInfoProviders.Add(new FacebookExternalLoginInfoProvider(
                         _appConfiguration["Authentication:Facebook:AppId"],
                         _appConfiguration["Authentication:Facebook:AppSecret"]
                     ));
-                }
             }
 
             if (bool.Parse(_appConfiguration["Authentication:Twitter:IsEnabled"]))
@@ -167,12 +157,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
             if (bool.Parse(_appConfiguration["Authentication:Google:IsEnabled"]))
             {
                 if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
-                {
                     externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                         IocManager.Resolve<TenantBasedGoogleExternalLoginInfoProvider>());
-                }
                 else
-                {
                     externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                         new GoogleExternalLoginInfoProvider(
                             _appConfiguration["Authentication:Google:ClientId"],
@@ -180,25 +167,20 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Startup
                             _appConfiguration["Authentication:Google:UserInfoEndpoint"]
                         )
                     );
-                }
             }
 
             if (bool.Parse(_appConfiguration["Authentication:Microsoft:IsEnabled"]))
             {
                 if (bool.Parse(_appConfiguration["Authentication:AllowSocialLoginSettingsPerTenant"]))
-                {
                     externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                         IocManager.Resolve<TenantBasedMicrosoftExternalLoginInfoProvider>());
-                }
                 else
-                {
                     externalAuthConfiguration.ExternalLoginInfoProviders.Add(
                         new MicrosoftExternalLoginInfoProvider(
                             _appConfiguration["Authentication:Microsoft:ConsumerKey"],
                             _appConfiguration["Authentication:Microsoft:ConsumerSecret"]
                         )
                     );
-                }
             }
         }
     }

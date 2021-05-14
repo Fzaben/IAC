@@ -7,12 +7,12 @@ namespace MyCompanyName.AbpZeroTemplate.Migrator
 {
     public class Log : ITransientDependency
     {
-        public ILogger Logger { get; set; }
-
         public Log()
         {
             Logger = NullLogger.Instance;
         }
+
+        public ILogger Logger { get; set; }
 
         public void Write(string text)
         {

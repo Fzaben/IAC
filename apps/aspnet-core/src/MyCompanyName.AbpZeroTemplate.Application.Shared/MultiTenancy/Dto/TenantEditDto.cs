@@ -16,8 +16,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto
         [StringLength(TenantConsts.MaxNameLength)]
         public string Name { get; set; }
 
-        [DisableAuditing]
-        public string ConnectionString { get; set; }
+        [DisableAuditing] public string ConnectionString { get; set; }
 
         public int? EditionId { get; set; }
 

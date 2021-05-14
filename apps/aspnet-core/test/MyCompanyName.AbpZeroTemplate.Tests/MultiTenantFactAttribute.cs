@@ -8,10 +8,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests
 
         public MultiTenantFactAttribute()
         {
-            if (!_multiTenancyEnabled)
-            {
-                Skip = "MultiTenancy is disabled.";
-            }
+            if (!_multiTenancyEnabled) Skip = "MultiTenancy is disabled.";
         }
     }
 }

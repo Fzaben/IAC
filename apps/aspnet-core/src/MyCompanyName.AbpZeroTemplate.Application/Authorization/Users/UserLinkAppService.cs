@@ -20,10 +20,10 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
     public class UserLinkAppService : AbpZeroTemplateAppServiceBase, IUserLinkAppService
     {
         private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
-        private readonly IUserLinkManager _userLinkManager;
+        private readonly LogInManager _logInManager;
         private readonly IRepository<Tenant> _tenantRepository;
         private readonly IRepository<UserAccount, long> _userAccountRepository;
-        private readonly LogInManager _logInManager;
+        private readonly IUserLinkManager _userLinkManager;
 
         public UserLinkAppService(
             AbpLoginResultTypeHelper abpLoginResultTypeHelper,
@@ -41,22 +41,17 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
 
         public async Task LinkToUser(LinkToUserInput input)
         {
-            var loginResult = await _logInManager.LoginAsync(input.UsernameOrEmailAddress, input.Password, input.TenancyName);
+            var loginResult =
+                await _logInManager.LoginAsync(input.UsernameOrEmailAddress, input.Password, input.TenancyName);
 
             if (loginResult.Result != AbpLoginResultType.Success)
-            {
-                throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(loginResult.Result, input.UsernameOrEmailAddress, input.TenancyName);
-            }
+                throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(loginResult.Result,
+                    input.UsernameOrEmailAddress, input.TenancyName);
 
-            if (AbpSession.IsUser(loginResult.User))
-            {
-                throw new UserFriendlyException(L("YouCannotLinkToSameAccount"));
-            }
+            if (AbpSession.IsUser(loginResult.User)) throw new UserFriendlyException(L("YouCannotLinkToSameAccount"));
 
             if (loginResult.User.ShouldChangePasswordOnNextLogin)
-            {
                 throw new UserFriendlyException(L("ChangePasswordBeforeLinkToAnAccount"));
-            }
 
             await _userLinkManager.Link(GetCurrentUser(), loginResult.User);
         }
@@ -64,15 +59,12 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         public async Task<PagedResultDto<LinkedUserDto>> GetLinkedUsers(GetLinkedUsersInput input)
         {
             var currentUserAccount = await _userLinkManager.GetUserAccountAsync(AbpSession.ToUserIdentifier());
-            if (currentUserAccount == null)
-            {
-                return new PagedResultDto<LinkedUserDto>(0, new List<LinkedUserDto>());
-            }
+            if (currentUserAccount == null) return new PagedResultDto<LinkedUserDto>(0, new List<LinkedUserDto>());
 
             var query = CreateLinkedUsersQuery(currentUserAccount, input.Sorting);
 
             var totalCount = await query.CountAsync();
-            
+
             var linkedUsers = await query
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount)
@@ -88,10 +80,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         public async Task<ListResultDto<LinkedUserDto>> GetRecentlyUsedLinkedUsers()
         {
             var currentUserAccount = await _userLinkManager.GetUserAccountAsync(AbpSession.ToUserIdentifier());
-            if (currentUserAccount == null)
-            {
-                return new ListResultDto<LinkedUserDto>();
-            }
+            if (currentUserAccount == null) return new ListResultDto<LinkedUserDto>();
 
             var query = CreateLinkedUsersQuery(currentUserAccount, "TenancyName, Username");
             var recentlyUsedlinkedUsers = await query.Take(3).ToListAsync();
@@ -103,15 +92,9 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
         {
             var currentUserAccount = await _userLinkManager.GetUserAccountAsync(AbpSession.ToUserIdentifier());
 
-            if (!currentUserAccount.UserLinkId.HasValue)
-            {
-                throw new Exception(L("YouAreNotLinkedToAnyAccount"));
-            }
+            if (!currentUserAccount.UserLinkId.HasValue) throw new Exception(L("YouAreNotLinkedToAnyAccount"));
 
-            if (!await _userLinkManager.AreUsersLinked(AbpSession.ToUserIdentifier(), input.ToUserIdentifier()))
-            {
-                return;
-            }
+            if (!await _userLinkManager.AreUsersLinked(AbpSession.ToUserIdentifier(), input.ToUserIdentifier())) return;
 
             await _userLinkManager.Unlink(input.ToUserIdentifier());
         }
@@ -121,20 +104,20 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users
             var currentUserIdentifier = AbpSession.ToUserIdentifier();
 
             return (from userAccount in _userAccountRepository.GetAll()
-                    join tenant in _tenantRepository.GetAll() on userAccount.TenantId equals tenant.Id into tenantJoined
-                    from tenant in tenantJoined.DefaultIfEmpty()
-                    where
-                        (userAccount.TenantId != currentUserIdentifier.TenantId ||
-                        userAccount.UserId != currentUserIdentifier.UserId) &&
-                        userAccount.UserLinkId.HasValue &&
-                        userAccount.UserLinkId == currentUserAccount.UserLinkId
-                    select new LinkedUserDto
-                    {
-                        Id = userAccount.UserId,
-                        TenantId = userAccount.TenantId,
-                        TenancyName = tenant == null ? "." : tenant.TenancyName,
-                        Username = userAccount.UserName
-                    }).OrderBy(sorting);
+                join tenant in _tenantRepository.GetAll() on userAccount.TenantId equals tenant.Id into tenantJoined
+                from tenant in tenantJoined.DefaultIfEmpty()
+                where
+                    (userAccount.TenantId != currentUserIdentifier.TenantId ||
+                     userAccount.UserId != currentUserIdentifier.UserId) &&
+                    userAccount.UserLinkId.HasValue &&
+                    userAccount.UserLinkId == currentUserAccount.UserLinkId
+                select new LinkedUserDto
+                {
+                    Id = userAccount.UserId,
+                    TenantId = userAccount.TenantId,
+                    TenancyName = tenant == null ? "." : tenant.TenancyName,
+                    Username = userAccount.UserName
+                }).OrderBy(sorting);
         }
     }
 }

@@ -17,33 +17,29 @@ namespace MyCompanyName.AbpZeroTemplate.EntityHistory
         public Dictionary<string, object> GetConfig(CustomConfigProviderContext customConfigProviderContext)
         {
             if (!_abpStartupConfiguration.EntityHistory.IsEnabled)
-            {
                 return new Dictionary<string, object>
                 {
                     {
                         EntityHistoryHelper.EntityHistoryConfigurationName,
-                        new EntityHistoryUiSetting{
+                        new EntityHistoryUiSetting
+                        {
                             IsEnabled = false
                         }
                     }
                 };
-            }
 
             var entityHistoryEnabledEntities = new List<string>();
 
             foreach (var type in EntityHistoryHelper.TrackedTypes)
-            {
                 if (_abpStartupConfiguration.EntityHistory.Selectors.Any(s => s.Predicate(type)))
-                {
                     entityHistoryEnabledEntities.Add(type.FullName);
-                }
-            }
 
             return new Dictionary<string, object>
             {
                 {
                     EntityHistoryHelper.EntityHistoryConfigurationName,
-                    new EntityHistoryUiSetting {
+                    new EntityHistoryUiSetting
+                    {
                         IsEnabled = true,
                         EnabledEntities = entityHistoryEnabledEntities
                     }

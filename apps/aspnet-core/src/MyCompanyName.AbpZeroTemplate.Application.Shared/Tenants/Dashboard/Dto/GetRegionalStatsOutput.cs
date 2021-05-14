@@ -15,6 +15,5 @@ namespace MyCompanyName.AbpZeroTemplate.Tenants.Dashboard.Dto
         }
 
         public List<RegionalStatCountry> Stats { get; set; }
-
     }
 }

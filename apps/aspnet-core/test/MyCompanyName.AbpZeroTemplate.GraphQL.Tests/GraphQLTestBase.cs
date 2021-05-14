@@ -20,7 +20,6 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests
     public class GraphQLTestBase<TSchema> : GraphQLTestBase<TSchema, GraphQLDocumentBuilder>
         where TSchema : ISchema
     {
-
     }
 
     public class GraphQLTestBase<TSchema, TDocumentBuilder> : AppTestBase<AbpZeroTemplateGraphQLTestModule>
@@ -29,18 +28,18 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests
     {
         public TSchema Schema;
 
-        public IDocumentExecuter Executer { get; }
-
-        public IDocumentWriter Writer { get; }
-
         public GraphQLTestBase()
         {
             Schema = Resolve<TSchema>();
 
             Executer = new DocumentExecuter(new TDocumentBuilder(), new DocumentValidator(), new ComplexityAnalyzer());
 
-            Writer = new DocumentWriter(indent: true);
+            Writer = new DocumentWriter(true);
         }
+
+        public IDocumentExecuter Executer { get; }
+
+        public IDocumentWriter Writer { get; }
 
         public async Task<ExecutionResult> AssertQuerySuccessAsync(
             string query,
@@ -111,10 +110,7 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests
 
             actualResult.ShouldBe(expectedResult);
 
-            if (executionResult.Errors == null)
-            {
-                executionResult.Errors = new ExecutionErrors();
-            }
+            if (executionResult.Errors == null) executionResult.Errors = new ExecutionErrors();
 
             executionResult.Errors.Count().ShouldBe(expectedErrorCount);
 
@@ -149,11 +145,9 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests
             string additionalInfo = null;
 
             if (executionResult.Errors?.Any() == true)
-            {
                 additionalInfo = string.Join(Environment.NewLine, executionResult.Errors
                     .Where(x => x.InnerException is GraphQLSyntaxErrorException)
                     .Select(x => x.InnerException.Message));
-            }
 
             actualResult.ShouldBe(expectedResult, additionalInfo);
 
@@ -164,10 +158,7 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests
         {
             object data = null;
 
-            if (!string.IsNullOrWhiteSpace(result))
-            {
-                data = JObject.Parse(result);
-            }
+            if (!string.IsNullOrWhiteSpace(result)) data = JObject.Parse(result);
 
             return new ExecutionResult
             {

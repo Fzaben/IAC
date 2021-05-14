@@ -21,11 +21,11 @@ namespace MyCompanyName.AbpZeroTemplate.Caching
         public ListResultDto<CacheDto> GetAllCaches()
         {
             var caches = _cacheManager.GetAllCaches()
-                                        .Select(cache => new CacheDto
-                                        {
-                                            Name = cache.Name
-                                        })
-                                        .ToList();
+                .Select(cache => new CacheDto
+                {
+                    Name = cache.Name
+                })
+                .ToList();
 
             return new ListResultDto<CacheDto>(caches);
         }
@@ -39,10 +39,7 @@ namespace MyCompanyName.AbpZeroTemplate.Caching
         public async Task ClearAllCaches()
         {
             var caches = _cacheManager.GetAllCaches();
-            foreach (var cache in caches)
-            {
-                await cache.ClearAsync();
-            }
+            foreach (var cache in caches) await cache.ClearAsync();
         }
     }
 }

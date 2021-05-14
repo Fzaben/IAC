@@ -1,4 +1,7 @@
-﻿using Abp.Application.Services.Dto;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Abp.Localization;
 using Abp.UI;
@@ -7,9 +10,6 @@ using MyCompanyName.AbpZeroTemplate.Editions;
 using MyCompanyName.AbpZeroTemplate.Editions.Dto;
 using MyCompanyName.AbpZeroTemplate.Features;
 using Shouldly;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
@@ -18,8 +18,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
     public class EditionAppService_Tests : AppTestBase
     {
         private readonly IEditionAppService _editionAppService;
-        private readonly IRepository<SubscribableEdition> _subcribableEditionRepository;
         private readonly ILocalizationManager _localizationManager;
+        private readonly IRepository<SubscribableEdition> _subcribableEditionRepository;
 
         public EditionAppService_Tests()
         {
@@ -45,10 +45,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
 
             //Changing a sample feature value
             var chatFeature = output.FeatureValues.FirstOrDefault(f => f.Name == AppFeatures.ChatFeature);
-            if (chatFeature != null)
-            {
-                chatFeature.Value = chatFeature.Value = "true";
-            }
+            if (chatFeature != null) chatFeature.Value = chatFeature.Value = "true";
 
             await _editionAppService.CreateEdition(
                 new CreateEditionDto
@@ -67,7 +64,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
 
                 if (chatFeature != null)
                 {
-                    var sampleFeatureValue = context.EditionFeatureSettings.FirstOrDefault(s => s.EditionId == premiumEditon.Id && s.Name == AppFeatures.ChatFeature);
+                    var sampleFeatureValue = context.EditionFeatureSettings.FirstOrDefault(s =>
+                        s.EditionId == premiumEditon.Id && s.Name == AppFeatures.ChatFeature);
                     sampleFeatureValue.ShouldNotBe(null);
                     sampleFeatureValue.Value.ShouldBe("true");
                 }
@@ -88,12 +86,13 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
                     {
                         DisplayName = editionName,
                         MonthlyPrice = monthlyPrice,
-                        AnnualPrice = annualPrice,
+                        AnnualPrice = annualPrice
                     },
                     FeatureValues = new List<NameValueDto>()
                 });
 
-            var editionRecord = UsingDbContext(context => context.Editions.FirstOrDefault(e => e.DisplayName == editionName));
+            var editionRecord =
+                UsingDbContext(context => context.Editions.FirstOrDefault(e => e.DisplayName == editionName));
 
             var premiumEditon = await _subcribableEditionRepository.GetAsync(editionRecord.Id);
             premiumEditon.ShouldNotBeNull();
@@ -105,17 +104,15 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
         [MultiTenantFact]
         public async Task Should_Update_Edition()
         {
-            var defaultEdition = UsingDbContext(context => context.Editions.FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName));
+            var defaultEdition = UsingDbContext(context =>
+                context.Editions.FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName));
             defaultEdition.ShouldNotBeNull();
 
             var output = await _editionAppService.GetEditionForEdit(new NullableIdDto(defaultEdition.Id));
 
             //Changing a sample feature value
             var chatFeature = output.FeatureValues.FirstOrDefault(f => f.Name == AppFeatures.ChatFeature);
-            if (chatFeature != null)
-            {
-                chatFeature.Value = chatFeature.Value = "true";
-            }
+            if (chatFeature != null) chatFeature.Value = chatFeature.Value = "true";
 
             await _editionAppService.UpdateEdition(
                 new UpdateEditionDto
@@ -142,10 +139,13 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Editions
             var editions = await _editionAppService.GetEditions();
             editions.Items.Count.ShouldBeGreaterThan(0);
 
-            var defaultEdition = UsingDbContext(context => context.Editions.FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName));
+            var defaultEdition = UsingDbContext(context =>
+                context.Editions.FirstOrDefault(e => e.Name == EditionManager.DefaultEditionName));
 
-            var exception = await Assert.ThrowsAsync<UserFriendlyException>(async () => await _editionAppService.DeleteEdition(new EntityDto(defaultEdition.Id)));
-            exception.Message.ShouldContain(_localizationManager.GetString(AbpZeroTemplateConsts.LocalizationSourceName, "ThereAreTenantsSubscribedToThisEdition"));
+            var exception = await Assert.ThrowsAsync<UserFriendlyException>(async () =>
+                await _editionAppService.DeleteEdition(new EntityDto(defaultEdition.Id)));
+            exception.Message.ShouldContain(_localizationManager.GetString(AbpZeroTemplateConsts.LocalizationSourceName,
+                "ThereAreTenantsSubscribedToThisEdition"));
         }
     }
 }

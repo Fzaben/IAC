@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
+using Abp.Application.Services.Dto;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Dto;
-using Abp.Application.Services.Dto;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
 {

@@ -8,12 +8,12 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
     public class PayPalPaymentAppService : AbpZeroTemplateAppServiceBase, IPayPalPaymentAppService
     {
         private readonly PayPalGatewayManager _payPalGatewayManager;
-        private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
         private readonly PayPalPaymentGatewayConfiguration _payPalPaymentGatewayConfiguration;
+        private readonly ISubscriptionPaymentRepository _subscriptionPaymentRepository;
 
         public PayPalPaymentAppService(
             PayPalGatewayManager payPalGatewayManager,
-            ISubscriptionPaymentRepository subscriptionPaymentRepository, 
+            ISubscriptionPaymentRepository subscriptionPaymentRepository,
             PayPalPaymentGatewayConfiguration payPalPaymentGatewayConfiguration)
         {
             _payPalGatewayManager = payPalGatewayManager;

@@ -9,11 +9,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
     public class HomeController : AbpZeroTemplateControllerBase
     {
+        private readonly IConfigurationRoot _appConfiguration;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        readonly IConfigurationRoot _appConfiguration;
-        
+
         public HomeController(
-            IWebHostEnvironment webHostEnvironment, 
+            IWebHostEnvironment webHostEnvironment,
             IAppConfigurationAccessor appConfigurationAccessor)
         {
             _webHostEnvironment = webHostEnvironment;
@@ -23,16 +23,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
         [DisableAuditing]
         public IActionResult Index()
         {
-            if (_webHostEnvironment.IsDevelopment())
-            {
-                return RedirectToAction("Index", "Ui");
-            }
+            if (_webHostEnvironment.IsDevelopment()) return RedirectToAction("Index", "Ui");
 
             var homePageUrl = _appConfiguration["App:HomePageUrl"];
-            if (string.IsNullOrEmpty(homePageUrl))
-            {
-                return RedirectToAction("Index", "Ui");
-            }
+            if (string.IsNullOrEmpty(homePageUrl)) return RedirectToAction("Index", "Ui");
 
             return Redirect(homePageUrl);
         }

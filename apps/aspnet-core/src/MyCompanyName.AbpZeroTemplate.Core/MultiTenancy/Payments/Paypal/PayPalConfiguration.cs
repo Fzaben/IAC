@@ -8,7 +8,10 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Paypal
     {
         private readonly IConfigurationRoot _appConfiguration;
 
-        public SubscriptionPaymentGatewayType GatewayType => SubscriptionPaymentGatewayType.Paypal;
+        public PayPalPaymentGatewayConfiguration(IAppConfigurationAccessor configurationAccessor)
+        {
+            _appConfiguration = configurationAccessor.Configuration;
+        }
 
         public string Environment => _appConfiguration["Payment:PayPal:Environment"];
 
@@ -20,13 +23,10 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments.Paypal
 
         public string DemoPassword => _appConfiguration["Payment:PayPal:DemoPassword"];
 
+        public SubscriptionPaymentGatewayType GatewayType => SubscriptionPaymentGatewayType.Paypal;
+
         public bool IsActive => _appConfiguration["Payment:PayPal:IsActive"].To<bool>();
 
         public bool SupportsRecurringPayments => false;
-        
-        public PayPalPaymentGatewayConfiguration(IAppConfigurationAccessor configurationAccessor)
-        {
-            _appConfiguration = configurationAccessor.Configuration;
-        }
     }
 }

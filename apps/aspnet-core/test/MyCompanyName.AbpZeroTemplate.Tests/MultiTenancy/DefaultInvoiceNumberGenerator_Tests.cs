@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Abp.Timing;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Accounting;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 
 namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
@@ -26,11 +25,11 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             var invoiceCountToGenerate = 100;
             var invoiceNumbers = new List<string>();
 
-            for (int i = 0; i < invoiceCountToGenerate; i++)
+            for (var i = 0; i < invoiceCountToGenerate; i++)
             {
                 var invoiceNo = await _invoiceNumberGenerator.GetNewInvoiceNumber();
                 invoiceNo.ShouldNotBeNullOrEmpty();
-                invoiceNo.Length.ShouldBe(11);//Should be YYYYMM00001
+                invoiceNo.Length.ShouldBe(11); //Should be YYYYMM00001
 
                 _invoiceRepository.Insert(new Invoice
                 {
@@ -69,7 +68,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
         {
             _invoiceRepository.Insert(new Invoice
             {
-                InvoiceNo = (Clock.Now.Year - 1) + (Clock.Now.Month).ToString("00") + "55555",
+                InvoiceNo = Clock.Now.Year - 1 + Clock.Now.Month.ToString("00") + "55555",
                 InvoiceDate = Clock.Now,
                 TenantAddress = "USA",
                 TenantLegalName = "AspNet Zero",
@@ -77,7 +76,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             });
 
             var invoiceNo = await _invoiceNumberGenerator.GetNewInvoiceNumber();
-            invoiceNo.ShouldBe(Clock.Now.Year + (Clock.Now.Month).ToString("00") + "00001");
+            invoiceNo.ShouldBe(Clock.Now.Year + Clock.Now.Month.ToString("00") + "00001");
         }
 
         [MultiTenantFact]
@@ -93,7 +92,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             });
 
             var invoiceNo = await _invoiceNumberGenerator.GetNewInvoiceNumber();
-            invoiceNo.ShouldBe(Clock.Now.Year + (Clock.Now.Month).ToString("00") + "100000");
+            invoiceNo.ShouldBe(Clock.Now.Year + Clock.Now.Month.ToString("00") + "100000");
 
             _invoiceRepository.Insert(new Invoice
             {
@@ -105,7 +104,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.MultiTenancy
             });
 
             invoiceNo = await _invoiceNumberGenerator.GetNewInvoiceNumber();
-            invoiceNo.ShouldBe(Clock.Now.Year + (Clock.Now.Month).ToString("00") + "100001");
+            invoiceNo.ShouldBe(Clock.Now.Year + Clock.Now.Month.ToString("00") + "100001");
         }
     }
 }

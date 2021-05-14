@@ -23,7 +23,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
 
             //Act
             var output = await UserAppService.GetUserPermissionsForEdit(new EntityDto<long>(admin.Id));
-            
+
             //Assert
             output.GrantedPermissionNames.ShouldNotBe(null);
             output.Permissions.ShouldNotBe(null);
@@ -38,7 +38,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
                 .GetAllPermissions()
                 .Where(p => p.MultiTenancySides.HasFlag(AbpSession.MultiTenancySide))
                 .ToList();
-            
+
             //Act
             await UserAppService.UpdateUserPermissions(
                 new UpdateUserPermissionsInput
@@ -50,9 +50,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             //Assert
             var userManager = Resolve<UserManager>();
             foreach (var permission in permissions)
-            {
                 (await userManager.IsGrantedAsync(admin, permission)).ShouldBe(true);
-            }
         }
 
         [Fact]
@@ -74,7 +72,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             await UserAppService.ResetUserSpecificPermissions(new EntityDto<long>(admin.Id));
 
             //Assert
-            (await UsingDbContextAsync(context => context.UserPermissions.CountAsync(p => p.UserId == admin.Id))).ShouldBe(0);
+            (await UsingDbContextAsync(context => context.UserPermissions.CountAsync(p => p.UserId == admin.Id)))
+                .ShouldBe(0);
         }
     }
 }

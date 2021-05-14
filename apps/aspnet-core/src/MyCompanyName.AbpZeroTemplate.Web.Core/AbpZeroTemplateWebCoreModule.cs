@@ -1,36 +1,25 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using Abp.AspNetCore;
 using Abp.AspNetCore.Configuration;
 using Abp.AspNetCore.SignalR;
-using Abp.AspNetZeroCore.Licensing;
 using Abp.AspNetZeroCore.Web;
 using Abp.Configuration.Startup;
-using Abp.Dependency;
 using Abp.Hangfire;
-using Abp.Hangfire.Configuration;
-using Abp.IO;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Abp.Runtime.Caching.Redis;
-using Abp.Timing;
 using Abp.Zero.Configuration;
-using Castle.Core.Internal;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MyCompanyName.AbpZeroTemplate.Authentication.TwoFactor;
-using MyCompanyName.AbpZeroTemplate.Chat;
 using MyCompanyName.AbpZeroTemplate.Configuration;
 using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore;
 using MyCompanyName.AbpZeroTemplate.Startup;
 using MyCompanyName.AbpZeroTemplate.Web.Authentication.JwtBearer;
-using MyCompanyName.AbpZeroTemplate.Web.Authentication.TwoFactor;
-using MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR;
 using MyCompanyName.AbpZeroTemplate.Web.Configuration;
-using MyCompanyName.AbpZeroTemplate.Web.DashboardCustomization;
 
 namespace MyCompanyName.AbpZeroTemplate.Web
 {
@@ -45,8 +34,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web
     )]
     public class AbpZeroTemplateWebCoreModule : AbpModule
     {
-        private readonly IWebHostEnvironment _env;
         private readonly IConfigurationRoot _appConfiguration;
+        private readonly IWebHostEnvironment _env;
 
         public AbpZeroTemplateWebCoreModule(IWebHostEnvironment env)
         {
@@ -70,16 +59,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web
                 );
 
             Configuration.Caching.Configure(TwoFactorCodeCacheItem.CacheName,
-                cache =>
-                {
-                    cache.DefaultSlidingExpireTime = TwoFactorCodeCacheItem.DefaultSlidingExpireTime;
-                });
+                cache => { cache.DefaultSlidingExpireTime = TwoFactorCodeCacheItem.DefaultSlidingExpireTime; });
 
             if (_appConfiguration["Authentication:JwtBearer:IsEnabled"] != null &&
                 bool.Parse(_appConfiguration["Authentication:JwtBearer:IsEnabled"]))
-            {
                 ConfigureTokenAuth();
-            }
 
             Configuration.ReplaceService<IAppConfigurationAccessor, AppConfigurationAccessor>();
 

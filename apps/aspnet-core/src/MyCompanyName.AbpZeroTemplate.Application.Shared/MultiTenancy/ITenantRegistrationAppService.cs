@@ -5,7 +5,7 @@ using MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 {
-    public interface ITenantRegistrationAppService: IApplicationService
+    public interface ITenantRegistrationAppService : IApplicationService
     {
         Task<RegisterTenantOutput> RegisterTenant(RegisterTenantInput input);
 

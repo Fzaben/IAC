@@ -3,22 +3,22 @@
 namespace MyCompanyName.AbpZeroTemplate
 {
     /// <summary>
-    /// Some consts used in the application.
+    ///     Some consts used in the application.
     /// </summary>
     public class AppConsts
     {
         /// <summary>
-        /// Default page size for paged requests.
+        ///     Default page size for paged requests.
         /// </summary>
         public const int DefaultPageSize = 10;
 
         /// <summary>
-        /// Maximum allowed page size for paged requests.
+        ///     Maximum allowed page size for paged requests.
         /// </summary>
         public const int MaxPageSize = 1000;
 
         /// <summary>
-        /// Default pass phrase for SimpleStringCipher decrypt/encrypt operations
+        ///     Default pass phrase for SimpleStringCipher decrypt/encrypt operations
         /// </summary>
         public const string DefaultPassPhrase = "gsKxGZ012HLL3MI5";
 
@@ -32,8 +32,6 @@ namespace MyCompanyName.AbpZeroTemplate
 
         public const string TokenType = "token_type";
 
-        public static string UserIdentifier = "user_identifier";
-
         public const string ThemeDefault = "default";
         public const string Theme2 = "theme2";
         public const string Theme3 = "theme3";
@@ -46,9 +44,11 @@ namespace MyCompanyName.AbpZeroTemplate
         public const string Theme10 = "theme10";
         public const string Theme11 = "theme11";
 
+        public const string DateTimeOffsetFormat = "yyyy-MM-ddTHH:mm:sszzz";
+
+        public static string UserIdentifier = "user_identifier";
+
         public static TimeSpan AccessTokenExpiration = TimeSpan.FromDays(1);
         public static TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(365);
-
-        public const string DateTimeOffsetFormat = "yyyy-MM-ddTHH:mm:sszzz";
     }
 }

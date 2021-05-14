@@ -6,12 +6,12 @@ using MyCompanyName.AbpZeroTemplate.Authorization;
 namespace MyCompanyName.AbpZeroTemplate
 {
     /// <summary>
-    /// Application layer module of the application.
+    ///     Application layer module of the application.
     /// </summary>
     [DependsOn(
         typeof(AbpZeroTemplateApplicationSharedModule),
         typeof(AbpZeroTemplateCoreModule)
-        )]
+    )]
     public class AbpZeroTemplateApplicationModule : AbpModule
     {
         public override void PreInitialize()

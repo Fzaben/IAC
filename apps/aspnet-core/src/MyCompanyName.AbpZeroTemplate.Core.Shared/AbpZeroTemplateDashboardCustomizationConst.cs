@@ -3,7 +3,7 @@
     public class AbpZeroTemplateDashboardCustomizationConsts
     {
         /// <summary>
-        /// Main page name your user will see if they dont change default page's name.
+        ///     Main page name your user will see if they dont change default page's name.
         /// </summary>
         public const string DefaultPageName = "Default Page";
 

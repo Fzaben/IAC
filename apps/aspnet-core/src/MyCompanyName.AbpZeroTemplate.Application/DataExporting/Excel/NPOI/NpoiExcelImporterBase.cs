@@ -41,13 +41,11 @@ namespace MyCompanyName.AbpZeroTemplate.DataExporting.Excel.NPOI
                     i++;
                     continue;
                 }
+
                 try
                 {
                     var entity = processExcelRow(worksheet, i++);
-                    if (entity != null)
-                    {
-                        entities.Add(entity);
-                    }
+                    if (entity != null) entities.Add(entity);
                 }
                 catch (Exception)
                 {

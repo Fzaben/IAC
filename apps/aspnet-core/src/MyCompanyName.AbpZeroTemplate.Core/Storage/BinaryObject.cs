@@ -9,12 +9,6 @@ namespace MyCompanyName.AbpZeroTemplate.Storage
     [Table("AppBinaryObjects")]
     public class BinaryObject : Entity<Guid>, IMayHaveTenant
     {
-        public virtual int? TenantId { get; set; }
-
-        public virtual string Description { get; set; }
-
-        [Required] public virtual byte[] Bytes { get; set; }
-
         public BinaryObject()
         {
             Id = SequentialGuidGenerator.Instance.Create();
@@ -27,5 +21,10 @@ namespace MyCompanyName.AbpZeroTemplate.Storage
             Bytes = bytes;
             Description = description;
         }
+
+        public virtual string Description { get; set; }
+
+        [Required] public virtual byte[] Bytes { get; set; }
+        public virtual int? TenantId { get; set; }
     }
 }

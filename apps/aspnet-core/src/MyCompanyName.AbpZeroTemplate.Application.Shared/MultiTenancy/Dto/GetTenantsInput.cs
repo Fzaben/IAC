@@ -17,16 +17,10 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Dto
 
         public void Normalize()
         {
-            if (string.IsNullOrEmpty(Sorting))
-            {
-                Sorting = "TenancyName";
-            }
+            if (string.IsNullOrEmpty(Sorting)) Sorting = "TenancyName";
 
-            Sorting = DtoSortingHelper.ReplaceSorting(Sorting, s =>
-            {
-                return s.Replace("editionDisplayName", "Edition.DisplayName");
-            });
+            Sorting = DtoSortingHelper.ReplaceSorting(Sorting,
+                s => { return s.Replace("editionDisplayName", "Edition.DisplayName"); });
         }
     }
 }
-

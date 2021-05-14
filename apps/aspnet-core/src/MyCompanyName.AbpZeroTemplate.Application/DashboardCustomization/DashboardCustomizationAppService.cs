@@ -55,10 +55,7 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
             var dashboard = GetDashboard(dashboards, input.DashboardName);
 
             var page = dashboard.Pages.FirstOrDefault(p => p.Id == input.Id);
-            if (page == null)
-            {
-                return;
-            }
+            if (page == null) return;
 
             page.Name = input.Name;
 
@@ -73,13 +70,13 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
             var page = new Page
             {
                 Name = input.Name,
-                Widgets = new List<Widget>(),
+                Widgets = new List<Widget>()
             };
 
             dashboard.Pages.Add(page);
             await SaveSetting(input.Application, dashboards);
 
-            return new AddNewPageOutput { PageId = page.Id };
+            return new AddNewPageOutput {PageId = page.Id};
         }
 
         public async Task DeletePage(DeletePageInput input)
@@ -91,7 +88,9 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
 
             if (dashboard.Pages.Count == 0) // return to default
             {
-                var defaultDashboard = (await GetDefaultDashboardValue(input.Application)).FirstOrDefault(d => d.DashboardName == input.DashboardName);
+                var defaultDashboard =
+                    (await GetDefaultDashboardValue(input.Application)).FirstOrDefault(d =>
+                        d.DashboardName == input.DashboardName);
 
                 dashboards.Remove(dashboard);
                 dashboards.Add(defaultDashboard);
@@ -124,11 +123,10 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
 
         public DashboardOutput GetDashboardDefinition(GetDashboardInput input)
         {
-            var dashboardDefinition = _dashboardConfiguration.DashboardDefinitions.FirstOrDefault(d => d.Name == input.DashboardName);
+            var dashboardDefinition =
+                _dashboardConfiguration.DashboardDefinitions.FirstOrDefault(d => d.Name == input.DashboardName);
             if (dashboardDefinition == null)
-            {
                 throw new UserFriendlyException(L("UnknownDashboard", input.DashboardName));
-            }
 
             //widgets which used in that dashboard
             var usedWidgetDefinitions = GetFilteredWidgets(dashboardDefinition);
@@ -137,21 +135,20 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
                 dashboardDefinition.Name,
                 usedWidgetDefinitions
                     .Select(widget => new WidgetOutput(
-                    widget.Id,
-                    widget.Name,
-                    widget.Description,
-                    filters: GetNeededWidgetFiltersOutput(widget))
+                        widget.Id,
+                        widget.Name,
+                        widget.Description,
+                        GetNeededWidgetFiltersOutput(widget))
                     ).ToList()
             );
         }
-        
+
         public List<WidgetOutput> GetAllWidgetDefinitions(GetDashboardInput input)
         {
-            var dashboardDefinition = _dashboardConfiguration.DashboardDefinitions.FirstOrDefault(d => d.Name == input.DashboardName);
+            var dashboardDefinition =
+                _dashboardConfiguration.DashboardDefinitions.FirstOrDefault(d => d.Name == input.DashboardName);
             if (dashboardDefinition == null)
-            {
                 throw new UserFriendlyException(L("UnknownDashboard", input.DashboardName));
-            }
 
             return GetFilteredWidgets(dashboardDefinition)
                 .Select(widget => new WidgetOutput(widget.Id, widget.Name, widget.Description)).ToList();
@@ -165,10 +162,7 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
         private Dashboard GetDashboard(List<Dashboard> dashboards, string dashboardName)
         {
             var dashboard = dashboards.FirstOrDefault(d => d.DashboardName == dashboardName);
-            if (dashboard == null)
-            {
-                throw new UserFriendlyException(L("UnknownDashboard", dashboardName));
-            }
+            if (dashboard == null) throw new UserFriendlyException(L("UnknownDashboard", dashboardName));
 
             return dashboard;
         }
@@ -177,10 +171,7 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
         {
             var dashboardConfigAsJsonString = await SettingManager.GetSettingValueAsync(GetSettingName(application));
 
-            if (string.IsNullOrWhiteSpace(dashboardConfigAsJsonString))
-            {
-                return null;
-            }
+            if (string.IsNullOrWhiteSpace(dashboardConfigAsJsonString)) return null;
 
             return JsonConvert.DeserializeObject<List<Dashboard>>(dashboardConfigAsJsonString);
         }
@@ -189,17 +180,15 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
         {
             var value = JsonConvert.SerializeObject(dashboards);
 
-            await SettingManager.ChangeSettingForUserAsync(GetCurrentUser().ToUserIdentifier(), GetSettingName(application), value);
+            await SettingManager.ChangeSettingForUserAsync(GetCurrentUser().ToUserIdentifier(),
+                GetSettingName(application), value);
         }
 
         private byte CalculatePositionY(List<Widget> widgets)
         {
-            if (widgets == null || !widgets.Any())
-            {
-                return 0;
-            }
+            if (widgets == null || !widgets.Any()) return 0;
 
-            return (byte)widgets.Max(w => w.PositionY + w.Height);
+            return (byte) widgets.Max(w => w.PositionY + w.Height);
         }
 
         private async Task<List<Dashboard>> GetDefaultDashboardValue(string application)
@@ -207,13 +196,12 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
             string dashboardConfigAsJsonString;
 
             if (AbpSession.MultiTenancySide == MultiTenancySides.Host)
-            {
-                dashboardConfigAsJsonString = await SettingManager.GetSettingValueForApplicationAsync(GetSettingName(application));
-            }
+                dashboardConfigAsJsonString =
+                    await SettingManager.GetSettingValueForApplicationAsync(GetSettingName(application));
             else
-            {
-                dashboardConfigAsJsonString = await SettingManager.GetSettingValueForTenantAsync(GetSettingName(application), AbpSession.GetTenantId());
-            }
+                dashboardConfigAsJsonString =
+                    await SettingManager.GetSettingValueForTenantAsync(GetSettingName(application),
+                        AbpSession.GetTenantId());
 
             return string.IsNullOrWhiteSpace(dashboardConfigAsJsonString)
                 ? null
@@ -240,12 +228,8 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
             var filteredWidgets = new List<WidgetDefinition>();
 
             foreach (var widget in widgets)
-            {
                 if (widget.Permissions.All(p => PermissionChecker.IsGranted(p)))
-                {
                     filteredWidgets.Add(widget);
-                }
-            }
 
             return filteredWidgets;
         }
@@ -258,9 +242,7 @@ namespace MyCompanyName.AbpZeroTemplate.DashboardCustomization
         private List<WidgetFilterOutput> GetNeededWidgetFiltersOutput(WidgetDefinition widget)
         {
             if (widget.UsedWidgetFilters == null || !widget.UsedWidgetFilters.Any())
-            {
                 return new List<WidgetFilterOutput>();
-            }
 
             var allNeededFilters = widget.UsedWidgetFilters.Distinct().ToList();
 

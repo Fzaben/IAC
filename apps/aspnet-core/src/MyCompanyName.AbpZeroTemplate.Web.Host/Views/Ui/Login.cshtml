@@ -15,7 +15,7 @@
     <h1>@L("LogIn")</h1>
     <form method="post">
         <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl"/>
-        
+
         @if (MultiTenancyConfig.IsEnabled)
         {
             <div class="login-form-row">
@@ -23,7 +23,7 @@
                 <input type="text" id="TenancyName" name="TenancyName" placeholder="@L("TenancyName")">
             </div>
         }
-    
+
         <div class="login-form-row">
             <label for="UsernameOrEmailAddress">@L("UserNameOrEmail")</label>
             <input type="text" id="UsernameOrEmailAddress" name="UserNameOrEmailAddress" placeholder="@L("UserNameOrEmail")">

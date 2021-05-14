@@ -5,11 +5,8 @@ namespace MyCompanyName.AbpZeroTemplate.Localization.Dto
 {
     public class GetLanguagesOutput : ListResultDto<ApplicationLanguageListDto>
     {
-        public string DefaultLanguageName { get; set; }
-
         public GetLanguagesOutput()
         {
-            
         }
 
         public GetLanguagesOutput(IReadOnlyList<ApplicationLanguageListDto> items, string defaultLanguageName)
@@ -17,5 +14,7 @@ namespace MyCompanyName.AbpZeroTemplate.Localization.Dto
         {
             DefaultLanguageName = defaultLanguageName;
         }
+
+        public string DefaultLanguageName { get; set; }
     }
 }

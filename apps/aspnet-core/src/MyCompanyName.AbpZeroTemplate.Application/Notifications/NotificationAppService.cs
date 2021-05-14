@@ -17,8 +17,8 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
     public class NotificationAppService : AbpZeroTemplateAppServiceBase, INotificationAppService
     {
         private readonly INotificationDefinitionManager _notificationDefinitionManager;
-        private readonly IUserNotificationManager _userNotificationManager;
         private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
+        private readonly IUserNotificationManager _userNotificationManager;
 
         public NotificationAppService(
             INotificationDefinitionManager notificationDefinitionManager,
@@ -35,52 +35,57 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
         {
             var totalCount = await _userNotificationManager.GetUserNotificationCountAsync(
                 AbpSession.ToUserIdentifier(), input.State, input.StartDate, input.EndDate
-                );
+            );
 
             var unreadCount = await _userNotificationManager.GetUserNotificationCountAsync(
                 AbpSession.ToUserIdentifier(), UserNotificationState.Unread, input.StartDate, input.EndDate
-                );
+            );
             var notifications = await _userNotificationManager.GetUserNotificationsAsync(
-                AbpSession.ToUserIdentifier(), input.State, input.SkipCount, input.MaxResultCount, input.StartDate, input.EndDate
-                );
+                AbpSession.ToUserIdentifier(), input.State, input.SkipCount, input.MaxResultCount, input.StartDate,
+                input.EndDate
+            );
 
             return new GetNotificationsOutput(totalCount, unreadCount, notifications);
         }
 
         public async Task SetAllNotificationsAsRead()
         {
-            await _userNotificationManager.UpdateAllUserNotificationStatesAsync(AbpSession.ToUserIdentifier(), UserNotificationState.Read);
+            await _userNotificationManager.UpdateAllUserNotificationStatesAsync(AbpSession.ToUserIdentifier(),
+                UserNotificationState.Read);
         }
 
         public async Task SetNotificationAsRead(EntityDto<Guid> input)
         {
-            var userNotification = await _userNotificationManager.GetUserNotificationAsync(AbpSession.TenantId, input.Id);
-            if (userNotification == null)
-            {
-                return;
-            }
+            var userNotification =
+                await _userNotificationManager.GetUserNotificationAsync(AbpSession.TenantId, input.Id);
+            if (userNotification == null) return;
 
             if (userNotification.UserId != AbpSession.GetUserId())
-            {
-                throw new Exception(string.Format("Given user notification id ({0}) is not belong to the current user ({1})", input.Id, AbpSession.GetUserId()));
-            }
+                throw new Exception(string.Format(
+                    "Given user notification id ({0}) is not belong to the current user ({1})", input.Id,
+                    AbpSession.GetUserId()));
 
-            await _userNotificationManager.UpdateUserNotificationStateAsync(AbpSession.TenantId, input.Id, UserNotificationState.Read);
+            await _userNotificationManager.UpdateUserNotificationStateAsync(AbpSession.TenantId, input.Id,
+                UserNotificationState.Read);
         }
 
         public async Task<GetNotificationSettingsOutput> GetNotificationSettings()
         {
             var output = new GetNotificationSettingsOutput();
 
-            output.ReceiveNotifications = await SettingManager.GetSettingValueAsync<bool>(NotificationSettingNames.ReceiveNotifications);
+            output.ReceiveNotifications =
+                await SettingManager.GetSettingValueAsync<bool>(NotificationSettingNames.ReceiveNotifications);
 
             //Get general notifications, not entity related notifications.
-            var notificationDefinitions = (await _notificationDefinitionManager.GetAllAvailableAsync(AbpSession.ToUserIdentifier())).Where(nd => nd.EntityType == null);
+            var notificationDefinitions =
+                (await _notificationDefinitionManager.GetAllAvailableAsync(AbpSession.ToUserIdentifier())).Where(nd =>
+                    nd.EntityType == null);
 
-            output.Notifications = ObjectMapper.Map<List<NotificationSubscriptionWithDisplayNameDto>>(notificationDefinitions);
+            output.Notifications =
+                ObjectMapper.Map<List<NotificationSubscriptionWithDisplayNameDto>>(notificationDefinitions);
 
             var subscribedNotifications = (await _notificationSubscriptionManager
-                .GetSubscribedNotificationsAsync(AbpSession.ToUserIdentifier()))
+                    .GetSubscribedNotificationsAsync(AbpSession.ToUserIdentifier()))
                 .Select(ns => ns.NotificationName)
                 .ToList();
 
@@ -91,33 +96,25 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
 
         public async Task UpdateNotificationSettings(UpdateNotificationSettingsInput input)
         {
-            await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(), NotificationSettingNames.ReceiveNotifications, input.ReceiveNotifications.ToString());
+            await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(),
+                NotificationSettingNames.ReceiveNotifications, input.ReceiveNotifications.ToString());
 
             foreach (var notification in input.Notifications)
-            {
                 if (notification.IsSubscribed)
-                {
-                    await _notificationSubscriptionManager.SubscribeAsync(AbpSession.ToUserIdentifier(), notification.Name);
-                }
+                    await _notificationSubscriptionManager.SubscribeAsync(AbpSession.ToUserIdentifier(),
+                        notification.Name);
                 else
-                {
-                    await _notificationSubscriptionManager.UnsubscribeAsync(AbpSession.ToUserIdentifier(), notification.Name);
-                }
-            }
+                    await _notificationSubscriptionManager.UnsubscribeAsync(AbpSession.ToUserIdentifier(),
+                        notification.Name);
         }
 
         public async Task DeleteNotification(EntityDto<Guid> input)
         {
             var notification = await _userNotificationManager.GetUserNotificationAsync(AbpSession.TenantId, input.Id);
-            if (notification == null)
-            {
-                return;
-            }
+            if (notification == null) return;
 
             if (notification.UserId != AbpSession.GetUserId())
-            {
                 throw new UserFriendlyException(L("ThisNotificationDoesntBelongToYou"));
-            }
 
             await _userNotificationManager.DeleteUserNotificationAsync(AbpSession.TenantId, input.Id);
         }
@@ -130,6 +127,5 @@ namespace MyCompanyName.AbpZeroTemplate.Notifications
                 input.StartDate,
                 input.EndDate);
         }
-
     }
 }

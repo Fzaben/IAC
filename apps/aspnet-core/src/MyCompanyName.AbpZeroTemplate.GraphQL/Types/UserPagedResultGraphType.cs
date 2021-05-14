@@ -9,7 +9,7 @@ namespace MyCompanyName.AbpZeroTemplate.Types
         public UserPagedResultGraphType()
         {
             Name = "UserPagedResultGraphType";
-            
+
             Field(x => x.TotalCount);
             Field(x => x.Items, type: typeof(ListGraphType<UserType>));
         }

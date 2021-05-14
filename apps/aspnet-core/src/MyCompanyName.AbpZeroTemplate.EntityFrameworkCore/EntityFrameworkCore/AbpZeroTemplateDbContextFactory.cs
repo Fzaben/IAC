@@ -24,7 +24,8 @@ namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
                 addUserSecrets: true
             );
 
-            AbpZeroTemplateDbContextConfigurer.Configure(builder, configuration.GetConnectionString(AbpZeroTemplateConsts.ConnectionStringName));
+            AbpZeroTemplateDbContextConfigurer.Configure(builder,
+                configuration.GetConnectionString(AbpZeroTemplateConsts.ConnectionStringName));
 
             return new AbpZeroTemplateDbContext(builder.Options);
         }

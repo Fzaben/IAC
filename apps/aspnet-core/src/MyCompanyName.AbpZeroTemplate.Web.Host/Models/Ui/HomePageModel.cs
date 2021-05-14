@@ -12,10 +12,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Models.Ui
         {
             var userName = "<span id=\"HeaderCurrentUserName\">" + LoginInformation.User.UserName + "</span>";
 
-            if (!IsMultiTenancyEnabled)
-            {
-                return userName;
-            }
+            if (!IsMultiTenancyEnabled) return userName;
 
             return LoginInformation.Tenant == null
                 ? "<span class='tenancy-name'>.\\</span>" + userName

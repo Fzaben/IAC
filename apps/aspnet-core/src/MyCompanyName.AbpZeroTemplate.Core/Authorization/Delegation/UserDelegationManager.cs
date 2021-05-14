@@ -27,7 +27,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Delegation
         public bool HasActiveDelegation(long sourceUserId, long targetUserId)
         {
             var activeUserDelegationExpression = new ActiveUserDelegationSpecification(sourceUserId, targetUserId)
-                    .ToExpression();
+                .ToExpression();
 
             var activeDelegation = _userDelegationRepository.FirstOrDefault(activeUserDelegationExpression);
 
@@ -40,10 +40,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Delegation
                 e.Id == userDelegationId && e.SourceUserId == currentUser.UserId
             );
 
-            if (delegation == null)
-            {
-                throw new Exception("Only source user can delete a user delegation !");
-            }
+            if (delegation == null) throw new Exception("Only source user can delete a user delegation !");
 
             await _userDelegationRepository.DeleteAsync(delegation);
         }

@@ -1,5 +1,4 @@
 ﻿using Abp.AspNetCore.Mvc.Authorization;
-using Microsoft.AspNetCore.Authorization;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile;
 using MyCompanyName.AbpZeroTemplate.Storage;
 

@@ -8,7 +8,7 @@ namespace MyCompanyName.AbpZeroTemplate.WebHooks
         public override void SetWebhooks(IWebhookDefinitionContext context)
         {
             context.Manager.Add(new WebhookDefinition(
-                name: AppWebHookNames.TestWebhook
+                AppWebHookNames.TestWebhook
             ));
 
             //Add your webhook definitions here 

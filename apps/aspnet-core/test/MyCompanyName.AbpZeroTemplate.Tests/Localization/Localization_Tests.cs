@@ -1,7 +1,6 @@
 ﻿using System.Globalization;
 using Abp.Localization;
 using Abp.Zero;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 

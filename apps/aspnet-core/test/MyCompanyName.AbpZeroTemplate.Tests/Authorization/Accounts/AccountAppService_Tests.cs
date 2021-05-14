@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Abp.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts;
 using MyCompanyName.AbpZeroTemplate.Authorization.Accounts.Dto;
-using MyCompanyName.AbpZeroTemplate.Test.Base;
 using Shouldly;
 using Xunit;
 

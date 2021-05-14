@@ -3,7 +3,7 @@ using Abp.Runtime.Validation;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto
 {
-    public class GetUsersToExcelInput: IShouldNormalize, IGetUsersInput
+    public class GetUsersToExcelInput : IShouldNormalize, IGetUsersInput
     {
         public string Filter { get; set; }
 
@@ -17,10 +17,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto
 
         public void Normalize()
         {
-            if (string.IsNullOrEmpty(Sorting))
-            {
-                Sorting = "Name,Surname";
-            }
+            if (string.IsNullOrEmpty(Sorting)) Sorting = "Name,Surname";
         }
     }
 }

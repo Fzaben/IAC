@@ -7,8 +7,7 @@ namespace MyCompanyName.AbpZeroTemplate.Authorization.Accounts.Dto
     {
         public int? TargetTenantId { get; set; }
 
-        [Range(1, long.MaxValue)]
-        public long TargetUserId { get; set; }
+        [Range(1, long.MaxValue)] public long TargetUserId { get; set; }
 
         public UserIdentifier ToUserIdentifier()
         {

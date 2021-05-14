@@ -6,16 +6,15 @@ using Abp.Extensions;
 using Abp.IO.Extensions;
 using Abp.MultiTenancy;
 using Abp.Reflection.Extensions;
-using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Url;
 
 namespace MyCompanyName.AbpZeroTemplate.Net.Emailing
 {
     public class EmailTemplateProvider : IEmailTemplateProvider, ISingletonDependency
     {
-        private readonly IWebUrlService _webUrlService;
-        private readonly ITenantCache _tenantCache;
         private readonly ConcurrentDictionary<string, string> _defaultTemplates;
+        private readonly ITenantCache _tenantCache;
+        private readonly IWebUrlService _webUrlService;
 
         public EmailTemplateProvider(IWebUrlService webUrlService, ITenantCache tenantCache)
         {
@@ -30,7 +29,9 @@ namespace MyCompanyName.AbpZeroTemplate.Net.Emailing
 
             return _defaultTemplates.GetOrAdd(tenancyKey, key =>
             {
-                using (var stream = typeof(EmailTemplateProvider).GetAssembly().GetManifestResourceStream("MyCompanyName.AbpZeroTemplate.Net.Emailing.EmailTemplates.default.html"))
+                using (var stream = typeof(EmailTemplateProvider).GetAssembly()
+                    .GetManifestResourceStream("MyCompanyName.AbpZeroTemplate.Net.Emailing.EmailTemplates.default.html")
+                )
                 {
                     var bytes = stream.GetAllBytes();
                     var template = Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
@@ -43,12 +44,12 @@ namespace MyCompanyName.AbpZeroTemplate.Net.Emailing
         private string GetTenantLogoUrl(int? tenantId)
         {
             if (!tenantId.HasValue)
-            {
-                return _webUrlService.GetServerRootAddress().EnsureEndsWith('/') + "TenantCustomization/GetTenantLogo?skin=light";
-            }
+                return _webUrlService.GetServerRootAddress().EnsureEndsWith('/') +
+                       "TenantCustomization/GetTenantLogo?skin=light";
 
             var tenant = _tenantCache.Get(tenantId.Value);
-            return _webUrlService.GetServerRootAddress(tenant.TenancyName).EnsureEndsWith('/') + "TenantCustomization/GetTenantLogo?skin=light&tenantId=" + tenantId.Value;
+            return _webUrlService.GetServerRootAddress(tenant.TenancyName).EnsureEndsWith('/') +
+                   "TenantCustomization/GetTenantLogo?skin=light&tenantId=" + tenantId.Value;
         }
     }
 }

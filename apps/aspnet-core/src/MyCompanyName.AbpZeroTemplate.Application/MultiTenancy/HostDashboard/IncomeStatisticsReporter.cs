@@ -18,44 +18,6 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
             _subscriptionPaymentRepository = subscriptionPaymentRepository;
         }
 
-        private async Task<List<IncomeStastistic>> GetDailyIncomeStatisticsData(DateTime startDate, DateTime endDate)
-        {
-            var dailyRecords = (await _subscriptionPaymentRepository.GetAll()
-                .Where(s => s.CreationTime >= startDate &&
-                            s.CreationTime <= endDate &&
-                            s.Status == SubscriptionPaymentStatus.Paid)
-                .Select(payment => new
-                {
-                    payment.CreationTime,
-                    payment.Amount
-                })
-                .ToListAsync())
-                .GroupBy(s => new DateTime(s.CreationTime.Year, s.CreationTime.Month, s.CreationTime.Day))
-                .Select(s => new IncomeStastistic
-                 {
-                     Date = s.Key.Date,
-                     Amount = s.Sum(c => c.Amount)
-                 })
-                .ToList();
-
-            FillGapsInDailyIncomeStatistics(dailyRecords, startDate, endDate);
-            return dailyRecords.OrderBy(s => s.Date).ToList();
-        }
-
-        private static void FillGapsInDailyIncomeStatistics(ICollection<IncomeStastistic> dailyRecords, DateTime startDate, DateTime endDate)
-        {
-            var currentDay = startDate;
-            while (currentDay <= endDate)
-            {
-                if (dailyRecords.All(d => d.Date != currentDay.Date))
-                {
-                    dailyRecords.Add(new IncomeStastistic(currentDay));
-                }
-
-                currentDay = currentDay.AddDays(1);
-            }
-        }
-
         public async Task<List<IncomeStastistic>> GetIncomeStatisticsData(DateTime startDate, DateTime endDate,
             ChartDateInterval dateInterval)
         {
@@ -76,12 +38,46 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
                     throw new ArgumentOutOfRangeException(nameof(dateInterval), dateInterval, null);
             }
 
-            incomeStastistics.ForEach(i =>
-            {
-                i.Label = i.Date.ToString(L("DateFormatShort"));
-            });
+            incomeStastistics.ForEach(i => { i.Label = i.Date.ToString(L("DateFormatShort")); });
 
             return incomeStastistics.OrderBy(i => i.Date).ToList();
+        }
+
+        private async Task<List<IncomeStastistic>> GetDailyIncomeStatisticsData(DateTime startDate, DateTime endDate)
+        {
+            var dailyRecords = (await _subscriptionPaymentRepository.GetAll()
+                    .Where(s => s.CreationTime >= startDate &&
+                                s.CreationTime <= endDate &&
+                                s.Status == SubscriptionPaymentStatus.Paid)
+                    .Select(payment => new
+                    {
+                        payment.CreationTime,
+                        payment.Amount
+                    })
+                    .ToListAsync())
+                .GroupBy(s => new DateTime(s.CreationTime.Year, s.CreationTime.Month, s.CreationTime.Day))
+                .Select(s => new IncomeStastistic
+                {
+                    Date = s.Key.Date,
+                    Amount = s.Sum(c => c.Amount)
+                })
+                .ToList();
+
+            FillGapsInDailyIncomeStatistics(dailyRecords, startDate, endDate);
+            return dailyRecords.OrderBy(s => s.Date).ToList();
+        }
+
+        private static void FillGapsInDailyIncomeStatistics(ICollection<IncomeStastistic> dailyRecords,
+            DateTime startDate, DateTime endDate)
+        {
+            var currentDay = startDate;
+            while (currentDay <= endDate)
+            {
+                if (dailyRecords.All(d => d.Date != currentDay.Date))
+                    dailyRecords.Add(new IncomeStastistic(currentDay));
+
+                currentDay = currentDay.AddDays(1);
+            }
         }
 
         private async Task<List<IncomeStastistic>> GetWeeklyIncomeStatisticsData(DateTime startDate, DateTime endDate)
@@ -100,10 +96,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
             {
                 if (dailyRecord.Date.DayOfWeek == firstDayOfWeek)
                 {
-                    if (!isFirstWeek)
-                    {
-                        incomeStastistics.Add(new IncomeStastistic(weekStart, weeklyAmount));
-                    }
+                    if (!isFirstWeek) incomeStastistics.Add(new IncomeStastistic(weekStart, weeklyAmount));
 
                     isFirstWeek = false;
                     weekStart = dailyRecord.Date;
@@ -121,15 +114,15 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
         {
             var dailyRecords = await GetDailyIncomeStatisticsData(startDate, endDate);
             var query = dailyRecords.GroupBy(d => new
-            {
-                d.Date.Year,
-                d.Date.Month
-            })
-            .Select(grouping => new IncomeStastistic
-            {
-                Date = FindMonthlyDate(startDate, grouping.Key.Year, grouping.Key.Month),
-                Amount = grouping.DefaultIfEmpty().Sum(x => x.Amount)
-            });
+                {
+                    d.Date.Year,
+                    d.Date.Month
+                })
+                .Select(grouping => new IncomeStastistic
+                {
+                    Date = FindMonthlyDate(startDate, grouping.Key.Year, grouping.Key.Month),
+                    Amount = grouping.DefaultIfEmpty().Sum(x => x.Amount)
+                });
 
             return query.ToList();
         }
@@ -137,9 +130,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.HostDashboard
         private static DateTime FindMonthlyDate(DateTime startDate, int groupYear, int groupMonth)
         {
             if (groupYear == startDate.Year && groupMonth == startDate.Month)
-            {
                 return new DateTime(groupYear, groupMonth, startDate.Day);
-            }
 
             return new DateTime(groupYear, groupMonth, 1);
         }

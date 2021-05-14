@@ -21,7 +21,8 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests.Roles
              }";
 
 
-            const string expectedResult = "{ \"roles\": [ { \"id\": 2, \"displayName\": \"Admin\" }, { \"id\": 3, \"displayName\": \"User\" } ]}";
+            const string expectedResult =
+                "{ \"roles\": [ { \"id\": 2, \"displayName\": \"Admin\" }, { \"id\": 3, \"displayName\": \"User\" } ]}";
 
             await AssertQuerySuccessAsync(query, expectedResult);
         }

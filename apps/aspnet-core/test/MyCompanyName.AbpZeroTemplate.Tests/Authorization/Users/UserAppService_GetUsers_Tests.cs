@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Abp.Authorization.Roles;
 using Abp.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
@@ -68,7 +67,7 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             var output2 = await UserAppService.GetUsers(
                 new GetUsersInput
                 {
-                    Permissions = new List<string> { "test.permission1" }
+                    Permissions = new List<string> {"test.permission1"}
                 });
 
             //Assert

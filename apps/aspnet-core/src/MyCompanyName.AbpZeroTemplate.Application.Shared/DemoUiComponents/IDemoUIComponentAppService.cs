@@ -6,7 +6,7 @@ using MyCompanyName.AbpZeroTemplate.DemoUiComponents.Dto;
 
 namespace MyCompanyName.AbpZeroTemplate.DemoUiComponents
 {
-    public interface IDemoUiComponentsAppService: IApplicationService
+    public interface IDemoUiComponentsAppService : IApplicationService
     {
         DateToStringOutput SendAndGetDate(DateTime? date);
 

@@ -5,10 +5,12 @@ using MyCompanyName.AbpZeroTemplate.EntityFrameworkCore.Repositories;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
 {
-    public class SubscriptionPaymentExtensionDataRepository : AbpZeroTemplateRepositoryBase<SubscriptionPaymentExtensionData, long>,
+    public class SubscriptionPaymentExtensionDataRepository :
+        AbpZeroTemplateRepositoryBase<SubscriptionPaymentExtensionData, long>,
         ISubscriptionPaymentExtensionDataRepository
     {
-        public SubscriptionPaymentExtensionDataRepository(IDbContextProvider<AbpZeroTemplateDbContext> dbContextProvider) : base(dbContextProvider)
+        public SubscriptionPaymentExtensionDataRepository(
+            IDbContextProvider<AbpZeroTemplateDbContext> dbContextProvider) : base(dbContextProvider)
         {
         }
 
@@ -29,18 +31,14 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments
         {
             var data = await FirstOrDefaultAsync(p => p.SubscriptionPaymentId == subscriptionPaymentId && p.Key == key);
 
-            if (data != null)
-            {
-                await DeleteAsync(data);
-            }
+            if (data != null) await DeleteAsync(data);
 
-            await InsertAsync(new SubscriptionPaymentExtensionData()
+            await InsertAsync(new SubscriptionPaymentExtensionData
             {
                 SubscriptionPaymentId = subscriptionPaymentId,
                 Key = key,
                 Value = value
             });
         }
-
     }
 }

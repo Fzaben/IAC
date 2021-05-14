@@ -18,10 +18,9 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
         private readonly ILocalizationManager _localizationManager;
         private readonly IWindsorContainer _windsorContainer;
         private bool _isCallByRelease;
-        private IAbpSession ChatAbpSession { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ChatHub"/> class.
+        ///     Initializes a new instance of the <see cref="ChatHub" /> class.
         /// </summary>
         public ChatHub(
             IChatMessageManager chatMessageManager,
@@ -38,6 +37,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
             ChatAbpSession = NullAbpSession.Instance;
         }
 
+        private IAbpSession ChatAbpSession { get; }
+
         public async Task<string> SendMessage(SendChatMessageInput input)
         {
             var sender = Context.ToUserIdentifier();
@@ -47,7 +48,8 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
             {
                 using (ChatAbpSession.Use(Context.GetTenantId(), Context.GetUserId()))
                 {
-                    await _chatMessageManager.SendMessageAsync(sender, receiver, input.Message, input.TenancyName, input.UserName, input.ProfilePictureId);
+                    await _chatMessageManager.SendMessageAsync(sender, receiver, input.Message, input.TenancyName,
+                        input.UserName, input.ProfilePictureId);
                     return string.Empty;
                 }
             }
@@ -72,10 +74,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Chat.SignalR
 
         protected override void Dispose(bool disposing)
         {
-            if (_isCallByRelease)
-            {
-                return;
-            }
+            if (_isCallByRelease) return;
             base.Dispose(disposing);
             if (disposing)
             {

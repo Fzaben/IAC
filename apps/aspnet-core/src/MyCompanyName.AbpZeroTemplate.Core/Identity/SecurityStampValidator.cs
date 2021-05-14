@@ -21,9 +21,9 @@ namespace MyCompanyName.AbpZeroTemplate.Identity
 {
     public class SecurityStampValidator : AbpSecurityStampValidator<Tenant, Role, User>
     {
-        private readonly IUserDelegationManager _userDelegationManager;
-        private readonly IUserDelegationConfiguration _userDelegationConfiguration;
         private readonly PermissionChecker _permissionChecker;
+        private readonly IUserDelegationConfiguration _userDelegationConfiguration;
+        private readonly IUserDelegationManager _userDelegationManager;
 
         public SecurityStampValidator(
             IOptions<SecurityStampValidatorOptions> options,
@@ -49,35 +49,28 @@ namespace MyCompanyName.AbpZeroTemplate.Identity
 
         private void ValidateUserDelegation(CookieValidatePrincipalContext context)
         {
-            if (!_userDelegationConfiguration.IsEnabled)
-            {
-                return;
-            }
+            if (!_userDelegationConfiguration.IsEnabled) return;
 
-            var impersonatorTenant = context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
+            var impersonatorTenant =
+                context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorTenantId);
             var user = context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.UserId);
-            var impersonatorUser = context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorUserId);
+            var impersonatorUser =
+                context.Principal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.ImpersonatorUserId);
 
-            if (impersonatorUser == null || user == null)
-            {
-                return;
-            }
+            if (impersonatorUser == null || user == null) return;
 
-            var impersonatorTenantId = impersonatorTenant == null ? null : impersonatorTenant.Value.IsNullOrEmpty() ? (int?)null : Convert.ToInt32(impersonatorTenant.Value);
+            var impersonatorTenantId = impersonatorTenant == null ? null :
+                impersonatorTenant.Value.IsNullOrEmpty() ? (int?) null : Convert.ToInt32(impersonatorTenant.Value);
             var sourceUserId = Convert.ToInt64(user.Value);
             var targetUserId = Convert.ToInt64(impersonatorUser.Value);
 
-            if (_permissionChecker.IsGranted(new UserIdentifier(impersonatorTenantId, targetUserId), AppPermissions.Pages_Administration_Users_Impersonation))
-            {
-                return;
-            }
+            if (_permissionChecker.IsGranted(new UserIdentifier(impersonatorTenantId, targetUserId),
+                AppPermissions.Pages_Administration_Users_Impersonation)) return;
 
             var hasActiveDelegation = _userDelegationManager.HasActiveDelegation(sourceUserId, targetUserId);
 
             if (!hasActiveDelegation)
-            {
                 throw new UserFriendlyException("ThereIsNoActiveUserDelegationBetweenYourUserAndCurrentUser");
-            }
         }
     }
 }

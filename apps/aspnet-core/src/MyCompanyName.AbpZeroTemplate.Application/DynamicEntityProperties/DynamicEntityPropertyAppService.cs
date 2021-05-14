@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.DynamicEntityProperties;
-using Microsoft.AspNetCore.Authorization;
 using MyCompanyName.AbpZeroTemplate.Authorization;
 using MyCompanyName.AbpZeroTemplate.DynamicEntityProperties.Dto;
 using NUglify.Helpers;
@@ -27,7 +26,8 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
             return ObjectMapper.Map<DynamicEntityPropertyDto>(entity);
         }
 
-        public async Task<ListResultDto<DynamicEntityPropertyDto>> GetAllPropertiesOfAnEntity(DynamicEntityPropertyGetAllInput input)
+        public async Task<ListResultDto<DynamicEntityPropertyDto>> GetAllPropertiesOfAnEntity(
+            DynamicEntityPropertyGetAllInput input)
         {
             var entities = await _dynamicEntityPropertyManager.GetAllAsync(input.EntityFullName);
             return new ListResultDto<DynamicEntityPropertyDto>(
@@ -66,7 +66,7 @@ namespace MyCompanyName.AbpZeroTemplate.DynamicEntityProperties
         {
             var entities = await _dynamicEntityPropertyManager.GetAllAsync();
             return new ListResultDto<GetAllEntitiesHasDynamicPropertyOutput>(
-                entities?.Select(x => new GetAllEntitiesHasDynamicPropertyOutput()
+                entities?.Select(x => new GetAllEntitiesHasDynamicPropertyOutput
                 {
                     EntityFullName = x.EntityFullName
                 }).DistinctBy(x => x.EntityFullName).ToList()

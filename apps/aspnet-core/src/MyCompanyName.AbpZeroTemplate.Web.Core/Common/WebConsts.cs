@@ -10,7 +10,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Common
         public static bool SwaggerUiEnabled = true;
         public static bool HangfireDashboardEnabled = false;
 
-        public static List<string> ReCaptchaIgnoreWhiteList = new List<string>
+        public static List<string> ReCaptchaIgnoreWhiteList = new()
         {
             AbpZeroTemplateConsts.AbpApiClientUserAgent
         };

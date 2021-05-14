@@ -6,7 +6,7 @@ using MyCompanyName.AbpZeroTemplate.Authorization.Roles.Dto;
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Roles
 {
     /// <summary>
-    /// Application service that is used by 'role management' page.
+    ///     Application service that is used by 'role management' page.
     /// </summary>
     public interface IRoleAppService : IApplicationService
     {

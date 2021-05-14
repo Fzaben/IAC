@@ -1,37 +1,21 @@
 ﻿using System;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Abp;
 using Abp.AspNetZeroCore;
 using Abp.AspNetZeroCore.Timing;
 using Abp.AutoMapper;
-using Abp.BackgroundJobs;
+using Abp.Configuration.Startup;
 using Abp.Dependency;
+using Abp.MailKit;
 using Abp.Modules;
 using Abp.Net.Mail;
+using Abp.Net.Mail.Smtp;
 using Abp.Reflection.Extensions;
 using Abp.Timing;
-using Abp.Configuration.Startup;
-using Abp.Domain.Uow;
-using Abp.Events.Bus;
-using Abp.Events.Bus.Exceptions;
-using Abp.Json;
-using Abp.Localization.Dictionaries.Xml;
-using Abp.Localization.Sources;
-using Abp.MailKit;
-using Abp.Net.Mail.Smtp;
-using Abp.Threading;
-using Abp.Threading.BackgroundWorkers;
-using Abp.Threading.Timers;
 using Abp.Zero;
 using Abp.Zero.Configuration;
 using Abp.Zero.Ldap;
-using Abp.Zero.Ldap.Configuration;
 using Castle.MicroKernel.Registration;
 using MailKit.Security;
 using MyCompanyName.AbpZeroTemplate.Authorization.Delegation;
-using MyCompanyName.AbpZeroTemplate.Authorization.Ldap;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Chat;
@@ -47,7 +31,6 @@ using MyCompanyName.AbpZeroTemplate.MultiTenancy;
 using MyCompanyName.AbpZeroTemplate.Net.Emailing;
 using MyCompanyName.AbpZeroTemplate.Notifications;
 using MyCompanyName.AbpZeroTemplate.WebHooks;
-using Newtonsoft.Json;
 
 namespace MyCompanyName.AbpZeroTemplate
 {
@@ -103,30 +86,27 @@ namespace MyCompanyName.AbpZeroTemplate
 
             // MailKit configuration
             Configuration.Modules.AbpMailKit().SecureSocketOption = SecureSocketOptions.Auto;
-            Configuration.ReplaceService<IMailKitSmtpBuilder, AbpZeroTemplateMailKitSmtpBuilder>(DependencyLifeStyle.Transient);
+            Configuration.ReplaceService<IMailKitSmtpBuilder, AbpZeroTemplateMailKitSmtpBuilder>(DependencyLifeStyle
+                .Transient);
 
             //Configure roles
             AppRoleConfig.Configure(Configuration.Modules.Zero().RoleManagement);
 
             if (DebugHelper.IsDebug)
-            {
                 //Disabling email sending in debug mode
                 Configuration.ReplaceService<IEmailSender, NullEmailSender>(DependencyLifeStyle.Transient);
-            }
 
             Configuration.ReplaceService(typeof(IEmailSenderConfiguration), () =>
             {
                 Configuration.IocManager.IocContainer.Register(
                     Component.For<IEmailSenderConfiguration, ISmtpEmailSenderConfiguration>()
-                             .ImplementedBy<AbpZeroTemplateSmtpEmailSenderConfiguration>()
-                             .LifestyleTransient()
+                        .ImplementedBy<AbpZeroTemplateSmtpEmailSenderConfiguration>()
+                        .LifestyleTransient()
                 );
             });
 
-            Configuration.Caching.Configure(FriendCacheItem.CacheName, cache =>
-            {
-                cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(30);
-            });
+            Configuration.Caching.Configure(FriendCacheItem.CacheName,
+                cache => { cache.DefaultSlidingExpireTime = TimeSpan.FromMinutes(30); });
 
             IocManager.Register<DashboardConfiguration>();
         }

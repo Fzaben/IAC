@@ -12,8 +12,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
     // ReSharper disable once InconsistentNaming
     public class UserAppService_Unlock_Tests : UserAppServiceTestBase
     {
-        private readonly UserManager _userManager;
         private readonly LogInManager _loginManager;
+        private readonly UserManager _userManager;
 
         public UserAppService_Unlock_Tests()
         {
@@ -39,7 +39,9 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
             AbpLoginResultType loginResultType;
             do
             {
-                loginResultType = (await _loginManager.LoginAsync(user.UserName, "wrong-password", AbpTenantBase.DefaultTenantName)).Result;
+                loginResultType =
+                    (await _loginManager.LoginAsync(user.UserName, "wrong-password", AbpTenantBase.DefaultTenantName))
+                    .Result;
             } while (loginResultType != AbpLoginResultType.LockedOut);
 
             (await _userManager.IsLockedOutAsync(await GetUserByUserNameAsync("jnash"))).ShouldBeTrue();
@@ -50,7 +52,8 @@ namespace MyCompanyName.AbpZeroTemplate.Tests.Authorization.Users
 
             //Assert
 
-            (await _loginManager.LoginAsync(user.UserName, "wrong-password", AbpTenantBase.DefaultTenantName)).Result.ShouldBe(AbpLoginResultType.InvalidPassword);
+            (await _loginManager.LoginAsync(user.UserName, "wrong-password", AbpTenantBase.DefaultTenantName)).Result
+                .ShouldBe(AbpLoginResultType.InvalidPassword);
         }
     }
 }

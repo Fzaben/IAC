@@ -11,11 +11,11 @@ namespace MyCompanyName.AbpZeroTemplate.Web.IdentityServer
         {
             return new List<ApiResource>
             {
-                new ApiResource("default-api", "Default (all) API")
+                new("default-api", "Default (all) API")
                 {
                     Description = "AllFunctionalityYouHaveInTheApplication",
                     ApiSecrets = {new Secret("secret")},
-                    Scopes = new List<string>()
+                    Scopes = new List<string>
                     {
                         "default-api"
                     }
@@ -27,7 +27,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.IdentityServer
         {
             return new List<ApiScope>
             {
-                new ApiScope(name: "default-api", displayName: "Default (all) API")
+                new("default-api", "Default (all) API")
             };
         }
 
@@ -47,7 +47,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.IdentityServer
             var clients = new List<Client>();
 
             foreach (var child in configuration.GetSection("IdentityServer:Clients").GetChildren())
-            {
                 clients.Add(new Client
                 {
                     ClientId = child["ClientId"],
@@ -63,7 +62,6 @@ namespace MyCompanyName.AbpZeroTemplate.Web.IdentityServer
                     PostLogoutRedirectUris = child.GetSection("PostLogoutRedirectUris").GetChildren()
                         .Select(c => c.Value).ToArray()
                 });
-            }
 
             return clients;
         }

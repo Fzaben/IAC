@@ -16,7 +16,7 @@ namespace MyCompanyName.AbpZeroTemplate.GraphQL.Tests
         public override void PreInitialize()
         {
             IServiceCollection services = new ServiceCollection();
-            
+
             services.AddAndConfigureGraphQL();
 
             WindsorRegistrationHelper.CreateServiceProvider(IocManager.IocContainer, services);

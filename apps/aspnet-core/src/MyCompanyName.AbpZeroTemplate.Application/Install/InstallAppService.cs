@@ -1,10 +1,10 @@
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp;
 using Abp.Auditing;
 using Abp.Authorization;
+using Abp.Authorization.Users;
 using Abp.Domain.Uow;
 using Abp.Localization;
 using Abp.Net.Mail;
@@ -14,7 +14,6 @@ using Abp.Zero.EntityFrameworkCore;
 using Castle.Core.Internal;
 using Microsoft.Extensions.Configuration;
 using MyCompanyName.AbpZeroTemplate.Authorization;
-using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Configuration;
 using MyCompanyName.AbpZeroTemplate.Configuration.Dto;
 using MyCompanyName.AbpZeroTemplate.Configuration.Host.Dto;
@@ -23,8 +22,6 @@ using MyCompanyName.AbpZeroTemplate.Identity;
 using MyCompanyName.AbpZeroTemplate.Install.Dto;
 using MyCompanyName.AbpZeroTemplate.Migrations.Seed;
 using MyCompanyName.AbpZeroTemplate.Migrations.Seed.Host;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace MyCompanyName.AbpZeroTemplate.Install
 {
@@ -32,12 +29,12 @@ namespace MyCompanyName.AbpZeroTemplate.Install
     [DisableAuditing]
     public class InstallAppService : AbpZeroTemplateAppServiceBase, IInstallAppService
     {
-        private readonly AbpZeroDbMigrator<AbpZeroTemplateDbContext> _migrator;
-        private readonly LogInManager _logInManager;
-        private readonly SignInManager _signInManager;
-        private readonly DatabaseCheckHelper _databaseCheckHelper;
         private readonly IConfigurationRoot _appConfiguration;
         private readonly IAppConfigurationWriter _appConfigurationWriter;
+        private readonly DatabaseCheckHelper _databaseCheckHelper;
+        private readonly LogInManager _logInManager;
+        private readonly AbpZeroDbMigrator<AbpZeroTemplateDbContext> _migrator;
+        private readonly SignInManager _signInManager;
 
         public InstallAppService(AbpZeroDbMigrator migrator,
             LogInManager logInManager,
@@ -56,10 +53,7 @@ namespace MyCompanyName.AbpZeroTemplate.Install
 
         public async Task Setup(InstallDto input)
         {
-            if (CheckDatabaseInternal())
-            {
-                throw new UserFriendlyException("Setup process is already done.");
-            }
+            if (CheckDatabaseInternal()) throw new UserFriendlyException("Setup process is already done.");
 
             SetConnectionString(input.ConnectionString);
 
@@ -85,7 +79,6 @@ namespace MyCompanyName.AbpZeroTemplate.Install
             var appUrl = _appConfiguration.GetSection("App");
 
             if (appUrl["WebSiteRootAddress"].IsNullOrEmpty())
-            {
                 return new AppSettingsJsonDto
                 {
                     WebSiteUrl = appUrl["ClientRootAddress"],
@@ -93,7 +86,6 @@ namespace MyCompanyName.AbpZeroTemplate.Install
                     Languages = DefaultLanguagesCreator.InitialLanguages
                         .Select(l => new NameValue(l.DisplayName, l.Name)).ToList()
                 };
-            }
 
             return new AppSettingsJsonDto
             {
@@ -113,10 +105,7 @@ namespace MyCompanyName.AbpZeroTemplate.Install
         {
             var connectionString = _appConfiguration[$"ConnectionStrings:{AbpZeroTemplateConsts.ConnectionStringName}"];
 
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(connectionString)) return false;
 
             return _databaseCheckHelper.Exist(connectionString);
         }
@@ -132,7 +121,7 @@ namespace MyCompanyName.AbpZeroTemplate.Install
 
             await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
 
-            var loginResult = await _logInManager.LoginAsync(User.AdminUserName, "123qwe");
+            var loginResult = await _logInManager.LoginAsync(AbpUserBase.AdminUserName, "123qwe");
             var signInResult = await _signInManager.SignInOrTwoFactorAsync(loginResult, false);
             if (signInResult.Succeeded)
             {
@@ -162,21 +151,29 @@ namespace MyCompanyName.AbpZeroTemplate.Install
 
         private async Task SetSmtpSettings(EmailSettingsEditDto input)
         {
-            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.DefaultFromAddress, input.DefaultFromAddress);
-            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.DefaultFromDisplayName, input.DefaultFromDisplayName);
+            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.DefaultFromAddress,
+                input.DefaultFromAddress);
+            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.DefaultFromDisplayName,
+                input.DefaultFromDisplayName);
             await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.Host, input.SmtpHost);
-            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.Port, input.SmtpPort.ToString(CultureInfo.InvariantCulture));
+            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.Port,
+                input.SmtpPort.ToString(CultureInfo.InvariantCulture));
             await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.UserName, input.SmtpUserName);
-            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.Password, SimpleStringCipher.Instance.Encrypt(input.SmtpPassword));
+            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.Password,
+                SimpleStringCipher.Instance.Encrypt(input.SmtpPassword));
             await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.Domain, input.SmtpDomain);
-            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.EnableSsl, input.SmtpEnableSsl.ToString().ToLowerInvariant());
-            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.UseDefaultCredentials, input.SmtpUseDefaultCredentials.ToString().ToLowerInvariant());
+            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.EnableSsl,
+                input.SmtpEnableSsl.ToString().ToLowerInvariant());
+            await SettingManager.ChangeSettingForApplicationAsync(EmailSettingNames.Smtp.UseDefaultCredentials,
+                input.SmtpUseDefaultCredentials.ToString().ToLowerInvariant());
         }
 
         private async Task SetBillingSettings(HostBillingSettingsEditDto input)
         {
-            await SettingManager.ChangeSettingForApplicationAsync(AppSettings.HostManagement.BillingLegalName, input.LegalName);
-            await SettingManager.ChangeSettingForApplicationAsync(AppSettings.HostManagement.BillingAddress, input.Address);
+            await SettingManager.ChangeSettingForApplicationAsync(AppSettings.HostManagement.BillingLegalName,
+                input.LegalName);
+            await SettingManager.ChangeSettingForApplicationAsync(AppSettings.HostManagement.BillingAddress,
+                input.Address);
         }
 
         private void EditAppSettingsjson(string key, string value)

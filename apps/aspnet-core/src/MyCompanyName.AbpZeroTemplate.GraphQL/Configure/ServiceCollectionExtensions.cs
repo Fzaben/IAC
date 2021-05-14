@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using GraphQL;
 using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using MyCompanyName.AbpZeroTemplate.Debugging;
-using MyCompanyName.AbpZeroTemplate.Schemas;
 
 namespace MyCompanyName.AbpZeroTemplate.Configure
 {

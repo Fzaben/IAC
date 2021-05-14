@@ -10,10 +10,7 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Authentication.External
         public override string GetUserNameFromClaims(List<Claim> claims)
         {
             var userName = claims.First(c => c.Type == ClaimTypes.WindowsAccountName)?.Value;
-            if (!userName.IsNullOrEmpty())
-            {
-                return userName;
-            }
+            if (!userName.IsNullOrEmpty()) return userName;
 
             return base.GetUserNameFromClaims(claims);
         }

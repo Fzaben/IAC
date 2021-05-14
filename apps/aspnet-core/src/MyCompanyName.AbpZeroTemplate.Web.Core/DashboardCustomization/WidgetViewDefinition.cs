@@ -2,10 +2,6 @@
 {
     public class WidgetViewDefinition : ViewDefinition
     {
-        public byte DefaultWidth { get; }
-
-        public byte DefaultHeight { get; }
-
         public WidgetViewDefinition(
             string id,
             string viewFile,
@@ -17,5 +13,9 @@
             DefaultWidth = defaultWidth;
             DefaultHeight = defaultHeight;
         }
+
+        public byte DefaultWidth { get; }
+
+        public byte DefaultHeight { get; }
     }
 }

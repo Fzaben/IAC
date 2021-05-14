@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using Abp.AspNetCore.Mvc.Authorization;
+using Abp.BackgroundJobs;
 using Abp.IO.Extensions;
+using Abp.Runtime.Session;
 using Abp.UI;
 using Abp.Web.Models;
-using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
-using MyCompanyName.AbpZeroTemplate.Storage;
-using Abp.BackgroundJobs;
+using Microsoft.AspNetCore.Mvc;
 using MyCompanyName.AbpZeroTemplate.Authorization;
-using Abp.AspNetCore.Mvc.Authorization;
-using Abp.Runtime.Session;
+using MyCompanyName.AbpZeroTemplate.Authorization.Users.Dto;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users.Importing;
+using MyCompanyName.AbpZeroTemplate.Storage;
 
 namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 {
     public abstract class UsersControllerBase : AbpZeroTemplateControllerBase
     {
-        protected readonly IBinaryObjectManager BinaryObjectManager;
         protected readonly IBackgroundJobManager BackgroundJobManager;
+        protected readonly IBinaryObjectManager BinaryObjectManager;
 
         protected UsersControllerBase(
             IBinaryObjectManager binaryObjectManager,
@@ -36,15 +36,10 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
             {
                 var file = Request.Form.Files.First();
 
-                if (file == null)
-                {
-                    throw new UserFriendlyException(L("File_Empty_Error"));
-                }
+                if (file == null) throw new UserFriendlyException(L("File_Empty_Error"));
 
                 if (file.Length > 1048576 * 100) //100 MB
-                {
                     throw new UserFriendlyException(L("File_SizeLimit_Error"));
-                }
 
                 byte[] fileBytes;
                 using (var stream = file.OpenReadStream())
@@ -57,12 +52,13 @@ namespace MyCompanyName.AbpZeroTemplate.Web.Controllers
 
                 await BinaryObjectManager.SaveAsync(fileObject);
 
-                await BackgroundJobManager.EnqueueAsync<ImportUsersToExcelJob, ImportUsersFromExcelJobArgs>(new ImportUsersFromExcelJobArgs
-                {
-                    TenantId = tenantId,
-                    BinaryObjectId = fileObject.Id,
-                    User = AbpSession.ToUserIdentifier()
-                });
+                await BackgroundJobManager.EnqueueAsync<ImportUsersToExcelJob, ImportUsersFromExcelJobArgs>(
+                    new ImportUsersFromExcelJobArgs
+                    {
+                        TenantId = tenantId,
+                        BinaryObjectId = fileObject.Id,
+                        User = AbpSession.ToUserIdentifier()
+                    });
 
                 return Json(new AjaxResponse(new { }));
             }

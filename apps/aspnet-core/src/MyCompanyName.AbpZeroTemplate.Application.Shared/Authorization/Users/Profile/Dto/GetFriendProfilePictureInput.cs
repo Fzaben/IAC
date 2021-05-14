@@ -1,5 +1,4 @@
-﻿using System;
-using Abp;
+﻿using Abp;
 
 namespace MyCompanyName.AbpZeroTemplate.Authorization.Users.Profile.Dto
 {

@@ -1,49 +1,48 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
 using Abp;
 using Abp.Application.Features;
+using Abp.BackgroundJobs;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
+using Abp.Extensions;
 using Abp.IdentityFramework;
+using Abp.Localization;
 using Abp.MultiTenancy;
+using Abp.Notifications;
+using Abp.Runtime.Security;
+using Abp.Runtime.Session;
+using Abp.UI;
+using Microsoft.AspNetCore.Identity;
 using MyCompanyName.AbpZeroTemplate.Authorization.Roles;
 using MyCompanyName.AbpZeroTemplate.Authorization.Users;
 using MyCompanyName.AbpZeroTemplate.Editions;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Demo;
-using Abp.Extensions;
-using Abp.Notifications;
-using Abp.Runtime.Security;
-using Microsoft.AspNetCore.Identity;
-using MyCompanyName.AbpZeroTemplate.Notifications;
-using System;
-using System.Diagnostics;
-using Abp.BackgroundJobs;
-using Abp.Localization;
-using Abp.Runtime.Session;
-using Abp.UI;
 using MyCompanyName.AbpZeroTemplate.MultiTenancy.Payments;
+using MyCompanyName.AbpZeroTemplate.Notifications;
 
 namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 {
     /// <summary>
-    /// Tenant manager.
+    ///     Tenant manager.
     /// </summary>
     public class TenantManager : AbpTenantManager<Tenant, User>
     {
-        public IAbpSession AbpSession { get; set; }
+        private readonly IAbpZeroDbMigrator _abpZeroDbMigrator;
+        private readonly IAppNotifier _appNotifier;
+        protected readonly IBackgroundJobManager _backgroundJobManager;
+        private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
+        private readonly IPasswordHasher<User> _passwordHasher;
+        private readonly RoleManager _roleManager;
+        private readonly IRepository<SubscribableEdition> _subscribableEditionRepository;
 
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        private readonly RoleManager _roleManager;
-        private readonly UserManager _userManager;
         private readonly IUserEmailer _userEmailer;
-        private readonly INotificationSubscriptionManager _notificationSubscriptionManager;
-        private readonly IAppNotifier _appNotifier;
-        private readonly IAbpZeroDbMigrator _abpZeroDbMigrator;
-        private readonly IPasswordHasher<User> _passwordHasher;
-        private readonly IRepository<SubscribableEdition> _subscribableEditionRepository;
-        protected readonly IBackgroundJobManager _backgroundJobManager;
-        
+        private readonly UserManager _userManager;
+
         public TenantManager(
             IRepository<Tenant> tenantRepository,
             IRepository<TenantFeatureSetting, long> tenantFeatureRepository,
@@ -57,13 +56,13 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             IAbpZeroFeatureValueStore featureValueStore,
             IAbpZeroDbMigrator abpZeroDbMigrator,
             IPasswordHasher<User> passwordHasher,
-            IRepository<SubscribableEdition> subscribableEditionRepository, 
+            IRepository<SubscribableEdition> subscribableEditionRepository,
             IBackgroundJobManager backgroundJobManager) : base(
-                tenantRepository,
-                tenantFeatureRepository,
-                editionManager,
-                featureValueStore
-            )
+            tenantRepository,
+            tenantFeatureRepository,
+            editionManager,
+            featureValueStore
+        )
         {
             AbpSession = NullAbpSession.Instance;
 
@@ -78,6 +77,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             _subscribableEditionRepository = subscribableEditionRepository;
             _backgroundJobManager = backgroundJobManager;
         }
+
+        public IAbpSession AbpSession { get; set; }
 
         public async Task<int> CreateWithAdminUserAsync(
             string tenancyName,
@@ -99,9 +100,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             await CheckEditionAsync(editionId, isInTrialPeriod);
 
             if (isInTrialPeriod && !subscriptionEndDate.HasValue)
-            {
-                throw new UserFriendlyException(LocalizationManager.GetString(AbpZeroTemplateConsts.LocalizationSourceName, "TrialWithoutEndDateErrorMessage"));
-            }
+                throw new UserFriendlyException(LocalizationManager.GetString(
+                    AbpZeroTemplateConsts.LocalizationSourceName, "TrialWithoutEndDateErrorMessage"));
 
             using (var uow = _unitOfWorkManager.Begin(TransactionScopeOption.RequiresNew))
             {
@@ -112,7 +112,9 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
                     EditionId = editionId,
                     SubscriptionEndDateUtc = subscriptionEndDate?.ToUniversalTime(),
                     IsInTrialPeriod = isInTrialPeriod,
-                    ConnectionString = connectionString.IsNullOrWhiteSpace() ? null : SimpleStringCipher.Instance.Encrypt(connectionString)
+                    ConnectionString = connectionString.IsNullOrWhiteSpace()
+                        ? null
+                        : SimpleStringCipher.Instance.Encrypt(connectionString)
                 };
 
                 await CreateAsync(tenant);
@@ -150,10 +152,7 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
                     {
                         await _userManager.InitializeOptionsAsync(AbpSession.TenantId);
                         foreach (var validator in _userManager.PasswordValidators)
-                        {
                             CheckErrors(await validator.ValidateAsync(_userManager, adminUser, adminPassword));
-                        }
-
                     }
 
                     adminUser.Password = _passwordHasher.HashPassword(adminUser, adminPassword);
@@ -190,7 +189,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             {
                 using (_unitOfWorkManager.Current.SetTenantId(newTenantId))
                 {
-                    await _notificationSubscriptionManager.SubscribeToAllAvailableNotificationsAsync(new UserIdentifier(newTenantId, newAdminId));
+                    await _notificationSubscriptionManager.SubscribeToAllAvailableNotificationsAsync(
+                        new UserIdentifier(newTenantId, newAdminId));
                     await _unitOfWorkManager.Current.SaveChangesAsync();
                     await uow.CompleteAsync();
                 }
@@ -201,18 +201,13 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
 
         public async Task CheckEditionAsync(int? editionId, bool isInTrialPeriod)
         {
-            if (!editionId.HasValue || !isInTrialPeriod)
-            {
-                return;
-            }
+            if (!editionId.HasValue || !isInTrialPeriod) return;
 
             var edition = await _subscribableEditionRepository.GetAsync(editionId.Value);
-            if (!edition.IsFree)
-            {
-                return;
-            }
+            if (!edition.IsFree) return;
 
-            var error = LocalizationManager.GetSource(AbpZeroTemplateConsts.LocalizationSourceName).GetString("FreeEditionsCannotHaveTrialVersions");
+            var error = LocalizationManager.GetSource(AbpZeroTemplateConsts.LocalizationSourceName)
+                .GetString("FreeEditionsCannotHaveTrialVersions");
             throw new UserFriendlyException(error);
         }
 
@@ -221,13 +216,14 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             identityResult.CheckErrors(LocalizationManager);
         }
 
-        public decimal GetUpgradePrice(SubscribableEdition currentEdition, SubscribableEdition targetEdition, int totalRemainingHourCount, PaymentPeriodType paymentPeriodType)
+        public decimal GetUpgradePrice(SubscribableEdition currentEdition, SubscribableEdition targetEdition,
+            int totalRemainingHourCount, PaymentPeriodType paymentPeriodType)
         {
-            int numberOfHoursPerDay = 24;
+            var numberOfHoursPerDay = 24;
 
             var totalRemainingDayCount = totalRemainingHourCount / numberOfHoursPerDay;
-            var unusedPeriodCount = totalRemainingDayCount / (int)paymentPeriodType;
-            var unusedHoursCount = totalRemainingHourCount % ((int)paymentPeriodType * numberOfHoursPerDay);
+            var unusedPeriodCount = totalRemainingDayCount / (int) paymentPeriodType;
+            var unusedHoursCount = totalRemainingHourCount % ((int) paymentPeriodType * numberOfHoursPerDay);
 
             decimal currentEditionPriceForUnusedPeriod = 0;
             decimal targetEditionPriceForUnusedPeriod = 0;
@@ -238,58 +234,54 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
             if (currentEditionPrice > 0)
             {
                 currentEditionPriceForUnusedPeriod = currentEditionPrice * unusedPeriodCount;
-                currentEditionPriceForUnusedPeriod += (currentEditionPrice / (int)paymentPeriodType) / numberOfHoursPerDay * unusedHoursCount;
+                currentEditionPriceForUnusedPeriod += currentEditionPrice / (int) paymentPeriodType /
+                    numberOfHoursPerDay * unusedHoursCount;
             }
 
             if (targetEditionPrice > 0)
             {
                 targetEditionPriceForUnusedPeriod = targetEditionPrice * unusedPeriodCount;
-                targetEditionPriceForUnusedPeriod += (targetEditionPrice / (int)paymentPeriodType) / numberOfHoursPerDay * unusedHoursCount;
+                targetEditionPriceForUnusedPeriod += targetEditionPrice / (int) paymentPeriodType /
+                    numberOfHoursPerDay * unusedHoursCount;
             }
 
             return targetEditionPriceForUnusedPeriod - currentEditionPriceForUnusedPeriod;
         }
 
-        public async Task<Tenant> UpdateTenantAsync(int tenantId, bool isActive, bool? isInTrialPeriod, PaymentPeriodType? paymentPeriodType, int editionId, EditionPaymentType editionPaymentType)
+        public async Task<Tenant> UpdateTenantAsync(int tenantId, bool isActive, bool? isInTrialPeriod,
+            PaymentPeriodType? paymentPeriodType, int editionId, EditionPaymentType editionPaymentType)
         {
             var tenant = await FindByIdAsync(tenantId);
 
             tenant.IsActive = isActive;
 
-            if (isInTrialPeriod.HasValue)
-            {
-                tenant.IsInTrialPeriod = isInTrialPeriod.Value;
-            }
+            if (isInTrialPeriod.HasValue) tenant.IsInTrialPeriod = isInTrialPeriod.Value;
 
             tenant.EditionId = editionId;
 
             if (paymentPeriodType.HasValue)
-            {
                 tenant.UpdateSubscriptionDateForPayment(paymentPeriodType.Value, editionPaymentType);
-            }
 
             return tenant;
         }
 
-        public async Task<EndSubscriptionResult> EndSubscriptionAsync(Tenant tenant, SubscribableEdition edition, DateTime nowUtc)
+        public async Task<EndSubscriptionResult> EndSubscriptionAsync(Tenant tenant, SubscribableEdition edition,
+            DateTime nowUtc)
         {
             if (tenant.EditionId == null || tenant.HasUnlimitedTimeSubscription())
-            {
-                throw new Exception($"Can not end tenant {tenant.TenancyName} subscription for {edition.DisplayName} tenant has unlimited time subscription!");
-            }
+                throw new Exception(
+                    $"Can not end tenant {tenant.TenancyName} subscription for {edition.DisplayName} tenant has unlimited time subscription!");
 
             Debug.Assert(tenant.SubscriptionEndDateUtc != null, "tenant.SubscriptionEndDateUtc != null");
 
             var subscriptionEndDateUtc = tenant.SubscriptionEndDateUtc.Value;
             if (!tenant.IsInTrialPeriod)
-            {
-                subscriptionEndDateUtc = tenant.SubscriptionEndDateUtc.Value.AddDays(edition.WaitingDayAfterExpire ?? 0);
-            }
+                subscriptionEndDateUtc =
+                    tenant.SubscriptionEndDateUtc.Value.AddDays(edition.WaitingDayAfterExpire ?? 0);
 
             if (subscriptionEndDateUtc >= nowUtc)
-            {
-                throw new Exception($"Can not end tenant {tenant.TenancyName} subscription for {edition.DisplayName} since subscription has not expired yet!");
-            }
+                throw new Exception(
+                    $"Can not end tenant {tenant.TenancyName} subscription for {edition.DisplayName} since subscription has not expired yet!");
 
             if (!tenant.IsInTrialPeriod && edition.ExpiringEditionId.HasValue)
             {
@@ -312,9 +304,8 @@ namespace MyCompanyName.AbpZeroTemplate.MultiTenancy
         public override Task UpdateAsync(Tenant tenant)
         {
             if (tenant.IsInTrialPeriod && !tenant.SubscriptionEndDateUtc.HasValue)
-            {
-                throw new UserFriendlyException(LocalizationManager.GetString(AbpZeroTemplateConsts.LocalizationSourceName, "TrialWithoutEndDateErrorMessage"));
-            }
+                throw new UserFriendlyException(LocalizationManager.GetString(
+                    AbpZeroTemplateConsts.LocalizationSourceName, "TrialWithoutEndDateErrorMessage"));
 
             return base.UpdateAsync(tenant);
         }

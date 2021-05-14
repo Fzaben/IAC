@@ -15,11 +15,11 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
     [AbpAuthorize]
     public class FriendshipAppService : AbpZeroTemplateAppServiceBase, IFriendshipAppService
     {
+        private readonly IChatCommunicator _chatCommunicator;
+        private readonly IChatFeatureChecker _chatFeatureChecker;
         private readonly IFriendshipManager _friendshipManager;
         private readonly IOnlineClientManager<ChatChannel> _onlineClientManager;
-        private readonly IChatCommunicator _chatCommunicator;
         private readonly ITenantCache _tenantCache;
-        private readonly IChatFeatureChecker _chatFeatureChecker;
 
         public FriendshipAppService(
             IFriendshipManager friendshipManager,
@@ -43,9 +43,7 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
             _chatFeatureChecker.CheckChatFeatures(userIdentifier.TenantId, probableFriend.TenantId);
 
             if (await _friendshipManager.GetFriendshipOrNullAsync(userIdentifier, probableFriend) != null)
-            {
                 throw new UserFriendlyException(L("YouAlreadySentAFriendshipRequestToThisUser"));
-            }
 
             var user = await UserManager.FindByIdAsync(AbpSession.GetUserId().ToString());
 
@@ -55,12 +53,16 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
                 probableFriendUser = await UserManager.FindByIdAsync(input.UserId.ToString());
             }
 
-            var friendTenancyName = probableFriend.TenantId.HasValue ? _tenantCache.Get(probableFriend.TenantId.Value).TenancyName : null;
-            var sourceFriendship = new Friendship(userIdentifier, probableFriend, friendTenancyName, probableFriendUser.UserName, probableFriendUser.ProfilePictureId, FriendshipState.Accepted);
+            var friendTenancyName = probableFriend.TenantId.HasValue
+                ? _tenantCache.Get(probableFriend.TenantId.Value).TenancyName
+                : null;
+            var sourceFriendship = new Friendship(userIdentifier, probableFriend, friendTenancyName,
+                probableFriendUser.UserName, probableFriendUser.ProfilePictureId, FriendshipState.Accepted);
             await _friendshipManager.CreateFriendshipAsync(sourceFriendship);
 
             var userTenancyName = user.TenantId.HasValue ? _tenantCache.Get(user.TenantId.Value).TenancyName : null;
-            var targetFriendship = new Friendship(probableFriend, userIdentifier, userTenancyName, user.UserName, user.ProfilePictureId, FriendshipState.Accepted);
+            var targetFriendship = new Friendship(probableFriend, userIdentifier, userTenancyName, user.UserName,
+                user.ProfilePictureId, FriendshipState.Accepted);
             await _friendshipManager.CreateFriendshipAsync(targetFriendship);
 
             var clients = _onlineClientManager.GetAllByUserId(probableFriend);
@@ -74,7 +76,8 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
             if (senderClients.Any())
             {
                 var isFriendOnline = _onlineClientManager.IsOnline(targetFriendship.ToUserIdentifier());
-                await _chatCommunicator.SendFriendshipRequestToClient(senderClients, sourceFriendship, true, isFriendOnline);
+                await _chatCommunicator.SendFriendshipRequestToClient(senderClients, sourceFriendship, true,
+                    isFriendOnline);
             }
 
             var sourceFriendshipRequest = ObjectMapper.Map<FriendDto>(sourceFriendship);
@@ -101,9 +104,8 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
 
             var clients = _onlineClientManager.GetAllByUserId(userIdentifier);
             if (clients.Any())
-            {
-                await _chatCommunicator.SendUserStateChangeToClients(clients, friendIdentifier, FriendshipState.Blocked);
-            }
+                await _chatCommunicator.SendUserStateChangeToClients(clients, friendIdentifier,
+                    FriendshipState.Blocked);
         }
 
         public async Task UnblockUser(UnblockUserInput input)
@@ -114,9 +116,8 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
 
             var clients = _onlineClientManager.GetAllByUserId(userIdentifier);
             if (clients.Any())
-            {
-                await _chatCommunicator.SendUserStateChangeToClients(clients, friendIdentifier, FriendshipState.Accepted);
-            }
+                await _chatCommunicator.SendUserStateChangeToClients(clients, friendIdentifier,
+                    FriendshipState.Accepted);
         }
 
         public async Task AcceptFriendshipRequest(AcceptFriendshipRequestInput input)
@@ -127,35 +128,27 @@ namespace MyCompanyName.AbpZeroTemplate.Friendships
 
             var clients = _onlineClientManager.GetAllByUserId(userIdentifier);
             if (clients.Any())
-            {
-                await _chatCommunicator.SendUserStateChangeToClients(clients, friendIdentifier, FriendshipState.Blocked);
-            }
+                await _chatCommunicator.SendUserStateChangeToClients(clients, friendIdentifier,
+                    FriendshipState.Blocked);
         }
 
         private async Task<UserIdentifier> GetUserIdentifier(string tenancyName, string userName)
         {
             int? tenantId = null;
             if (!tenancyName.Equals("."))
-            {
                 using (CurrentUnitOfWork.SetTenantId(null))
                 {
                     var tenant = await TenantManager.FindByTenancyNameAsync(tenancyName);
                     if (tenant == null)
-                    {
                         throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", tenancyName));
-                    }
 
                     tenantId = tenant.Id;
                 }
-            }
 
             using (CurrentUnitOfWork.SetTenantId(tenantId))
             {
                 var user = await UserManager.FindByNameOrEmailAsync(userName);
-                if (user == null)
-                {
-                    throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", tenancyName));
-                }
+                if (user == null) throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", tenancyName));
 
                 return user.ToUserIdentifier();
             }

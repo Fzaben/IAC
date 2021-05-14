@@ -23,14 +23,12 @@ namespace MyCompanyName.AbpZeroTemplate.EntityFrameworkCore
         public bool Exist(string connectionString)
         {
             if (connectionString.IsNullOrEmpty())
-            {
                 //connectionString is null for unit tests
                 return true;
-            }
 
             try
             {
-                using (var uow =_unitOfWorkManager.Begin())
+                using (var uow = _unitOfWorkManager.Begin())
                 {
                     // Switching to host is necessary for single tenant mode.
                     using (_unitOfWorkManager.Current.SetTenantId(null))

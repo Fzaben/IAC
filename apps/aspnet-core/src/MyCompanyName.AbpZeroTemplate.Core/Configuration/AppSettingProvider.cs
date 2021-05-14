@@ -4,7 +4,6 @@ using Abp.Configuration;
 using Abp.Json;
 using Abp.Net.Mail;
 using Abp.Zero.Configuration;
-using Castle.Core.Internal;
 using Microsoft.Extensions.Configuration;
 using MyCompanyName.AbpZeroTemplate.Authentication;
 using MyCompanyName.AbpZeroTemplate.DashboardCustomization;
@@ -13,8 +12,8 @@ using Newtonsoft.Json;
 namespace MyCompanyName.AbpZeroTemplate.Configuration
 {
     /// <summary>
-    /// Defines settings for the application.
-    /// See <see cref="AppSettings"/> for setting names.
+    ///     Defines settings for the application.
+    ///     See <see cref="AppSettings" /> for setting names.
     /// </summary>
     public class AppSettingProvider : SettingProvider
     {
@@ -102,7 +101,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     isVisibleToClients: true),
                 new SettingDefinition(AppSettings.UiManagement.Theme,
                     GetFromAppSettings(AppSettings.UiManagement.Theme, "default"), isVisibleToClients: true,
-                    scopes: SettingScopes.All),
+                    scopes: SettingScopes.All)
             };
         }
 
@@ -223,8 +222,8 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                 new SettingDefinition(themeName + "." + AppSettings.UiManagement.LeftAside.HoverableAside,
                     GetFromAppSettings(themeName + "." + AppSettings.UiManagement.LeftAside.HoverableAside,
                         "false"), isVisibleToClients: true, scopes: SettingScopes.All),
-                
-                
+
+
                 new SettingDefinition(themeName + "." + AppSettings.UiManagement.Footer.FixedFooter,
                     GetFromAppSettings(themeName + "." + AppSettings.UiManagement.Footer.FixedFooter, "false"),
                     isVisibleToClients: true, scopes: SettingScopes.All),
@@ -540,19 +539,19 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
         public List<Dashboard> GetDefaultMvcDashboardViews()
         {
             //It is the default dashboard view which your user will see if they don't do any customization.
-            return new List<Dashboard>
+            return new()
             {
-                new Dashboard
+                new()
                 {
                     DashboardName = AbpZeroTemplateDashboardCustomizationConsts.DashboardNames.DefaultTenantDashboard,
                     Pages = new List<Page>
                     {
-                        new Page
+                        new()
                         {
                             Name = AbpZeroTemplateDashboardCustomizationConsts.DefaultPageName,
                             Widgets = new List<Widget>
                             {
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .GeneralStats, // General Stats
@@ -561,7 +560,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 19
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .ProfitShare, // Profit Share
@@ -570,7 +569,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 28
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId =
                                         AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
@@ -580,7 +579,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 6,
                                     PositionY = 28
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .RegionalStats, // Regional Stats
@@ -589,7 +588,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 6,
                                     PositionY = 5
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .DailySales, // Daily Sales
@@ -598,7 +597,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 6,
                                     PositionY = 19
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .TopStats, // Top Stats
@@ -607,7 +606,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 0
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .SalesSummary, // Sales Summary
@@ -620,17 +619,17 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                         }
                     }
                 },
-                new Dashboard
+                new()
                 {
                     DashboardName = AbpZeroTemplateDashboardCustomizationConsts.DashboardNames.DefaultHostDashboard,
                     Pages = new List<Page>
                     {
-                        new Page
+                        new()
                         {
                             Name = AbpZeroTemplateDashboardCustomizationConsts.DefaultPageName,
                             Widgets = new List<Widget>
                             {
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .TopStats, // Top Stats
@@ -639,7 +638,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 0
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId =
                                         AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
@@ -649,7 +648,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 6
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .RecentTenants, // Recent tenants
@@ -658,7 +657,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 7,
                                     PositionY = 17
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .SubscriptionExpiringTenants, // Subscription expiring tenants
@@ -667,7 +666,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 17
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .EditionStatistics, // Edition statistics
@@ -686,19 +685,19 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
         public List<Dashboard> GetDefaultAngularDashboardViews()
         {
             //It is the default dashboard view which your user will see if they don't do any customization.
-            return new List<Dashboard>
+            return new()
             {
-                new Dashboard
+                new()
                 {
                     DashboardName = AbpZeroTemplateDashboardCustomizationConsts.DashboardNames.DefaultTenantDashboard,
                     Pages = new List<Page>
                     {
-                        new Page
+                        new()
                         {
                             Name = AbpZeroTemplateDashboardCustomizationConsts.DefaultPageName,
                             Widgets = new List<Widget>
                             {
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .TopStats, // Top Stats
@@ -707,7 +706,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 0
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .SalesSummary, // Sales Summary
@@ -716,7 +715,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 4
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .RegionalStats, // Regional Stats
@@ -725,7 +724,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 6,
                                     PositionY = 4
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .GeneralStats, // General Stats
@@ -734,7 +733,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 16
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .DailySales, // Daily Sales
@@ -743,7 +742,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 6,
                                     PositionY = 16
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
                                         .ProfitShare, // Profit Share
@@ -752,7 +751,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 24
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId =
                                         AbpZeroTemplateDashboardCustomizationConsts.Widgets.Tenant
@@ -766,17 +765,17 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                         }
                     }
                 },
-                new Dashboard
+                new()
                 {
                     DashboardName = AbpZeroTemplateDashboardCustomizationConsts.DashboardNames.DefaultHostDashboard,
                     Pages = new List<Page>
                     {
-                        new Page
+                        new()
                         {
                             Name = AbpZeroTemplateDashboardCustomizationConsts.DefaultPageName,
                             Widgets = new List<Widget>
                             {
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .TopStats, // Top Stats
@@ -785,7 +784,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 0
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId =
                                         AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
@@ -795,7 +794,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 4
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId =
                                         AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
@@ -805,7 +804,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 7,
                                     PositionY = 12
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .SubscriptionExpiringTenants, // Subscription expiring tenants
@@ -814,7 +813,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                                     PositionX = 0,
                                     PositionY = 12
                                 },
-                                new Widget
+                                new()
                                 {
                                     WidgetId = AbpZeroTemplateDashboardCustomizationConsts.Widgets.Host
                                         .EditionStatistics, // Edition statistics
@@ -842,10 +841,10 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
 
         private SettingDefinition[] GetFacebookExternalLoginProviderSettings()
         {
-            string appId = GetFromSettings("Authentication:Facebook:AppId");
-            string appSecret = GetFromSettings("Authentication:Facebook:AppSecret");
+            var appId = GetFromSettings("Authentication:Facebook:AppId");
+            var appSecret = GetFromSettings("Authentication:Facebook:AppSecret");
 
-            var facebookExternalLoginProviderInfo = new FacebookExternalLoginProviderSettings()
+            var facebookExternalLoginProviderInfo = new FacebookExternalLoginProviderSettings
             {
                 AppId = appId,
                 AppSecret = appSecret
@@ -858,7 +857,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     facebookExternalLoginProviderInfo.ToJsonString(),
                     isVisibleToClients: false,
                     scopes: SettingScopes.Application,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.Tenant.Facebook_IsDeactivated,
@@ -871,18 +870,18 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     "",
                     isVisibleToClients: false,
                     scopes: SettingScopes.Tenant,
-                    isEncrypted:true
+                    isEncrypted: true
                 )
             };
         }
 
         private SettingDefinition[] GetGoogleExternalLoginProviderSettings()
         {
-            string clientId = GetFromSettings("Authentication:Google:ClientId");
-            string clientSecret = GetFromSettings("Authentication:Google:ClientSecret");
-            string userInfoEndPoint = GetFromSettings("Authentication:Google:UserInfoEndpoint");
+            var clientId = GetFromSettings("Authentication:Google:ClientId");
+            var clientSecret = GetFromSettings("Authentication:Google:ClientSecret");
+            var userInfoEndPoint = GetFromSettings("Authentication:Google:UserInfoEndpoint");
 
-            var googleExternalLoginProviderInfo = new GoogleExternalLoginProviderSettings()
+            var googleExternalLoginProviderInfo = new GoogleExternalLoginProviderSettings
             {
                 ClientId = clientId,
                 ClientSecret = clientSecret,
@@ -896,7 +895,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     googleExternalLoginProviderInfo.ToJsonString(),
                     isVisibleToClients: false,
                     scopes: SettingScopes.Application,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.Tenant.Google_IsDeactivated,
@@ -909,22 +908,22 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     "",
                     isVisibleToClients: false,
                     scopes: SettingScopes.Tenant,
-                    isEncrypted:true
-                ),
+                    isEncrypted: true
+                )
             };
         }
 
         private SettingDefinition[] GetTwitterExternalLoginProviderSettings()
         {
-            string consumerKey = GetFromSettings("Authentication:Twitter:ConsumerKey");
-            string consumerSecret = GetFromSettings("Authentication:Twitter:ConsumerSecret");
+            var consumerKey = GetFromSettings("Authentication:Twitter:ConsumerKey");
+            var consumerSecret = GetFromSettings("Authentication:Twitter:ConsumerSecret");
 
             var twitterExternalLoginProviderInfo = new TwitterExternalLoginProviderSettings
             {
                 ConsumerKey = consumerKey,
                 ConsumerSecret = consumerSecret
             };
-            
+
             return new[]
             {
                 new SettingDefinition(
@@ -932,7 +931,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     twitterExternalLoginProviderInfo.ToJsonString(),
                     isVisibleToClients: false,
                     scopes: SettingScopes.Application,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.Tenant.Twitter_IsDeactivated,
@@ -945,17 +944,17 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     "",
                     isVisibleToClients: false,
                     scopes: SettingScopes.Tenant,
-                    isEncrypted:true
-                ),
+                    isEncrypted: true
+                )
             };
         }
 
         private SettingDefinition[] GetMicrosoftExternalLoginProviderSettings()
         {
-            string consumerKey = GetFromSettings("Authentication:Microsoft:ConsumerKey");
-            string consumerSecret = GetFromSettings("Authentication:Microsoft:ConsumerSecret");
+            var consumerKey = GetFromSettings("Authentication:Microsoft:ConsumerKey");
+            var consumerSecret = GetFromSettings("Authentication:Microsoft:ConsumerSecret");
 
-            var microsoftExternalLoginProviderInfo = new MicrosoftExternalLoginProviderSettings()
+            var microsoftExternalLoginProviderInfo = new MicrosoftExternalLoginProviderSettings
             {
                 ClientId = consumerKey,
                 ClientSecret = consumerSecret
@@ -969,7 +968,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     microsoftExternalLoginProviderInfo.ToJsonString(),
                     isVisibleToClients: false,
                     scopes: SettingScopes.Application,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.Tenant.Microsoft_IsDeactivated,
@@ -982,8 +981,8 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     "",
                     isVisibleToClients: false,
                     scopes: SettingScopes.Tenant,
-                    isEncrypted:true
-                ),
+                    isEncrypted: true
+                )
             };
         }
 
@@ -994,9 +993,9 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
             var authority = GetFromSettings("Authentication:OpenId:Authority");
             var validateIssuerStr = GetFromSettings("Authentication:OpenId:ValidateIssuer");
 
-            bool.TryParse(validateIssuerStr, out bool validateIssuer);
+            bool.TryParse(validateIssuerStr, out var validateIssuer);
 
-            var openIdConnectExternalLoginProviderInfo = new OpenIdConnectExternalLoginProviderSettings()
+            var openIdConnectExternalLoginProviderInfo = new OpenIdConnectExternalLoginProviderSettings
             {
                 ClientId = clientId,
                 ClientSecret = clientSecret,
@@ -1014,7 +1013,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     openIdConnectExternalLoginProviderInfo.ToJsonString(),
                     isVisibleToClients: false,
                     scopes: SettingScopes.Application,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.Tenant.OpenIdConnect_IsDeactivated,
@@ -1027,7 +1026,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     "",
                     isVisibleToClients: false,
                     scopes: SettingScopes.Tenant,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.OpenIdConnectMappedClaims,
@@ -1046,7 +1045,7 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
             var tenant = GetFromSettings("Authentication:WsFederation:Tenant");
             var metaDataAddress = GetFromSettings("Authentication:WsFederation:MetaDataAddress");
 
-            var wsFederationExternalLoginProviderInfo = new WsFederationExternalLoginProviderSettings()
+            var wsFederationExternalLoginProviderInfo = new WsFederationExternalLoginProviderSettings
             {
                 ClientId = clientId,
                 Tenant = tenant,
@@ -1065,14 +1064,14 @@ namespace MyCompanyName.AbpZeroTemplate.Configuration
                     wsFederationExternalLoginProviderInfo.ToJsonString(),
                     isVisibleToClients: false,
                     scopes: SettingScopes.Application,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition( //default is empty for tenants
                     AppSettings.ExternalLoginProvider.Tenant.WsFederation,
                     "",
                     isVisibleToClients: false,
                     scopes: SettingScopes.Tenant,
-                    isEncrypted:true
+                    isEncrypted: true
                 ),
                 new SettingDefinition(
                     AppSettings.ExternalLoginProvider.Tenant.WsFederation_IsDeactivated,
