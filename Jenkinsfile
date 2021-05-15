@@ -6,11 +6,10 @@ pipeline {
         ls -la
       }
     }
-  stage('Restore packages') {
-    steps {
-      dotnet restore apps/aspnet-core/DevOps.sln 
+    stage('Restore packages') {
+      steps {
+        dotnet restore apps/aspnet-core/DevOps.sln 
+      }
     }
-  }
-
   }
 }
