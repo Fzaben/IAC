@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Restore packages') {
       steps {
-        "dotnet --help" 
+        dotnet 
       }
     }
   }
