@@ -3,9 +3,14 @@ pipeline {
   stages {
     stage('test') {
       steps {
-        retry(count: 1)
+        ls -la
       }
     }
+  stage('Restore packages') {
+    steps {
+      dotnet restore apps/aspnet-core/DevOps.sln 
+    }
+  }
 
   }
 }
