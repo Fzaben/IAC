@@ -1,0 +1,6 @@
+webserver_static_sites:
+  - name: devops.dev.devops.terkwaz.com
+    root: /usr/share/nginx/devops.dev.devops.terkwaz.com
+
+  - name: devops1.dev.devops.terkwaz.com
+    root: /usr/share/nginx/devops1.dev.devops.terkwaz.com

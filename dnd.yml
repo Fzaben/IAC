@@ -1,0 +1,45 @@
+version: "2"
+
+services:
+
+  docker-in-docker:
+    image: docker:dind
+    privileged: true
+    expose:
+      - 2375
+      - 2376
+
+  node1:
+    image: docker
+    links:
+      - docker-in-docker
+    environment:
+      DOCKER_HOST: tcp://docker-in-docker:2375
+    command: docker ps -a
+
+  node2:
+    image: docker
+    links:
+      - docker-in-docker
+    environment:
+      DOCKER_HOST: tcp://docker-in-docker:2375
+    command: docker images -a
+
+# image: docker:stable
+
+# stages:
+#     - deploy
+
+# services:
+#   - docker:dind
+
+# before_script:
+#   - apk update
+#   - apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+#   - pip install docker-compose
+
+# deploy_app:
+#     stage: deploy
+#     script:
+#         - docker-compose down
+#         - docker-compose up -d

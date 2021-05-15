@@ -1,0 +1,59 @@
+#!/bin/bash
+project_name=$solution_name'.Web.Host'
+
+## Host
+alias dotnet-publish-host='dotnet publish "$project_path"/"$project_name"/ -c Release -r ubuntu.20.04-x64'
+alias package-host='package "$project_name".tar.gz -C "$project_path"/"$project_name"/bin/Release/net5.0/ubuntu.20.04-x64/publish ./'
+alias copy-host-package-to-server='copy "$project_name".tar.gz "$server":~/'
+alias unpackage-host-package-from-server='attach -t "$unpackage ~/$project_name.tar.gz -C /var/www/$DOMAIN"'
+
+alias copy-host-service-to-systemd='copy "$project_root_path"/ci-scripts/etc/systemd/system/$DOMAIN.service $server:~/'
+alias mv-host-service-to-systemd='attach -t "sudo mv ~/$DOMAIN.service /etc/systemd/system"'
+
+enable='sudo systemctl enable '$DOMAIN'.service'
+start='sudo systemctl start '$DOMAIN'.service'
+restart='sudo systemctl restart '$DOMAIN'.service'
+status='sudo systemctl status '$DOMAIN'.service'
+alias start-host-service='attach -t "$enable && $start && $status"'
+alias restart-host-service='attach -t "$restart"'
+
+alias copy-host-to-nginx='copy ci-scripts/etc/nginx/sites-available/"$DOMAIN" "$server":~/'
+alias mv-host-to-nginx='attach -t "sudo mv ~/$DOMAIN /etc/nginx/sites-available/$DOMAIN"'
+alias ln-host-nginx='attach -t "sudo ln -s /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/"'
+alias request-host-ssl='attach -t "sudo certbot --nginx -d "$DOMAIN" --agree-tos -m "$email" --redirect"'
+
+# Host
+publish_host () {
+    dotnet-publish-host && \
+    package-host && \
+    copy-host-package-to-server && \
+    unpackage-host-package-from-server
+}
+
+add_host_service () {
+    copy-host-service-to-systemd && \
+    mv-host-service-to-systemd && \
+    start-host-service
+}
+
+add_host_nginx () {
+    copy-host-to-nginx && \
+    mv-host-to-nginx && \
+    ln-host-nginx && \
+    change-nginx-permission && \
+    request-host-ssl
+}
+
+init_deploy_host () {
+    publish_host && \
+    add_host_service && \
+    add_host_nginx && \
+    restart-host-service && \
+    restart-nginx
+}
+
+deploy_host () {
+    publish_host && \
+    restart-host-service && \
+    restart-nginx
+}

@@ -1,0 +1,22 @@
+# terraform
+.ssh
+.terraform*
+terraform.tfplan
+terraform.tfstate*
+
+# ansible
+ansible.log
+
+
+not-here
+
+# apps
+db
+node_modules
+api
+auth
+___abp-demo
+abp-framework
+# packges
+*tar.gz
+.idea
